@@ -123,30 +123,30 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary/90 to-primary/70 p-8 md:p-12 text-primary-foreground shadow-2xl shadow-primary/20">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary/90 to-primary/70 p-5 sm:p-8 md:p-12 text-primary-foreground shadow-2xl shadow-primary/20">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-black/10 blur-2xl"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-heading font-bold tracking-tight">
+
+        <div className="relative z-10 flex flex-col gap-5">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold tracking-tight">
               Bem-vindo, {user?.name.split(' ')[0]}! 👋
             </h1>
-            <p className="text-primary-foreground/80 text-lg max-w-xl">
-              Aqui está o resumo das atividades da sua mercearia hoje. 
+            <p className="text-primary-foreground/80 text-sm sm:text-base md:text-lg max-w-xl">
+              Aqui está o resumo das atividades da sua mercearia hoje.{' '}
               Você tem <span className="font-bold bg-white/20 px-2 py-0.5 rounded-full">{lowStockCount} alertas</span> precisando de atenção.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:gap-3">
             <Link href="/reports">
-              <Button variant="secondary" className="shadow-lg bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
-                <Activity className="mr-2 h-4 w-4" />
+              <Button variant="secondary" className="w-full shadow-lg bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm text-sm">
+                <Activity className="mr-1.5 h-4 w-4 shrink-0" />
                 Ver Relatórios
               </Button>
             </Link>
             <Link href="/pos">
-              <Button size="lg" className="shadow-xl bg-white text-primary hover:bg-white/90 font-bold border-none">
-                <Zap className="mr-2 h-4 w-4 fill-current" />
+              <Button size="lg" className="w-full shadow-xl bg-white text-primary hover:bg-white/90 font-bold border-none text-sm">
+                <Zap className="mr-1.5 h-4 w-4 fill-current shrink-0" />
                 Nova Venda
               </Button>
             </Link>

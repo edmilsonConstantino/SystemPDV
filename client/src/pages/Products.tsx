@@ -303,25 +303,25 @@ export default function Products() {
           <h1 className="text-3xl font-heading font-bold text-foreground">Produtos</h1>
           <p className="text-muted-foreground">Gerencie seu estoque e catálogo.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.xls" />
-          <Button variant="outline" onClick={handleImportClick} data-testid="button-import">
+          <Button variant="outline" onClick={handleImportClick} className="flex-1 sm:flex-none rounded-xl" data-testid="button-import">
             <FileUp className="mr-2 h-4 w-4" />
             Importar
           </Button>
-          <Button variant="outline" onClick={handleExport} data-testid="button-export">
+          <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none rounded-xl" data-testid="button-export">
             <FileDown className="mr-2 h-4 w-4" />
             Exportar
           </Button>
-          
+
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
-              <Button className="shadow-lg shadow-primary/20" data-testid="button-add-product">
+              <Button className="w-full sm:w-auto rounded-xl shadow-lg shadow-primary/20" data-testid="button-add-product">
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Produto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Adicionar Produto</DialogTitle>
               </DialogHeader>
@@ -334,19 +334,19 @@ export default function Products() {
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Nome do Produto</Label>
-                    <Input 
-                      value={newProduct.name} 
+                    <Input
+                      value={newProduct.name}
                       onChange={e => setNewProduct({...newProduct, name: e.target.value})}
                       data-testid="input-product-name"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Código (SKU)</Label>
-                    <Input 
-                      value={newProduct.sku} 
+                    <Input
+                      value={newProduct.sku}
                       onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
                       placeholder="Gerado automaticamente se vazio"
                       data-testid="input-product-sku"
@@ -354,29 +354,29 @@ export default function Products() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label>Preço Venda (MT)</Label>
-                    <Input 
-                      type="number" 
-                      value={newProduct.price} 
+                    <Input
+                      type="number"
+                      value={newProduct.price}
                       onChange={e => setNewProduct({...newProduct, price: e.target.value})}
                       data-testid="input-product-price"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Preço Custo (MT)</Label>
-                    <Input 
-                      type="number" 
-                      value={newProduct.costPrice} 
+                    <Input
+                      type="number"
+                      value={newProduct.costPrice}
                       onChange={e => setNewProduct({...newProduct, costPrice: e.target.value})}
                       data-testid="input-product-cost"
                     />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 col-span-2 sm:col-span-1">
                     <Label>Unidade</Label>
-                    <Select 
-                      value={newProduct.unit} 
+                    <Select
+                      value={newProduct.unit}
                       onValueChange={(val: any) => setNewProduct({...newProduct, unit: val})}
                     >
                       <SelectTrigger data-testid="select-product-unit">
@@ -392,27 +392,27 @@ export default function Products() {
                     </Select>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-3 gap-4">
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="grid gap-2">
                     <Label>Estoque Inicial</Label>
-                    <Input 
-                      type="number" 
-                      value={newProduct.stock} 
+                    <Input
+                      type="number"
+                      value={newProduct.stock}
                       onChange={e => setNewProduct({...newProduct, stock: e.target.value})}
                       data-testid="input-product-stock"
                     />
                   </div>
-                   <div className="grid gap-2">
+                  <div className="grid gap-2">
                     <Label>Estoque Mínimo (Alerta)</Label>
-                    <Input 
-                      type="number" 
-                      value={newProduct.minStock} 
+                    <Input
+                      type="number"
+                      value={newProduct.minStock}
                       onChange={e => setNewProduct({...newProduct, minStock: e.target.value})}
                       data-testid="input-product-minstock"
                     />
                   </div>
-                   <div className="grid gap-2">
+                  <div className="grid gap-2 col-span-2 sm:col-span-1">
                     <Label>Categoria</Label>
                     <div className="flex gap-2">
                       <Select 

@@ -176,18 +176,18 @@ export default function Reports() {
           <h1 className="text-3xl font-heading font-bold text-foreground">Relatórios</h1>
           <p className="text-muted-foreground">Análise detalhada de vendas e desempenho.</p>
         </div>
-        <div className="flex gap-2">
-           <Button onClick={handleExportExcel} variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Exportar Excel
-            </Button>
-           <Popover>
+        <div className="flex flex-col md:flex-row gap-2">
+          <Button onClick={handleExportExcel} variant="outline" className="gap-2 rounded-xl w-full md:w-auto">
+            <Download className="h-4 w-4" />
+            Exportar Excel
+          </Button>
+          <Popover>
             <PopoverTrigger asChild>
               <Button
                 id="date"
                 variant={"outline"}
                 className={cn(
-                  "w-[300px] justify-start text-left font-normal",
+                  "w-full md:w-[300px] justify-start text-left font-normal rounded-xl",
                   !date && "text-muted-foreground"
                 )}
                 data-testid="button-date-range"

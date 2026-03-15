@@ -263,19 +263,19 @@ export default function POS() {
                   Carrinho ({cartCount})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="px-4 pt-4 pb-3 border-b shrink-0">
                   <DialogTitle className="text-xl font-bold">Carrinho ({cart.length})</DialogTitle>
                 </DialogHeader>
-                
-                <div className="space-y-3 py-4">
+
+                <div className="flex-1 overflow-y-auto px-4 py-3">
                   {cart.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <ShoppingBag className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p>Carrinho vazio</p>
                     </div>
                   ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                    <div className="space-y-3">
                       {cart.map((item) => {
                         const product = products.find(p => p.id === item.productId);
                         if (!product) return null;
@@ -349,7 +349,7 @@ export default function POS() {
                 </div>
 
                 {cart.length > 0 && (
-                  <div className="border-t pt-4 space-y-3">
+                  <div className="border-t px-4 py-3 space-y-3 shrink-0 bg-background">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Subtotal</span>
@@ -385,44 +385,42 @@ export default function POS() {
       {/* Produtos - Desktop sempre, Mobile em aba */}
       <div className="flex-1 flex flex-col min-w-0 bg-card rounded-xl border border-border shadow-sm overflow-hidden lg:block">
         <div className="p-3 lg:p-4 border-b border-border space-y-3">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button 
-              variant={selectedCategory === 'all' ? "default" : "outline"} 
-              className="rounded-full text-xs h-8 flex-shrink-0"
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              className={`rounded-full text-xs h-8 px-4 flex-shrink-0 font-medium transition-all border ${selectedCategory === 'all' ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'}`}
               onClick={() => setSelectedCategory('all')}
               data-testid="button-category-all"
             >
               Todos
-            </Button>
+            </button>
             {categories.map(cat => (
-              <Button 
+              <button
                 key={cat.id}
-                variant={selectedCategory === cat.id ? "default" : "outline"}
-                className={`rounded-full text-xs h-8 flex-shrink-0 ${selectedCategory === cat.id ? cat.color : ''}`}
+                className={`rounded-full text-xs h-8 px-4 flex-shrink-0 font-medium transition-all border whitespace-nowrap ${selectedCategory === cat.id ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'}`}
                 onClick={() => setSelectedCategory(cat.id)}
                 data-testid={`button-category-${cat.id}`}
               >
                 {cat.name}
-              </Button>
+              </button>
             ))}
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por nome ou código..." 
-                className="pl-9 bg-muted/30 text-sm"
+              <Input
+                placeholder="Buscar por nome ou código..."
+                className="pl-9 bg-muted/30 text-sm rounded-xl"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 data-testid="input-search-products"
               />
             </div>
-            <div className="flex border rounded-md">
+            <div className="flex border rounded-xl overflow-hidden">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className="rounded-r-none"
+                className="rounded-none"
                 data-testid="button-view-list"
               >
                 <List className="h-4 w-4" />
@@ -431,7 +429,7 @@ export default function POS() {
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="icon"
                 onClick={() => setViewMode('grid')}
-                className="rounded-l-none"
+                className="rounded-none"
                 data-testid="button-view-grid"
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -449,17 +447,18 @@ export default function POS() {
                 const parsedPrice = parseFloat(product.price);
 
                 return (
-                  <div 
-                    key={product.id} 
-                    className={`flex items-center gap-3 p-3 bg-card rounded-lg border cursor-pointer transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : 'hover:border-primary/50 hover:shadow-md active:scale-[0.99]'}`}
+                  <div
+                    key={product.id}
+                    className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : 'hover:border-emerald-200 hover:shadow-md active:scale-[0.98]'}`}
                     onClick={() => parsedStock > 0 && handleAddProduct(product)}
                     data-testid={`card-product-${product.id}`}
                   >
-                    <div className="h-14 w-14 rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 flex items-center justify-center shrink-0 border border-emerald-200/50 relative overflow-hidden">
+                    {/* Imagem / Inicial */}
+                    <div className="h-14 w-14 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
                       {product.image ? (
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-emerald-600 text-xl font-bold">
+                        <span className="text-emerald-600 text-2xl font-bold leading-none">
                           {product.name.charAt(0).toUpperCase()}
                         </span>
                       )}
@@ -469,39 +468,36 @@ export default function POS() {
                         </div>
                       )}
                     </div>
+
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-sm leading-tight truncate">{product.name}</h3>
-                        <span className="font-bold text-orange-600 text-base shrink-0">{formatCurrency(parsedPrice)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-[10px] h-5">{product.unit}</Badge>
+                      <h3 className="font-semibold text-sm leading-tight truncate text-gray-800">{product.name}</h3>
+                      <span className="font-bold text-orange-500 text-base leading-tight">{formatCurrency(parsedPrice)}</span>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600">{product.unit}</span>
                         {product.unit === 'kg' && (
-                          <Badge variant="secondary" className="text-[10px] h-5">
-                            <Scale className="h-3 w-3 mr-1" /> Pesável
-                          </Badge>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                            <Scale className="h-3 w-3" /> Pesável
+                          </span>
                         )}
                         {parsedStock <= parsedMinStock && parsedStock > 0 && (
-                          <Badge className="text-[10px] h-5 bg-orange-500">Pouco estoque</Badge>
+                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-600">Pouco estoque</span>
                         )}
-                        <span className="text-[10px] text-muted-foreground ml-auto">
+                        <span className="text-[10px] text-gray-400 ml-auto">
                           Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
                         </span>
                       </div>
                     </div>
-                    <Button
-                      size="icon"
-                      variant="default"
-                      className="shrink-0 h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (parsedStock > 0) handleAddProduct(product);
-                      }}
+
+                    {/* Botão + */}
+                    <button
+                      className="shrink-0 h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 flex items-center justify-center shadow-md transition-colors disabled:opacity-40"
+                      onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
                       disabled={parsedStock <= 0}
                       data-testid={`button-add-${product.id}`}
                     >
-                      <Plus className="h-5 w-5" />
-                    </Button>
+                      <Plus className="h-5 w-5 text-white" />
+                    </button>
                   </div>
                 );
               })}
@@ -860,17 +856,17 @@ export default function POS() {
       </Dialog>
 
       <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-heading font-bold">Finalizar Venda</DialogTitle>
             <DialogDescription>
               Revise os itens e escolha o método de pagamento.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="border rounded-lg p-4 bg-muted/10 h-[300px] overflow-y-auto">
+              <div className="border rounded-lg p-4 bg-muted/10 h-[120px] md:h-[300px] overflow-y-auto">
                 <h4 className="font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wide text-muted-foreground">
                   <ShoppingBag className="h-4 w-4" /> Resumo do Pedido
                 </h4>
@@ -927,42 +923,42 @@ export default function POS() {
 
             <div className="space-y-4">
               <Label>Método de Pagamento</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col h-20 gap-1 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
+              <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-3">
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-16 md:h-20 gap-1 text-xs md:text-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
                   onClick={() => handleCheckout('cash')}
                   disabled={amountReceived < cartTotal && amountReceived > 0}
                   data-testid="button-payment-cash"
                 >
-                  <Banknote className="h-5 w-5" />
+                  <Banknote className="h-4 w-4 md:h-5 md:w-5" />
                   Dinheiro
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col h-20 gap-1 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-16 md:h-20 gap-1 text-xs md:text-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
                   onClick={() => handleCheckout('card')}
                   data-testid="button-payment-card"
                 >
-                  <CreditCard className="h-5 w-5" />
+                  <CreditCard className="h-4 w-4 md:h-5 md:w-5" />
                   Cartão (POS)
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col h-20 gap-1 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-16 md:h-20 gap-1 text-xs md:text-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
                   onClick={() => handleCheckout('pix')}
                   data-testid="button-payment-pix"
                 >
-                  <QrCode className="h-5 w-5" />
-                  PIX / M-Pesa
+                  <QrCode className="h-4 w-4 md:h-5 md:w-5" />
+                  M-Pesa
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex flex-col h-20 gap-1 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
+                <Button
+                  variant="outline"
+                  className="flex flex-col h-16 md:h-20 gap-1 text-xs md:text-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all"
                   onClick={() => handleCheckout('emola')}
                   data-testid="button-payment-emola"
                 >
-                  <CreditCard className="h-5 w-5" />
+                  <CreditCard className="h-4 w-4 md:h-5 md:w-5" />
                   e-Mola
                 </Button>
               </div>

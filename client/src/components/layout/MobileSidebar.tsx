@@ -10,7 +10,6 @@ import {
   CheckSquare, 
   LogOut, 
   Store,
-  X,
   Boxes
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,14 +115,6 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                 <span className="text-xs font-medium text-muted-foreground">Sistema de Vendas</span>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => onOpenChange(false)}
-              className="h-8 w-8"
-            >
-              <X className="h-5 w-5" />
-            </Button>
           </div>
 
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">

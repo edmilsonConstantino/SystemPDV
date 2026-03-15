@@ -1,5 +1,8 @@
-// Carregar .env APENAS em desenvolvimento
+// Carregar .env ANTES de qualquer módulo que use variáveis de ambiente
 await import("../env");
+
+const { app } = await import("./app");
+const { default: runApp } = await import("./runApp");
 
 import fs from "node:fs";
 import { type Server } from "node:http";
@@ -9,8 +12,6 @@ import type { Express } from "express";
 import { nanoid } from "nanoid";
 import { createServer as createViteServer, createLogger } from "vite";
 
-import { app } from "./app";
-import runApp from "./runApp";
 import viteConfig from "../vite.config";
 
 const viteLogger = createLogger();

@@ -168,12 +168,12 @@ export default function Orders() {
                 const hasOverstock = order.items.some((item: any) => item.quantity > 100); // Simplified check
                 return (
                   <div key={order.id} className={`p-4 rounded-lg border-2 ${getStatusColor(order.status, hasOverstock)}`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <p className="font-bold text-lg">{order.orderCode}</p>
                           {hasOverstock && (
-                            <Badge className="bg-red-500 text-white">
+                            <Badge className="bg-red-500 text-white text-xs">
                               <AlertTriangle className="h-3 w-3 mr-1" />
                               Estoque Insuficiente
                             </Badge>
@@ -182,8 +182,8 @@ export default function Orders() {
                         <p className="text-sm font-medium">{order.customerName}</p>
                         <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">{formatCurrency(parseFloat(order.total))}</p>
+                      <div className="text-right shrink-0">
+                        <p className="text-xl font-bold text-primary">{formatCurrency(parseFloat(order.total))}</p>
                         <p className="text-xs text-muted-foreground">{order.items.length} itens</p>
                       </div>
                     </div>
@@ -243,23 +243,21 @@ export default function Orders() {
             <div className="space-y-3">
               {approvedOrders.map((order: Order) => (
                 <div key={order.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex justify-between items-start gap-3">
-                    <div className="flex-1">
-                      <span className="font-semibold text-sm">{order.orderCode} - {order.customerName}</span>
+                  <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-sm truncate block">{order.orderCode} - {order.customerName}</span>
+                      <span className="font-bold text-green-600 text-sm">{formatCurrency(parseFloat(order.total))}</span>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <span className="font-bold text-green-600">{formatCurrency(parseFloat(order.total))}</span>
-                      <Button
-                        onClick={() => reopenMutation.mutate(order.id)}
-                        disabled={reopenMutation.isPending}
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                        Reabrir
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={() => reopenMutation.mutate(order.id)}
+                      disabled={reopenMutation.isPending}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 shrink-0"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Reabrir
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -283,23 +281,21 @@ export default function Orders() {
             <div className="space-y-3">
               {cancelledOrders.map((order: Order) => (
                 <div key={order.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-start gap-3">
-                    <div className="flex-1">
-                      <span className="font-semibold text-gray-600 text-sm">{order.orderCode} - {order.customerName}</span>
+                  <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-gray-600 text-sm truncate block">{order.orderCode} - {order.customerName}</span>
+                      <span className="text-gray-500 text-sm">{formatCurrency(parseFloat(order.total))}</span>
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <span className="text-gray-500">{formatCurrency(parseFloat(order.total))}</span>
-                      <Button
+                    <Button
                         onClick={() => reopenMutation.mutate(order.id)}
                         disabled={reopenMutation.isPending}
                         variant="outline"
                         size="sm"
-                        className="gap-1"
+                        className="gap-1 shrink-0"
                       >
                         <RotateCcw className="h-3 w-3" />
                         Reabrir
                       </Button>
-                    </div>
                   </div>
                 </div>
               ))}
