@@ -458,14 +458,14 @@ export default function POS() {
                 return (
                   <div
                     key={product.id}
-                    className={`w-full flex items-center bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-400 bg-emerald-50/30' : 'border-gray-200'}`}
+                    className={`w-full flex items-stretch min-h-[56px] bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-400 bg-emerald-50/30' : 'border-gray-200'}`}
                     data-testid={`card-product-${product.id}`}
                   >
                     {/* Faixa colorida esquerda */}
                     <div className={`w-1 self-stretch shrink-0 ${cartItem ? 'bg-emerald-400' : 'bg-transparent'}`} />
 
-                    {/* Inicial */}
-                    <div className="h-9 w-9 m-1.5 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
+                    {/* Inicial — centrado verticalmente */}
+                    <div className="w-9 m-1.5 self-center rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden aspect-square">
                       {product.image
                         ? <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                         : <span className="text-emerald-600 text-sm font-bold">{product.name.charAt(0).toUpperCase()}</span>
@@ -477,18 +477,18 @@ export default function POS() {
                       )}
                     </div>
 
-                    {/* Nome + preço */}
-                    <div className="flex-1 min-w-0 overflow-hidden py-1.5 pr-1">
+                    {/* Nome (em baixo) + preço */}
+                    <div className="flex-1 min-w-0 overflow-hidden flex flex-col justify-end pb-2 pt-1 pr-1">
                       <p className="text-xs font-semibold text-gray-800 truncate leading-tight max-w-[120px]">{product.name}</p>
                       <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-xs font-bold text-orange-500 truncate">{formatCurrency(parsedPrice)}</span>
+                        <span className="text-xs font-bold text-orange-500">{formatCurrency(parsedPrice)}</span>
                         <span className="text-[9px] text-gray-400 shrink-0">/{product.unit}</span>
                         {product.unit === 'kg' && <Scale className="h-2.5 w-2.5 text-emerald-500 shrink-0" />}
                       </div>
                     </div>
 
-                    {/* Controlos — largura fixa, nunca desaparece */}
-                    <div className="flex items-center shrink-0 pr-2 gap-1" onClick={e => e.stopPropagation()}>
+                    {/* Controlos — centrados verticalmente */}
+                    <div className="flex items-center self-center shrink-0 pr-2 gap-1" onClick={e => e.stopPropagation()}>
                       <button
                         type="button"
                         className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors active:scale-95 ${cartItem ? 'bg-red-500' : 'bg-gray-200'}`}
