@@ -453,10 +453,9 @@ export default function POS() {
                 const parsedStock = parseFloat(product.stock);
                 const parsedMinStock = parseFloat(product.minStock);
                 const parsedPrice = parseFloat(product.price);
+                const cartItem = cart.find(i => i.productId === product.id);
 
-                {(() => {
-                  const cartItem = cart.find(i => i.productId === product.id);
-                  return (
+                return (
                     <div
                       key={product.id}
                       className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-2xl border shadow-sm transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-300 bg-emerald-50/40' : 'border-gray-100 hover:border-emerald-200 hover:shadow-md active:scale-[0.98] cursor-pointer'}`}
@@ -539,8 +538,7 @@ export default function POS() {
                         </button>
                       )}
                     </div>
-                  );
-                })()}
+                );
               })}
             </div>
           ) : (
@@ -549,10 +547,9 @@ export default function POS() {
                 const parsedStock = parseFloat(product.stock);
                 const parsedMinStock = parseFloat(product.minStock);
                 const parsedPrice = parseFloat(product.price);
+                const cartItem = cart.find(i => i.productId === product.id);
 
-                {(() => {
-                  const cartItem = cart.find(i => i.productId === product.id);
-                  return (
+                return (
                     <Card
                       key={product.id}
                       className={`transition-all group rounded-lg ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : ''} ${cartItem ? 'border-emerald-400 shadow-md' : 'hover:shadow-lg hover:border-primary/50 hover:scale-105 hover:-translate-y-1 cursor-pointer'}`}
@@ -623,8 +620,7 @@ export default function POS() {
                         </div>
                       </CardContent>
                     </Card>
-                  );
-                })()}
+                );
               })}
             </div>
           )}
