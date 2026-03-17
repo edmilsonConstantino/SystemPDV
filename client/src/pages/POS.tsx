@@ -458,83 +458,80 @@ export default function POS() {
                 return (
                     <div
                       key={product.id}
-                      className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-2xl border shadow-sm transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-300 bg-emerald-50/40' : 'border-gray-100 hover:border-emerald-200 hover:shadow-md active:scale-[0.98] cursor-pointer'}`}
+                      className={`flex items-center gap-2 px-2 py-2 bg-white rounded-2xl border shadow-sm transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-300 bg-emerald-50/40' : 'border-gray-100 hover:border-emerald-200 hover:shadow-md active:scale-[0.98] cursor-pointer'}`}
                       onClick={() => !cartItem && parsedStock > 0 && handleAddProduct(product)}
                       data-testid={`card-product-${product.id}`}
                     >
                       {/* Imagem / Inicial */}
-                      <div className="h-14 w-14 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
                         {product.image ? (
                           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-emerald-600 text-2xl font-bold leading-none">
+                          <span className="text-emerald-600 text-base font-bold leading-none">
                             {product.name.charAt(0).toUpperCase()}
                           </span>
                         )}
                         {parsedStock <= 0 && (
                           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <span className="text-white text-[8px] font-bold">Esgotado</span>
+                            <span className="text-white text-[7px] font-bold">Esgotado</span>
                           </div>
                         )}
                         {cartItem && (
-                          <div className="absolute top-0 right-0 h-5 w-5 bg-emerald-500 rounded-bl-lg flex items-center justify-center">
-                            <Check className="h-3 w-3 text-white" />
+                          <div className="absolute top-0 right-0 h-4 w-4 bg-emerald-500 rounded-bl-lg flex items-center justify-center">
+                            <Check className="h-2.5 w-2.5 text-white" />
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-sm leading-tight truncate text-gray-800">{product.name}</h3>
-                        <span className="font-bold text-orange-500 text-base leading-tight">{formatCurrency(parsedPrice)}</span>
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600">{product.unit}</span>
+                        <h3 className="font-semibold text-xs leading-tight truncate text-gray-800">{product.name}</h3>
+                        <span className="font-bold text-orange-500 text-sm leading-tight">{formatCurrency(parsedPrice)}</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-medium text-gray-600">{product.unit}</span>
                           {product.unit === 'kg' && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                              <Scale className="h-3 w-3" /> Pesável
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700">
+                              <Scale className="h-2.5 w-2.5" /> Pesável
                             </span>
                           )}
-                          {parsedStock <= parsedMinStock && parsedStock > 0 && (
-                            <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-600">Pouco estoque</span>
-                          )}
-                          <span className="text-[10px] text-gray-400 ml-auto">
-                            Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
+                          <span className="text-[9px] text-gray-400 ml-auto">
+                            Est: {parsedStock.toFixed(product.unit === 'kg' ? 1 : 0)}
                           </span>
                         </div>
                       </div>
 
                       {/* Botão + ou controlo de quantidade */}
                       {cartItem ? (
-                        <div className="shrink-0 flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        <div className="shrink-0 flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
                           <button
                             type="button"
-                            className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
+                            className="h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
                             onClick={() => handleQuantityChange(product.id, -1)}
                             data-testid={`button-decrease-list-${product.id}`}
                           >
-                            <Minus className="h-4 w-4 text-white" />
+                            <Minus className="h-3.5 w-3.5 text-white" />
                           </button>
-                          <span className="min-w-[32px] text-center text-sm font-bold text-emerald-700">
+                          <span className="min-w-[24px] text-center text-xs font-bold text-emerald-700">
                             {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)}
                           </span>
                           <button
                             type="button"
-                            className="h-9 w-9 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
+                            className="h-8 w-8 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
                             onClick={() => handleQuantityChange(product.id, 1)}
                             data-testid={`button-increase-list-${product.id}`}
                           >
-                            <Plus className="h-4 w-4 text-white" />
+                            <Plus className="h-3.5 w-3.5 text-white" />
                           </button>
                         </div>
                       ) : (
                         <button
                           type="button"
-                          className="shrink-0 h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 flex items-center justify-center shadow-md transition-colors disabled:opacity-40"
+                          className="shrink-0 h-9 w-9 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 flex items-center justify-center shadow-md transition-colors disabled:opacity-40"
                           onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
                           disabled={parsedStock <= 0}
                           data-testid={`button-add-${product.id}`}
                         >
-                          <Plus className="h-5 w-5 text-white" />
+                          <Plus className="h-4 w-4 text-white" />
                         </button>
                       )}
                     </div>
@@ -933,29 +930,37 @@ export default function POS() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="border rounded-lg p-4 bg-muted/10 h-[120px] md:h-[300px] overflow-y-auto">
-                <h4 className="font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wide text-muted-foreground">
-                  <ShoppingBag className="h-4 w-4" /> Resumo do Pedido
-                </h4>
-                <div className="space-y-3">
+              <div className="rounded-2xl border border-border bg-white overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-muted/30 border-b border-border">
+                  <ShoppingBag className="h-4 w-4 text-primary" />
+                  <h4 className="font-bold text-sm text-muted-foreground uppercase tracking-wide">Resumo do Pedido</h4>
+                </div>
+                <div className="divide-y divide-border max-h-[160px] md:max-h-[280px] overflow-y-auto">
                   {cart.map((item, idx) => {
                     const product = products.find(p => p.id === item.productId);
                     return (
-                      <div key={idx} className="flex justify-between items-center text-sm border-b border-dashed border-border pb-2 last:border-0 gap-2">
-                        <div className="flex-1 min-w-0">
-                           <p className="font-medium truncate">{product?.name}</p>
-                           <p className="text-xs text-muted-foreground">
-                             {item.quantity.toFixed(product?.unit === 'kg' ? 3 : 0)}{product?.unit} x {formatCurrency(item.priceAtSale)}
-                           </p>
+                      <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
+                        {/* Inicial */}
+                        <div className="h-8 w-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 text-emerald-600 font-bold text-xs">
+                          {product?.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-bold shrink-0">{formatCurrency(item.quantity * item.priceAtSale)}</span>
+                        {/* Nome + qtd */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-xs leading-tight truncate text-gray-800">{product?.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {item.quantity.toFixed(product?.unit === 'kg' ? 1 : 0)}{product?.unit} × {formatCurrency(item.priceAtSale)}
+                          </p>
+                        </div>
+                        {/* Total */}
+                        <span className="text-sm font-bold text-primary shrink-0">{formatCurrency(item.quantity * item.priceAtSale)}</span>
+                        {/* Remover */}
                         <button
                           type="button"
-                          className="shrink-0 p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                          className="p-1 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors shrink-0"
                           onClick={() => removeFromCart(item.productId)}
                           data-testid={`button-remove-checkout-${item.productId}`}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     );
