@@ -55,3 +55,21 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+/** Catálogo: dados persistidos no localStorage + revalidação periódica (PDV intenso) */
+const catalogStale = 45_000;
+const catalogGc = 1000 * 60 * 60 * 24 * 7;
+
+queryClient.setQueryDefaults(["/api/products"], {
+  staleTime: catalogStale,
+  gcTime: catalogGc,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+});
+
+queryClient.setQueryDefaults(["/api/categories"], {
+  staleTime: catalogStale,
+  gcTime: catalogGc,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+});

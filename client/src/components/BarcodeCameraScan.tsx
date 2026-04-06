@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera, Check, RotateCcw, ImageIcon } from 'lucide-react';
+import { Camera, Check, RotateCcw, ImageIcon, SwitchCamera } from 'lucide-react';
 import { extractBarcodeFromCanvas } from '@/lib/barcodeScan';
+import { cn } from '@/lib/utils';
 
 interface BarcodeCameraScanProps {
   id?: string;
@@ -22,11 +23,12 @@ export function BarcodeCameraScan({ id = 'barcode-camera-scan', onScan, onClose,
   const [errorMsg, setErrorMsg] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualCode, setManualCode] = useState('');
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
-  };
+  }, []);
 
   const handleClose = () => {
     stopCamera();
@@ -35,8 +37,18 @@ export function BarcodeCameraScan({ id = 'barcode-camera-scan', onScan, onClose,
 
   useEffect(() => {
     let cancelled = false;
+    setStatus('loading');
+    setErrorMsg('');
+    stopCamera();
+
     navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } })
+      .getUserMedia({
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      })
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
@@ -59,7 +71,7 @@ export function BarcodeCameraScan({ id = 'barcode-camera-scan', onScan, onClose,
       cancelled = true;
       stopCamera();
     };
-  }, []);
+  }, [facingMode, stopCamera]);
 
   const captureAndExtract = async () => {
     const video = videoRef.current;
@@ -146,32 +158,84 @@ export function BarcodeCameraScan({ id = 'barcode-camera-scan', onScan, onClose,
     }
   };
 
+  const flipCamera = () => {
+    setFacingMode((m) => (m === 'environment' ? 'user' : 'environment'));
+  };
+
   return (
     <div className="space-y-4">
-      <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button
+          type="button"
+          variant={facingMode === 'environment' ? 'default' : 'outline'}
+          size="sm"
+          className="h-9 rounded-full px-4 font-semibold"
+          onClick={() => setFacingMode('environment')}
+          disabled={status === 'loading' || status === 'capturing'}
+        >
+          Traseira
+        </Button>
+        <Button
+          type="button"
+          variant={facingMode === 'user' ? 'default' : 'outline'}
+          size="sm"
+          className="h-9 rounded-full px-4 font-semibold"
+          onClick={() => setFacingMode('user')}
+          disabled={status === 'loading' || status === 'capturing'}
+        >
+          Frontal
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-9 rounded-full px-3 font-semibold"
+          onClick={flipCamera}
+          disabled={status === 'loading' || status === 'capturing'}
+          title="Alternar câmera"
+        >
+          <SwitchCamera className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div
+        className={cn(
+          'relative overflow-hidden rounded-2xl bg-black',
+          'aspect-video min-h-[200px] max-md:aspect-auto max-md:min-h-[42dvh]',
+        )}
+      >
         <video
           ref={videoRef}
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover"
           style={{ display: status === 'result' ? 'none' : 'block' }}
         />
         <canvas ref={canvasRef} className="hidden" />
+        {/* Moldura tipo visor — ajuda a alinhar o código */}
+        {status !== 'result' && status !== 'loading' && (
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center p-[10%] max-md:p-[8%]"
+            aria-hidden
+          >
+            <div className="aspect-[2.4/1] w-full max-w-md rounded-xl border-2 border-white/60 bg-black/10" />
+          </div>
+        )}
         {status === 'loading' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-            <p className="text-white text-sm">A abrir câmera...</p>
+            <p className="text-sm text-white">A abrir câmera…</p>
           </div>
         )}
         {status === 'capturing' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-            <p className="text-white text-sm flex items-center gap-2">
+            <p className="flex items-center gap-2 text-sm text-white">
               <ImageIcon className="h-5 w-5 animate-pulse" />
-              A processar (escala cinza)...
+              A ler código…
             </p>
           </div>
         )}
         {status === 'result' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-emerald-900/30">
+          <div className="absolute inset-0 flex items-center justify-center bg-emerald-950/40">
             <Check className="h-16 w-16 text-emerald-400" />
           </div>
         )}
@@ -200,12 +264,17 @@ export function BarcodeCameraScan({ id = 'barcode-camera-scan', onScan, onClose,
         </div>
       ) : (
         <div className="space-y-2">
-          <Button onClick={captureAndExtract} disabled={status !== 'ready'} className="w-full" size="lg">
-            <Camera className="h-5 w-5 mr-2" />
+          <Button
+            onClick={captureAndExtract}
+            disabled={status !== 'ready'}
+            className="h-12 w-full rounded-xl text-base font-bold shadow-md"
+            size="lg"
+          >
+            <Camera className="mr-2 h-5 w-5" />
             Capturar e ler
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            Aponte para o código, toque para capturar. A foto é convertida em escala de cinza para melhor leitura.
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">
+            Alinhe o código na moldura, mantenha firme e toque em capturar. Pode trocar entre câmera traseira e frontal acima.
           </p>
         </div>
       )}

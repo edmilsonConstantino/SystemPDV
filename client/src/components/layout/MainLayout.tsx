@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { MobileSidebar } from './MobileSidebar';
+import { MobileDock } from './MobileDock';
 import { Header } from './Header';
 import { useAuth } from '@/lib/auth';
 import { Redirect } from 'wouter';
@@ -31,8 +32,11 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-secondary/30 flex items-center justify-center">
-        <div className="animate-pulse text-xl text-primary">Carregando...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-11 w-11 animate-pulse rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25" />
+          <p className="text-sm font-semibold text-muted-foreground">A carregar…</p>
+        </div>
       </div>
     );
   }
@@ -42,17 +46,27 @@ export function MainLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/30 flex">
+    <div className="flex min-h-screen bg-background">
       <Sidebar onCollapsedChange={setSidebarCollapsed} />
       <MobileSidebar open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} />
+      <MobileDock onOpenMenu={() => setMobileMenuOpen(true)} />
 
-      <main className={cn(
-        "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        sidebarCollapsed ? "md:ml-16" : "md:ml-64"
-      )}>
+      <main
+        className={cn(
+          'flex min-w-0 flex-1 flex-col transition-all duration-300',
+          /* Mobile: altura natural → scroll no documento; Desktop: painel com scroll interno */
+          'md:h-[100dvh] md:min-h-0 md:overflow-hidden',
+          sidebarCollapsed ? 'md:ml-16' : 'md:ml-64',
+        )}
+      >
         <Header onMenuClick={() => setMobileMenuOpen(true)} />
-        <div className="flex-1 p-4 md:p-6 overflow-y-auto h-[calc(100vh-4rem)]">
-          <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div
+          className={cn(
+            'w-full p-3 pb-28 sm:p-4',
+            'md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-y-contain md:p-6 md:pb-6',
+          )}
+        >
+          <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>
         </div>

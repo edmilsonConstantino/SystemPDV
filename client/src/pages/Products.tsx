@@ -21,6 +21,7 @@ export default function Products() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [view, setView] = useState<'all' | 'out' | 'low' | 'recent'>('all');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -148,10 +149,35 @@ export default function Products() {
     }
   });
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.sku.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchText = search.trim().toLowerCase();
+
+  const outOfStockCount = products.filter(p => parseFloat(p.stock) <= 0).length;
+  const lowStockCount = products.filter(p => {
+    const s = parseFloat(p.stock);
+    const m = parseFloat(p.minStock);
+    return s > 0 && s <= m;
+  }).length;
+  const recentlyEditedCount = products.filter(p => {
+    const updated = new Date(p.updatedAt as any).getTime();
+    return Number.isFinite(updated) && (Date.now() - updated) <= 24 * 60 * 60 * 1000;
+  }).length;
+
+  const filteredProducts = products
+    .filter(p =>
+      !searchText
+        ? true
+        : p.name.toLowerCase().includes(searchText) ||
+          p.sku.toLowerCase().includes(searchText),
+    )
+    .filter(p => {
+      if (view === 'all') return true;
+      const s = parseFloat(p.stock);
+      const m = parseFloat(p.minStock);
+      if (view === 'out') return s <= 0;
+      if (view === 'low') return s > 0 && s <= m;
+      const updated = new Date(p.updatedAt as any).getTime();
+      return Number.isFinite(updated) && (Date.now() - updated) <= 24 * 60 * 60 * 1000;
+    });
 
   const handleExport = () => {
     const exportData = products.map(p => ({
@@ -540,6 +566,33 @@ export default function Products() {
         </Alert>
       )}
 
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Card className="border-border/70">
+          <CardContent className="pt-5">
+            <p className="text-xs font-semibold text-muted-foreground">Total</p>
+            <p className="mt-1 font-heading text-2xl font-black tabular-nums">{products.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-destructive/20 bg-destructive/5">
+          <CardContent className="pt-5">
+            <p className="text-xs font-semibold text-muted-foreground">Sem estoque</p>
+            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-destructive">{outOfStockCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-[hsl(38_92%_72%)]/40 bg-[hsl(48_96%_96%)]">
+          <CardContent className="pt-5">
+            <p className="text-xs font-semibold text-muted-foreground">Abaixo do mínimo</p>
+            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-[hsl(38_92%_30%)]">{lowStockCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-5">
+            <p className="text-xs font-semibold text-muted-foreground">Editados (24h)</p>
+            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-primary">{recentlyEditedCount}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Modal de Edição de Produtos */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -689,15 +742,52 @@ export default function Products() {
 
       <Card className="border-primary/10">
         <CardHeader className="pb-2">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Filtrar produtos..." 
-              className="pl-9" 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              data-testid="input-search-products"
-            />
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="relative max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou SKU..."
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                data-testid="input-search-products"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={view === 'all' ? 'secondary' : 'outline'}
+                className="h-9 rounded-xl"
+                onClick={() => setView('all')}
+              >
+                Todos
+              </Button>
+              <Button
+                type="button"
+                variant={view === 'out' ? 'secondary' : 'outline'}
+                className="h-9 rounded-xl"
+                onClick={() => setView('out')}
+              >
+                Sem estoque
+              </Button>
+              <Button
+                type="button"
+                variant={view === 'low' ? 'secondary' : 'outline'}
+                className="h-9 rounded-xl"
+                onClick={() => setView('low')}
+              >
+                Abaixo do mínimo
+              </Button>
+              <Button
+                type="button"
+                variant={view === 'recent' ? 'secondary' : 'outline'}
+                className="h-9 rounded-xl"
+                onClick={() => setView('recent')}
+              >
+                Recentes
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

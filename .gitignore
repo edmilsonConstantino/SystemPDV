@@ -11,6 +11,9 @@ server/public
 .env.production
 .env.*.local
 
+# PGlite (dev local)
+data/
+
 # Sistema
 .DS_Store
 *.tar.gz
@@ -23,16 +26,3 @@ vite.config.ts.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-```
-
-
-
-**Environment Variables:**
-```
-DATABASE_URL=postgresql://managementsystem_tx9f_user:dm691R4CzUdeTI08191SM3Sn8wOM7HC1@dpg-d58i9a6uk2gs73dl0uvg-a.render.com/managementsystem_tx9f?sslmode=require
-
-NODE_ENV=production
-
-SESSION_SECRET=sua_chave_secreta_forte_aqui_min_32_caracteres
-
-PORT=10000

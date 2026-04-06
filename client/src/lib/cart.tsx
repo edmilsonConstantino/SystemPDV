@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { Product } from './api';
 
 export interface CartItem {
@@ -11,51 +11,63 @@ interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product, quantity: number) => void;
   removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
+  /** maxStock = stock actual do produto; quantidade é limitada para não ultrapassar */
+  updateCartQuantity: (productId: string, quantity: number, maxStock?: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
 }
 
 const CART_STORAGE_KEY = 'pos_cart';
 
-function loadCartFromStorage(): CartItem[] {
-  try {
-    const saved = localStorage.getItem(CART_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
-}
-
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>(loadCartFromStorage);
+  /** Carrinho só em memória — recarregar a página limpa o carrinho */
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const cartRef = useRef<CartItem[]>(cart);
+  cartRef.current = cart;
 
   useEffect(() => {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      localStorage.removeItem(CART_STORAGE_KEY);
     } catch {}
-  }, [cart]);
+  }, []);
 
   const addToCart = (product: Product, quantity: number) => {
     const parsedStock = parseFloat(product.stock);
-    if (parsedStock < quantity) {
-      throw new Error(`Estoque insuficiente. Apenas ${parsedStock} ${product.unit} disponíveis.`);
+    if (quantity <= 0 || Number.isNaN(parsedStock)) {
+      throw new Error('Quantidade inválida.');
     }
 
-    setCart((prevCart) => {
-      const existingItemIndex = prevCart.findIndex(item => item.productId === product.id);
-      if (existingItemIndex > -1) {
-        const newCart = [...prevCart];
-        newCart[existingItemIndex].quantity += quantity;
+    const prevCart = cartRef.current;
+    const existingItemIndex = prevCart.findIndex((item) => item.productId === product.id);
+    const inCart = existingItemIndex > -1 ? prevCart[existingItemIndex].quantity : 0;
+    const totalAfter = inCart + quantity;
+
+    if (totalAfter > parsedStock + 1e-9) {
+      throw new Error(
+        `Estoque insuficiente. Disponível: ${parsedStock} ${product.unit}. Já no carrinho: ${inCart}.`,
+      );
+    }
+
+    setCart((prevCartInner) => {
+      const idx = prevCartInner.findIndex((item) => item.productId === product.id);
+      if (idx > -1) {
+        const newCart = [...prevCartInner];
+        newCart[idx] = {
+          ...newCart[idx],
+          quantity: Number((newCart[idx].quantity + quantity).toFixed(4)),
+        };
         return newCart;
       }
-      return [...prevCart, {
-        productId: product.id,
-        quantity,
-        priceAtSale: parseFloat(product.price)
-      }];
+      return [
+        ...prevCartInner,
+        {
+          productId: product.id,
+          quantity,
+          priceAtSale: parseFloat(product.price),
+        },
+      ];
     });
   };
 
@@ -63,10 +75,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart((prevCart) => prevCart.filter(item => item.productId !== productId));
   };
 
-  const updateCartQuantity = (productId: string, quantity: number) => {
-    setCart((prevCart) => prevCart.map(item =>
-      item.productId === productId ? { ...item, quantity } : item
-    ));
+  const updateCartQuantity = (productId: string, quantity: number, maxStock?: number) => {
+    let q = Math.max(0, quantity);
+    if (maxStock !== undefined && !Number.isNaN(maxStock)) {
+      q = Math.min(q, maxStock);
+    }
+    if (q <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart((prevCart) =>
+      prevCart.map((item) => (item.productId === productId ? { ...item, quantity: q } : item)),
+    );
   };
 
   const clearCart = () => {

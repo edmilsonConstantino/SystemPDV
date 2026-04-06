@@ -149,15 +149,43 @@ export const orders = pgTable("orders", {
     priceAtSale: number;
   }>>(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").notNull().$type<'pending' | 'approved' | 'cancelled'>().default('pending'),
-  paymentMethod: text("payment_method").notNull().$type<'cash' | 'transfer'>(),
+  status: text("status")
+    .notNull()
+    .$type<'pending' | 'accepted' | 'ready' | 'completed' | 'cancelled'>()
+    .default('pending'),
+  paymentMethod: text("payment_method").notNull().$type<'cash' | 'transfer' | 'mpesa' | 'emola' | 'bank'>(),
   paymentProof: text("payment_proof"), // URL to uploaded proof for transfers
-  approvedBy: varchar("approved_by").references(() => users.id), // UserId when approved
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  approvedAt: timestamp("approved_at"),
+  // Estado operacional (gestor/admin)
+  acceptedBy: varchar("accepted_by").references(() => users.id),
+  acceptedAt: timestamp("accepted_at"),
+  readyAt: timestamp("ready_at"),
+  completedAt: timestamp("completed_at"),
+  completedBy: varchar("completed_by").references(() => users.id),
+  saleId: varchar("sale_id").references(() => sales.id),
+  last3Phone: varchar("last3_phone", { length: 3 }),
+  customerNameOverride: text("customer_name_override"),
+  // Mensagem do staff visível para o cliente (tracking por código)
+  staffMessage: text("staff_message"),
+  staffMessageAt: timestamp("staff_message_at"),
 });
 
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, orderCode: true, status: true, approvedBy: true, createdAt: true, approvedAt: true });
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  orderCode: true,
+  status: true,
+  createdAt: true,
+  acceptedBy: true,
+  acceptedAt: true,
+  readyAt: true,
+  completedAt: true,
+  completedBy: true,
+  saleId: true,
+  last3Phone: true,
+  customerNameOverride: true,
+  staffMessage: true,
+  staffMessageAt: true,
+});
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
 

@@ -1,5 +1,5 @@
 import { useAuth } from '@/lib/auth';
-import { Bell, Search, Menu, AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
+import { Bell, Search, Menu, AlertTriangle, CheckCircle, Info, XCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from '@/lib/api';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface HeaderProps {
@@ -52,54 +52,79 @@ export function Header({ onMenuClick }: HeaderProps) {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-red-600" />;
+        return <AlertTriangle className="h-5 w-5 text-[hsl(16_88%_48%)]" />;
       case 'error':
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-primary" />;
       default:
-        return <Info className="h-5 w-5 text-blue-600" />;
+        return <Info className="h-5 w-5 text-accent" />;
     }
   };
 
   if (!user) return null;
 
-  return (
-    <header className="h-16 bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-10 px-4 flex items-center justify-between md:justify-end gap-4">
-      <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
-        <Menu className="h-5 w-5" />
-      </Button>
+  const dateShort = format(new Date(), 'EEE, d MMM', { locale: ptBR });
 
-      <div className="hidden md:flex items-center max-w-md w-full mr-auto">
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Buscar produtos, pedidos ou clientes..." 
-            className="w-full pl-9 bg-muted/50 border-none focus-visible:ring-1"
+  return (
+    <header className="sticky top-0 z-30 border-b border-border bg-card/90 shadow-sm shadow-primary/5 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between gap-3 px-3 sm:h-16 sm:px-4 md:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 md:mr-4 md:flex-initial">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0 rounded-xl md:hidden"
+            onClick={onMenuClick}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="min-w-0 md:hidden">
+            <p className="truncate font-heading text-sm font-bold tracking-tight text-foreground">Makira Sales</p>
+            <p className="truncate text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+              {dateShort}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative hidden max-w-md flex-1 md:flex">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
+          <Input
+            type="search"
+            placeholder="Buscar produtos, pedidos ou clientes…"
+            className="h-10 w-full rounded-xl border-border bg-muted/40 pl-10 shadow-inner focus-visible:border-primary/40 focus-visible:ring-primary/20"
           />
         </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="relative hover:bg-accent hover:text-accent-foreground transition-colors" 
-              data-testid="button-notifications"
-            >
-              <Bell className={`h-5 w-5 ${criticalCount > 0 ? 'text-red-600 animate-bounce' : ''}`} />
-              {unreadCount > 0 && (
-                <span className={`absolute -top-0.5 -right-0.5 h-5 w-5 rounded-full animate-pulse flex items-center justify-center text-[10px] font-bold text-white ${
-                  criticalCount > 0 ? 'bg-red-600 shadow-lg shadow-red-600/50' : 'bg-destructive'
-                }`} data-testid="badge-unread">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className="hidden items-center gap-1.5 rounded-xl border border-border/80 bg-muted/30 px-2.5 py-1 sm:flex md:hidden">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[0.7rem] font-semibold capitalize text-muted-foreground">{dateShort}</span>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-10 w-10 rounded-xl hover:bg-primary/10"
+                data-testid="button-notifications"
+              >
+                <Bell className={`h-5 w-5 ${criticalCount > 0 ? 'text-destructive animate-bounce' : 'text-muted-foreground'}`} />
+                {unreadCount > 0 && (
+                  <span
+                    className={`absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-destructive-foreground ${
+                      criticalCount > 0
+                        ? 'bg-destructive shadow-md shadow-destructive/40'
+                        : 'bg-accent shadow-md shadow-accent/30'
+                    }`}
+                    data-testid="badge-unread"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80 p-0">
             <DropdownMenuLabel className="px-4 py-3 border-b border-border">Notificações</DropdownMenuLabel>
             <div className="max-h-[300px] overflow-y-auto">
@@ -151,6 +176,25 @@ export function Header({ onMenuClick }: HeaderProps) {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+
+          <div
+            className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground shadow-md shadow-primary/25 ring-2 ring-background sm:h-10 sm:w-10"
+            title={user.name}
+          >
+            {(user.avatar || user.name).charAt(0).toUpperCase()}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 px-3 pb-2 pt-2 md:hidden">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/70" />
+          <Input
+            type="search"
+            placeholder="Buscar produtos, pedidos…"
+            className="h-10 w-full rounded-xl border-border bg-muted/35 pl-10 text-sm shadow-inner focus-visible:border-primary/40 focus-visible:ring-primary/20"
+          />
+        </div>
       </div>
     </header>
   );

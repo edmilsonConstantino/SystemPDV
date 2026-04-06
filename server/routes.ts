@@ -7,6 +7,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { seedDatabase } from "../db/init";
 import { createScannerToken, consumeBarcodes, pushBarcode, pingToken, listSessions, revokeToken, renewToken, TOKEN_TTL_MS } from "./scannerToken";
+import { getCachedProducts, getCachedCategories, bustProductsCache, bustCategoriesCache } from "./catalogCache";
 
 // Session augmentation
 declare module 'express-session' {
@@ -194,7 +195,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/categories", async (req: Request, res: Response) => {
     try {
-      const categories = await storage.getAllCategories();
+      const categories = await getCachedCategories(() => storage.getAllCategories());
+      res.setHeader("Cache-Control", "private, max-age=30");
       res.json(categories);
     } catch (error) {
       console.error("Get categories error:", error);
@@ -216,6 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: { name: newCategory.name }
       });
 
+      bustCategoriesCache();
       res.json(newCategory);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -239,6 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: {}
       });
 
+      bustCategoriesCache();
       res.json({ success: true });
     } catch (error) {
       console.error("Delete category error:", error);
@@ -250,7 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/products", async (req: Request, res: Response) => {
     try {
-      const products = await storage.getAllProducts();
+      const products = await getCachedProducts(() => storage.getAllProducts());
+      res.setHeader("Cache-Control", "private, max-age=30");
       res.json(products);
     } catch (error) {
       console.error("Get products error:", error);
@@ -296,6 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      bustProductsCache();
       res.json(newProduct);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -347,6 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      bustProductsCache();
       res.json(updated);
     } catch (error) {
       console.error("Update product error:", error);
@@ -399,6 +406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { productId: product.id, action: "stock_increased" }
       });
 
+      bustProductsCache();
       res.json(updated);
     } catch (error) {
       console.error("Increase stock error:", error);
@@ -433,6 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { productId: product.id }
       });
 
+      bustProductsCache();
       res.json({ success: true });
     } catch (error) {
       console.error("Delete product error:", error);
@@ -508,6 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { saleId: newSale.id }
       });
 
+      bustProductsCache();
       res.json(newSale);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -721,10 +731,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", async (req: Request, res: Response) => {
     try {
-      const { customerName, customerPhone, items, total, paymentMethod } = req.body;
+      const { customerName, customerPhone, items, total, paymentMethod, paymentProof } = req.body;
       
       if (!customerName || !customerPhone || !items || !total) {
         return res.status(400).json({ error: "Dados incompletos" });
+      }
+      if (paymentMethod === 'transfer' && (!paymentProof || typeof paymentProof !== 'string')) {
+        return res.status(400).json({ error: "Anexe o comprovativo para transferência" });
       }
 
       const orderCode = Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -733,7 +746,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerPhone, 
         items, 
         total: total.toString(),
-        paymentMethod 
+        paymentMethod,
+        paymentProof: typeof paymentProof === 'string' ? paymentProof : undefined,
       }, orderCode);
 
       // Check for over-stock orders and notify
@@ -839,13 +853,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createNotification({
         userId: null,
         type: "success",
-        message: `✅ Pedido ${updated.orderCode} foi aprovado!`,
+        message: `✅ Pedido ${updated.orderCode} foi aceite!`,
         metadata: { orderId: updated.id }
       });
 
       await storage.createAuditLog({
         userId: req.session.userId!,
-        action: "APPROVE_ORDER",
+        action: "ACCEPT_ORDER",
         entityType: "order",
         entityId: updated.id,
         details: { orderCode: updated.orderCode, total: updated.total }
@@ -855,6 +869,248 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Approve order error:", error);
       res.status(500).json({ error: "Erro ao aprovar pedido" });
+    }
+  });
+
+  // Alias explícito (novo endpoint) para aceitar
+  app.patch("/api/orders/:id/accept", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      // Reutiliza a mesma validação de estoque do approve (approve virou alias de accept na storage)
+      const order = await storage.getAllOrders().then(orders => orders.find(o => o.id === req.params.id));
+      if (!order) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      const insufficientItems = [];
+      for (const item of order.items) {
+        const product = await storage.getProduct(item.productId);
+        if (!product || item.quantity > parseFloat(product.stock)) {
+          insufficientItems.push({
+            productId: item.productId,
+            productName: product?.name || 'Produto desconhecido',
+            requested: item.quantity,
+            available: product?.stock || '0'
+          });
+        }
+      }
+
+      if (insufficientItems.length > 0) {
+        return res.status(400).json({
+          error: "Não é possível aceitar pedido com estoque insuficiente",
+          insufficientItems
+        });
+      }
+
+      const updated = await storage.acceptOrder(req.params.id, req.session.userId!);
+      if (!updated) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      await storage.createNotification({
+        userId: null,
+        type: "success",
+        message: `✅ Pedido ${updated.orderCode} foi aceite!`,
+        metadata: { orderId: updated.id }
+      });
+
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "ACCEPT_ORDER",
+        entityType: "order",
+        entityId: updated.id,
+        details: { orderCode: updated.orderCode, total: updated.total }
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Accept order error:", error);
+      res.status(500).json({ error: "Erro ao aceitar pedido" });
+    }
+  });
+
+  app.patch("/api/orders/:id/ready", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const updated = await storage.markOrderReady(req.params.id);
+      if (!updated) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      await storage.createNotification({
+        userId: null,
+        type: "info",
+        message: `📦 Pedido ${updated.orderCode} está pronto`,
+        metadata: { orderId: updated.id }
+      });
+
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "MARK_ORDER_READY",
+        entityType: "order",
+        entityId: updated.id,
+        details: { orderCode: updated.orderCode }
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Ready order error:", error);
+      res.status(500).json({ error: "Erro ao marcar pedido como pronto" });
+    }
+  });
+
+  app.patch("/api/orders/:id/complete", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const updated = await storage.completeOrder(req.params.id);
+      if (!updated) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      await storage.createNotification({
+        userId: null,
+        type: "success",
+        message: `🏁 Pedido ${updated.orderCode} foi entregue`,
+        metadata: { orderId: updated.id }
+      });
+
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "COMPLETE_ORDER",
+        entityType: "order",
+        entityId: updated.id,
+        details: { orderCode: updated.orderCode }
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Complete order error:", error);
+      res.status(500).json({ error: "Erro ao concluir pedido" });
+    }
+  });
+
+  app.patch("/api/orders/:id/message", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+      const updated = await storage.setOrderStaffMessage(req.params.id, message.length ? message : null);
+      if (!updated) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "SET_ORDER_MESSAGE",
+        entityType: "order",
+        entityId: updated.id,
+        details: { orderCode: updated.orderCode, hasMessage: !!message.length }
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Order message error:", error);
+      res.status(500).json({ error: "Erro ao salvar mensagem do pedido" });
+    }
+  });
+
+  // Finalizar pedido online: cria venda + marca pedido como concluído + histórico
+  app.post("/api/orders/:id/checkout", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const order = await storage.getAllOrders().then((orders) => orders.find((o) => o.id === req.params.id));
+      if (!order) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      const last3 = String(req.body?.last3Phone ?? '').replace(/\D/g, '').slice(-3);
+      if (last3.length !== 3) {
+        return res.status(400).json({ error: "Informe os últimos 3 dígitos do telefone" });
+      }
+      const phoneDigits = String(order.customerPhone ?? '').replace(/\D/g, '');
+      const phoneLast3 = phoneDigits.slice(-3);
+      if (phoneLast3 && phoneLast3 !== last3) {
+        return res.status(400).json({ error: "Os 3 dígitos não correspondem ao telefone do pedido" });
+      }
+
+      const paymentMethodRaw = String(req.body?.paymentMethod ?? '').toLowerCase();
+      const paymentMethod = (['cash', 'transfer', 'mpesa', 'emola', 'bank'] as const).includes(paymentMethodRaw as any)
+        ? (paymentMethodRaw as any)
+        : 'cash';
+
+      const paymentProof = typeof req.body?.paymentProof === 'string' ? req.body.paymentProof.trim() : '';
+      const customerNameOverride = typeof req.body?.customerName === 'string' ? req.body.customerName.trim() : '';
+
+      // Revalidar stock (pode ter mudado após o pedido)
+      const insufficientItems = [];
+      for (const item of order.items) {
+        const product = await storage.getProduct(item.productId);
+        if (!product || item.quantity > parseFloat(product.stock)) {
+          insufficientItems.push({
+            productId: item.productId,
+            productName: product?.name || 'Produto desconhecido',
+            requested: item.quantity,
+            available: product?.stock || '0'
+          });
+        }
+      }
+      if (insufficientItems.length > 0) {
+        return res.status(400).json({
+          error: "Não é possível finalizar com estoque insuficiente",
+          insufficientItems
+        });
+      }
+
+      // Criar venda (usando itens do pedido)
+      const sale = await storage.createSale({
+        userId: req.session.userId!,
+        total: order.total,
+        paymentMethod,
+        items: order.items,
+        preview: {
+          items: await Promise.all(order.items.map(async (it) => {
+            const p = await storage.getProduct(it.productId);
+            return {
+              productId: it.productId,
+              quantity: it.quantity,
+              priceAtSale: it.priceAtSale,
+              productName: p?.name || 'Produto',
+              productUnit: (p as any)?.unit || 'un',
+            };
+          })),
+          subtotal: Number(order.total),
+          discount: { type: 'none', value: 0 },
+          discountAmount: 0,
+          total: Number(order.total),
+          paymentMethod,
+          order: {
+            orderId: order.id,
+            orderCode: order.orderCode,
+            customerName: customerNameOverride || order.customerName,
+            customerPhone: order.customerPhone,
+            last3Phone: last3,
+            paymentProof: paymentProof || undefined,
+          },
+        },
+      } as any);
+
+      const updated = await storage.finalizeOrderAsSale({
+        orderId: order.id,
+        saleId: sale.id,
+        userId: req.session.userId!,
+        paymentMethod,
+        paymentProof: paymentProof || null,
+        last3Phone: last3,
+        customerNameOverride: customerNameOverride || null,
+      });
+
+      await storage.createAuditLog({
+        userId: req.session.userId!,
+        action: "CHECKOUT_ORDER",
+        entityType: "order",
+        entityId: order.id,
+        details: {
+          orderCode: order.orderCode,
+          saleId: sale.id,
+          paymentMethod,
+          hasProof: !!paymentProof,
+        }
+      });
+
+      await storage.createNotification({
+        userId: null,
+        type: "success",
+        message: `🧾 Pedido ${order.orderCode} finalizado como venda`,
+        metadata: { orderId: order.id, saleId: sale.id, action: "order_checked_out" }
+      });
+
+      bustProductsCache();
+      res.json({ order: updated, sale });
+    } catch (error) {
+      console.error("Checkout order error:", error);
+      res.status(500).json({ error: "Erro ao finalizar pedido" });
     }
   });
 

@@ -3,7 +3,8 @@
  * Token links a POS session to barcodes sent from a mobile/companion device.
  */
 
-export const TOKEN_TTL_MS = 2 * 60 * 60 * 1000; // 2 horas
+/** Sessão do scanner remoto: 7 dias desde criação ou última renovação manual */
+export const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface ScannerSession {
   token: string;
@@ -86,7 +87,7 @@ export function pingToken(token: string, userAgent = ''): ScannerSession | null 
     return null;
   }
   entry.lastAccess = Date.now();
-  entry.createdAt = Date.now(); // renovação automática: cada ping estende a sessão
+  /* Não alterar createdAt no ping — evita “renovação infinita”; TTL conta desde criação/renovar */
   if (userAgent) {
     entry.userAgent = userAgent;
     entry.deviceType = parseDeviceType(userAgent);

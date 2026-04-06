@@ -12,15 +12,16 @@ if (result.error) {
   console.log('✅ Variáveis de ambiente carregadas do .env');
 }
 
-// Validar variáveis essenciais
-const requiredEnvVars = ['DATABASE_URL'];
-const missing = requiredEnvVars.filter(key => !process.env[key]);
-
-if (missing.length > 0) {
-  console.error('❌ ERRO: Variáveis de ambiente obrigatórias não definidas:');
-  missing.forEach(key => console.error(`   - ${key}`));
-  console.error('\n💡 Certifique-se de que o arquivo .env existe e contém essas variáveis\n');
-  process.exit(1);
+// Base de dados: em desenvolvimento, PGlite local se DATABASE_URL estiver vazia (sem Docker / sem Postgres)
+const isProd = process.env.NODE_ENV === 'production';
+if (!process.env.DATABASE_URL?.trim()) {
+  if (isProd) {
+    console.error('❌ ERRO: DATABASE_URL é obrigatória em produção.');
+    process.exit(1);
+  }
+  process.env.DATABASE_URL = 'pglite:./data/pglite-dev';
+  console.log('📁 DATABASE_URL vazia — usando PGlite em ./data/pglite-dev (ficheiro local, zero instalação).');
+  console.log('   Para Postgres remoto: defina DATABASE_URL=postgresql://… no .env\n');
 }
 
 export {};

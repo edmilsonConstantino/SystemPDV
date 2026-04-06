@@ -342,12 +342,20 @@ export interface Order {
     priceAtSale: number;
   }>;
   total: string;
-  status: 'pending' | 'approved' | 'cancelled';
-  paymentMethod: 'cash' | 'transfer';
+  status: 'pending' | 'accepted' | 'ready' | 'completed' | 'cancelled';
+  paymentMethod: 'cash' | 'transfer' | 'mpesa' | 'emola' | 'bank';
   paymentProof?: string;
-  approvedBy?: string;
   createdAt: Date;
-  approvedAt?: Date;
+  acceptedBy?: string;
+  acceptedAt?: Date;
+  readyAt?: Date;
+  completedAt?: Date;
+  staffMessage?: string | null;
+  staffMessageAt?: Date;
+  completedBy?: string;
+  saleId?: string;
+  last3Phone?: string;
+  customerNameOverride?: string | null;
 }
 
 export const ordersApi = {
@@ -382,6 +390,58 @@ export const ordersApi = {
       credentials: 'include'
     });
     if (!res.ok) throw new Error('Erro ao aprovar pedido');
+    return res.json();
+  },
+
+  accept: async (id: string): Promise<Order> => {
+    const res = await fetch(`${API_BASE}/orders/${id}/accept`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Erro ao aceitar pedido');
+    return res.json();
+  },
+
+  ready: async (id: string): Promise<Order> => {
+    const res = await fetch(`${API_BASE}/orders/${id}/ready`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Erro ao marcar pedido como pronto');
+    return res.json();
+  },
+
+  complete: async (id: string): Promise<Order> => {
+    const res = await fetch(`${API_BASE}/orders/${id}/complete`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Erro ao concluir pedido');
+    return res.json();
+  },
+
+  setMessage: async (id: string, message: string): Promise<Order> => {
+    const res = await fetch(`${API_BASE}/orders/${id}/message`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ message }),
+    });
+    if (!res.ok) throw new Error('Erro ao salvar mensagem');
+    return res.json();
+  },
+
+  checkout: async (id: string, data: { last3Phone: string; paymentMethod: Order['paymentMethod']; paymentProof?: string; customerName?: string }): Promise<{ order: Order; sale: any }> => {
+    const res = await fetch(`${API_BASE}/orders/${id}/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Erro ao finalizar pedido');
+    }
     return res.json();
   },
 

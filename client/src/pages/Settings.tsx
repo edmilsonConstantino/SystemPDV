@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, UserPlus, Lock, Activity, History, Search, Eye, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, TrendingUp, Users } from 'lucide-react';
-import { useState } from 'react';
+import { Shield, UserPlus, Lock, Activity, History, Search, Eye, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, TrendingUp, Users, Receipt } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
@@ -24,10 +24,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi, auditLogsApi, salesApi, productsApi } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { loadInvoiceSettings, saveInvoiceSettings, type InvoiceSettings } from '@/lib/invoiceSettings';
+import { useLocation } from 'wouter';
+import { Separator } from '@/components/ui/separator';
+import { InvoiceA7Template } from '@/components/invoice/InvoiceA7Templates';
+import type { InvoiceData } from '@/lib/invoiceModels';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("users");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState('');
@@ -128,6 +135,47 @@ export default function SettingsPage() {
   };
 
   const [actionFilter, setActionFilter] = useState<string>('all');
+  const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>(() => loadInvoiceSettings());
+  const [notesText, setNotesText] = useState(() => loadInvoiceSettings().defaultNotes.join('\n'));
+  const [addressLines, setAddressLines] = useState<string[]>(() => loadInvoiceSettings().seller.addressLines ?? []);
+
+  const invoicePreviewData: InvoiceData = {
+    invoiceNo: 'MK-2026-000042',
+    issuedAt: new Date(),
+    currencyLabel: invoiceSettings.currencyLabel,
+    seller: { ...invoiceSettings.seller, addressLines },
+    customer: { name: 'Cliente exemplo', phone: '+258 84 000 0000' },
+    paymentMethod: 'Dinheiro',
+    lines: [
+      { name: 'Arroz integral 5kg', qty: 1, unit: 'un', unitPrice: 350, total: 350 },
+      { name: 'Banana', qty: 2, unit: 'kg', unitPrice: 60, total: 120 },
+      { name: 'Leite 1L', qty: 1, unit: 'un', unitPrice: 90, total: 90 },
+    ],
+    subtotal: 560,
+    discount: 20,
+    total: 540,
+    notes: invoiceSettings.defaultNotes,
+    qrValue: invoiceSettings.showQr ? 'MK-2026-000042' : undefined,
+    barcodeValue: invoiceSettings.showBarcode ? 'MK-2026-000042' : undefined,
+  };
+
+  // Permite abrir uma tab específica via URL: /settings?tab=invoices
+  useEffect(() => {
+    const qs = location.split('?')[1] ?? '';
+    const params = new URLSearchParams(qs);
+    const tab = params.get('tab');
+    if (tab === 'invoices') setActiveTab('invoices');
+    else if (tab === 'audit') setActiveTab('audit');
+    else if (tab === 'permissions') setActiveTab('permissions');
+    else if (tab === 'users') setActiveTab('users');
+  }, [location]);
+
+  // Mantém o URL sincronizado ao trocar tabs (para o sidebar apontar direto)
+  useEffect(() => {
+    const base = '/settings';
+    const target = activeTab === 'users' ? base : `${base}?tab=${activeTab}`;
+    if (location !== target) setLocation(target, { replace: true });
+  }, [activeTab]);
 
   const filteredAuditLogs = auditLogs.filter(log => {
     const logUser = users.find(u => u.id === log.userId);
@@ -227,6 +275,7 @@ export default function SettingsPage() {
           <TabsTrigger value="users" className="gap-2" data-testid="tab-users"><UserPlus className="h-4 w-4" /> Usuários</TabsTrigger>
           <TabsTrigger value="permissions" className="gap-2" data-testid="tab-permissions"><Shield className="h-4 w-4" /> Permissões</TabsTrigger>
           <TabsTrigger value="audit" className="gap-2" data-testid="tab-audit"><History className="h-4 w-4" /> Rastreio & Auditoria</TabsTrigger>
+          <TabsTrigger value="invoices" className="gap-2" data-testid="tab-invoices"><Receipt className="h-4 w-4" /> Recibos & Faturas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -648,6 +697,279 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="invoices" className="space-y-4">
+          <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-primary" />
+                  Recibos & Faturas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label>Nome da loja</Label>
+                    <Input
+                      value={invoiceSettings.seller.name}
+                      onChange={(e) =>
+                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, name: e.target.value } }))
+                      }
+                      placeholder="Ex: Makira Sales"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>NIF (opcional)</Label>
+                    <Input
+                      value={invoiceSettings.seller.taxId ?? ''}
+                      onChange={(e) =>
+                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, taxId: e.target.value } }))
+                      }
+                      placeholder="Ex: 400123456"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Telefone (opcional)</Label>
+                    <Input
+                      value={invoiceSettings.seller.phone ?? ''}
+                      onChange={(e) =>
+                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, phone: e.target.value } }))
+                      }
+                      placeholder="Ex: +258 84 000 0000"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Moeda</Label>
+                    <Input
+                      value={invoiceSettings.currencyLabel}
+                      onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, currencyLabel: e.target.value }))}
+                      placeholder="Ex: MT"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Endereço</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAddressLines((prev) => [...prev, ''])}
+                    >
+                      + Adicionar linha
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {(addressLines.length ? addressLines : ['']).map((val, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <Input
+                          value={val}
+                          onChange={(e) =>
+                            setAddressLines((prev) => prev.map((x, i) => (i === idx ? e.target.value : x)))
+                          }
+                          placeholder={idx === 0 ? 'Ex: Av. 25 de Setembro' : 'Ex: Maputo'}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setAddressLines((prev) => prev.filter((_, i) => i !== idx))}
+                          disabled={addressLines.length <= 1}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm font-black">Transferências (Mpesa/Emola)</p>
+                    <p className="text-xs text-muted-foreground">
+                      Estes números aparecem no checkout do cliente quando ele escolher Mpesa/Emola.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label>Número Mpesa</Label>
+                      <Input
+                        value={invoiceSettings.transferAccounts?.mpesa ?? ''}
+                        onChange={(e) =>
+                          setInvoiceSettings((prev) => ({
+                            ...prev,
+                            transferAccounts: { ...(prev.transferAccounts ?? {}), mpesa: e.target.value },
+                          }))
+                        }
+                        placeholder="Ex: 84 000 0000"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Número Emola</Label>
+                      <Input
+                        value={invoiceSettings.transferAccounts?.emola ?? ''}
+                        onChange={(e) =>
+                          setInvoiceSettings((prev) => ({
+                            ...prev,
+                            transferAccounts: { ...(prev.transferAccounts ?? {}), emola: e.target.value },
+                          }))
+                        }
+                        placeholder="Ex: 86 000 0000"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label>Modelo padrão</Label>
+                    <Select
+                      value={invoiceSettings.defaultModel}
+                      onValueChange={(v) => setInvoiceSettings((prev) => ({ ...prev, defaultModel: v as any }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Escolher modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="classic">Clássico</SelectItem>
+                        <SelectItem value="compact">Compacto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+                      <div>
+                        <p className="text-sm font-semibold">Mostrar QR</p>
+                        <p className="text-xs text-muted-foreground">Exibe QR na fatura</p>
+                      </div>
+                      <Checkbox
+                        checked={invoiceSettings.showQr}
+                        onCheckedChange={(v) => setInvoiceSettings((prev) => ({ ...prev, showQr: Boolean(v) }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+                      <div>
+                        <p className="text-sm font-semibold">Mostrar Barcode</p>
+                        <p className="text-xs text-muted-foreground">Exibe código de barras</p>
+                      </div>
+                      <Checkbox
+                        checked={invoiceSettings.showBarcode}
+                        onCheckedChange={(v) => setInvoiceSettings((prev) => ({ ...prev, showBarcode: Boolean(v) }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  {(['classic', 'compact'] as const).map((m) => {
+                    const active = invoiceSettings.defaultModel === m;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setInvoiceSettings((prev) => ({ ...prev, defaultModel: m }))}
+                        className={`overflow-hidden rounded-2xl border text-left transition ${
+                          active ? 'border-primary/40 ring-2 ring-primary/20' : 'border-border hover:bg-muted/30'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+                          <div>
+                            <p className="text-sm font-black">{m === 'classic' ? 'Clássico' : 'Compacto'}</p>
+                            <p className="text-xs text-muted-foreground">Toque para definir como padrão</p>
+                          </div>
+                          <Badge variant={active ? 'default' : 'outline'} className="rounded-xl">
+                            {active ? 'Padrão' : 'Selecionar'}
+                          </Badge>
+                        </div>
+                        <div className="bg-muted/20 p-4">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="h-3 rounded bg-white" />
+                            <div className="h-3 rounded bg-white/80" />
+                            <div className="h-3 rounded bg-white/60" />
+                            <div className="col-span-3 h-12 rounded bg-white/70" />
+                            <div className="col-span-2 h-8 rounded bg-white/60" />
+                            <div className="h-8 rounded bg-white/60" />
+                          </div>
+                          <p className="mt-3 text-xs text-muted-foreground">
+                            Preview completo ao lado.
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Notas padrão (uma por linha)</Label>
+                  <Textarea
+                    value={notesText}
+                    onChange={(e) => {
+                      setNotesText(e.target.value);
+                      setInvoiceSettings((prev) => ({
+                        ...prev,
+                        defaultNotes: e.target.value.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 5),
+                      }));
+                    }}
+                    placeholder="Ex:\nObrigado pela preferência\nTrocas até 7 dias"
+                    className="min-h-[90px]"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const merged: InvoiceSettings = {
+                        ...invoiceSettings,
+                        seller: { ...invoiceSettings.seller, addressLines: addressLines.map((x) => x.trim()).filter(Boolean).slice(0, 6) },
+                      };
+                      setInvoiceSettings(merged);
+                      saveInvoiceSettings(merged);
+                      toast({ title: 'Salvo', description: 'Configurações de fatura aplicadas.' });
+                    }}
+                  >
+                    Salvar configurações
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const fresh = loadInvoiceSettings();
+                      setInvoiceSettings(fresh);
+                      setAddressLines(fresh.seller.addressLines ?? []);
+                      setNotesText(fresh.defaultNotes.join('\n'));
+                      toast({ title: 'Recarregado', description: 'Configuração atual recarregada.' });
+                    }}
+                  >
+                    Recarregar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="h-fit lg:sticky lg:top-20">
+              <CardHeader>
+                <CardTitle className="text-base">Preview (A7)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mx-auto w-fit rounded-2xl border border-border bg-white p-3 shadow-sm">
+                  <InvoiceA7Template model={invoiceSettings.defaultModel} data={invoicePreviewData} />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Este preview muda em tempo real conforme você edita.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

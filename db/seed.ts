@@ -8,7 +8,7 @@ async function seed() {
   try {
     // Create users
     console.log('Criando usuários...');
-    const hashedPassword = await bcrypt.hash('senha123', 10);
+    const hashedPassword = await bcrypt.hash('admin123', 10);
     
     const [admin] = await db.insert(users).values([
       {

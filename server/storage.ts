@@ -72,7 +72,20 @@ export interface IStorage {
   getOrderByCode(code: string): Promise<Order | undefined>;
   getAllOrders(): Promise<Order[]>;
   updateOrderItems(orderCode: string, items: any[]): Promise<Order | undefined>;
-  approveOrder(orderId: string, userId: string): Promise<Order | undefined>;
+  approveOrder(orderId: string, userId: string): Promise<Order | undefined>; // legacy alias for accept
+  acceptOrder(orderId: string, userId: string): Promise<Order | undefined>;
+  markOrderReady(orderId: string): Promise<Order | undefined>;
+  completeOrder(orderId: string): Promise<Order | undefined>;
+  setOrderStaffMessage(orderId: string, message: string | null): Promise<Order | undefined>;
+  finalizeOrderAsSale(args: {
+    orderId: string;
+    saleId: string;
+    userId: string;
+    paymentMethod: Order['paymentMethod'];
+    paymentProof?: string | null;
+    last3Phone: string;
+    customerNameOverride?: string | null;
+  }): Promise<Order | undefined>;
   cancelOrder(orderId: string): Promise<Order | undefined>;
   deleteOrder(orderId: string): Promise<void>;
   reopenOrder(orderId: string): Promise<Order | undefined>;
@@ -370,9 +383,63 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveOrder(orderId: string, userId: string): Promise<Order | undefined> {
+    // Backward compatibility: "approve" now means "accept"
+    return this.acceptOrder(orderId, userId);
+  }
+
+  async acceptOrder(orderId: string, userId: string): Promise<Order | undefined> {
     const [updated] = await db.update(orders)
-      .set({ status: 'approved', approvedBy: userId, approvedAt: new Date() })
+      .set({ status: 'accepted', acceptedBy: userId, acceptedAt: new Date() })
       .where(eq(orders.id, orderId))
+      .returning();
+    return updated;
+  }
+
+  async markOrderReady(orderId: string): Promise<Order | undefined> {
+    const [updated] = await db.update(orders)
+      .set({ status: 'ready', readyAt: new Date() })
+      .where(eq(orders.id, orderId))
+      .returning();
+    return updated;
+  }
+
+  async completeOrder(orderId: string): Promise<Order | undefined> {
+    const [updated] = await db.update(orders)
+      .set({ status: 'completed', completedAt: new Date() })
+      .where(eq(orders.id, orderId))
+      .returning();
+    return updated;
+  }
+
+  async setOrderStaffMessage(orderId: string, message: string | null): Promise<Order | undefined> {
+    const [updated] = await db.update(orders)
+      .set({ staffMessage: message, staffMessageAt: new Date() })
+      .where(eq(orders.id, orderId))
+      .returning();
+    return updated;
+  }
+
+  async finalizeOrderAsSale(args: {
+    orderId: string;
+    saleId: string;
+    userId: string;
+    paymentMethod: Order['paymentMethod'];
+    paymentProof?: string | null;
+    last3Phone: string;
+    customerNameOverride?: string | null;
+  }): Promise<Order | undefined> {
+    const [updated] = await db.update(orders)
+      .set({
+        status: 'completed',
+        completedAt: new Date(),
+        completedBy: args.userId,
+        saleId: args.saleId,
+        paymentMethod: args.paymentMethod,
+        paymentProof: args.paymentProof ?? null,
+        last3Phone: args.last3Phone,
+        customerNameOverride: args.customerNameOverride ?? null,
+      })
+      .where(eq(orders.id, args.orderId))
       .returning();
     return updated;
   }

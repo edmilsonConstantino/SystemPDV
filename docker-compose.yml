@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: makira-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: makira
+      POSTGRES_PASSWORD: makira
+      POSTGRES_DB: makira
+    volumes:
+      - makira_pgdata:/var/lib/postgresql/data
+      - ./scripts/init-pg.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U makira -d makira"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  makira_pgdata:
