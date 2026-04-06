@@ -52,6 +52,7 @@ export interface IStorage {
 
   // Audit Logs
   getAllAuditLogs(): Promise<AuditLog[]>;
+  getAuditLogsByEntity(entityType: string, entityId: string): Promise<AuditLog[]>;
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogsByUserAndDateRange(userId: string, startDate: string, endDate: string, startHour?: number, endHour?: number): Promise<AuditLog[]>;
 
@@ -257,6 +258,15 @@ export class DatabaseStorage implements IStorage {
   // AUDIT LOGS
   async getAllAuditLogs(): Promise<AuditLog[]> {
     return await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(100);
+  }
+
+  async getAuditLogsByEntity(entityType: string, entityId: string): Promise<AuditLog[]> {
+    return await db
+      .select()
+      .from(auditLogs)
+      .where(and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(200);
   }
 
   async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {

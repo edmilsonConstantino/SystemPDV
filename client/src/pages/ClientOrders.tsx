@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Package, Phone, User, Plus, Minus, Check, Clock, X, Store, AlertCircle, Search } from 'lucide-react';
+import { ShoppingCart, Package, Phone, User, Plus, Minus, Check, Clock, X, Store, AlertCircle, Search, Copy, Share2, Image as ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -14,6 +14,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Product, Category } from '@/lib/api';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { loadInvoiceSettings } from '@/lib/invoiceSettings';
+import { useAuth } from '@/lib/auth';
 
 interface CartItem {
   productId: string;
@@ -40,6 +41,7 @@ interface OrderData {
 }
 
 export default function ClientOrders() {
+  const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const [step, setStep] = useState<'intro' | 'browse' | 'checkout' | 'tracking'>('browse');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -47,6 +49,9 @@ export default function ClientOrders() {
   const [consultOpen, setConsultOpen] = useState(false);
   const [trackingCode, setTrackingCode] = useState('');
   const [order, setOrder] = useState<OrderData | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [auditData, setAuditData] = useState<any>(null);
+  const [proofOpen, setProofOpen] = useState(false);
   const [formData, setFormData] = useState<{
     customerName: string;
     customerPhone: string;
@@ -141,6 +146,24 @@ export default function ClientOrders() {
     },
     onError: (error: any) => {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    }
+  });
+
+  const loadAuditMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const res = await fetch(`/api/orders/${code}/audit`, { credentials: 'include' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Sem permissão ou auditoria indisponível');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setAuditData(data);
+      setAuditOpen(true);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Auditoria', description: error.message, variant: 'destructive' });
     }
   });
 
@@ -1143,6 +1166,48 @@ export default function ClientOrders() {
                   <p className="text-sm text-muted-foreground">Seu código de rastreamento:</p>
                   <p className="text-4xl font-bold text-emerald-600 tracking-wider font-mono">{order.orderCode}</p>
                   <p className="text-xs text-muted-foreground">Guarde este código para acompanhar seu pedido</p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(String(order.orderCode || '').trim());
+                          toast({ title: 'Copiado', description: 'Código copiado para a área de transferência.' });
+                        } catch {
+                          toast({ title: 'Falhou', description: 'Não foi possível copiar.', variant: 'destructive' });
+                        }
+                      }}
+                    >
+                      <Copy className="h-4 w-4" /> Copiar código
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={async () => {
+                        const code = String(order.orderCode || '').trim();
+                        const text = `Pedido ${code} · Status: ${order.status}`;
+                        try {
+                          if ((navigator as any).share) {
+                            await (navigator as any).share({ title: 'Pedido', text });
+                            return;
+                          }
+                        } catch {
+                          // ignore
+                        }
+                        try {
+                          await navigator.clipboard.writeText(text);
+                          toast({ title: 'Partilha rápida', description: 'Texto copiado para partilhar.' });
+                        } catch {
+                          toast({ title: 'Falhou', description: 'Não foi possível partilhar.', variant: 'destructive' });
+                        }
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" /> Partilhar
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -1156,6 +1221,35 @@ export default function ClientOrders() {
                     <p className="text-2xl font-bold text-emerald-600">{formatCurrency(order.total)}</p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-lg border border-emerald-100">
+                    <p className="text-xs text-muted-foreground mb-1">Pagamento</p>
+                    <p className="font-semibold capitalize">{order.paymentMethod}</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-emerald-100">
+                    <p className="text-xs text-muted-foreground mb-1">Comprovativo</p>
+                    <p className="text-sm text-muted-foreground">
+                      {order.paymentProof ? 'Anexado' : '—'}
+                    </p>
+                  </div>
+                </div>
+
+                {order.paymentProof && (
+                  <button
+                    type="button"
+                    onClick={() => setProofOpen(true)}
+                    className="group overflow-hidden rounded-xl border border-emerald-200 bg-white text-left transition hover:shadow-md"
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-emerald-200/60 px-4 py-3">
+                      <p className="text-sm font-black text-emerald-950 flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4 text-emerald-700" /> Comprovativo
+                      </p>
+                      <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground">Toque para ampliar</span>
+                    </div>
+                    <img src={order.paymentProof} alt="" className="h-44 w-full object-cover" />
+                  </button>
+                )}
 
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="font-semibold text-blue-900 mb-2">Status:</p>
@@ -1230,10 +1324,96 @@ export default function ClientOrders() {
                 >
                   Fazer Novo Pedido
                 </Button>
+
+                {user && user.role !== 'seller' && order.orderCode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => loadAuditMutation.mutate(order.orderCode!)}
+                    disabled={loadAuditMutation.isPending}
+                  >
+                    {loadAuditMutation.isPending ? 'Carregando auditoria…' : 'Auditoria profunda (admin/gestor)'}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
         )}
+
+        <Dialog open={auditOpen} onOpenChange={setAuditOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Auditoria profunda do pedido</DialogTitle>
+            </DialogHeader>
+            {!auditData ? (
+              <div className="py-6 text-sm text-muted-foreground">Sem dados.</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                  <p className="text-sm font-black">
+                    Pedido <span className="font-mono">#{auditData.order?.orderCode}</span> · {auditData.order?.status}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    SaleId: {auditData.order?.saleId || '—'} · Last3: {auditData.order?.last3Phone || '—'}
+                  </p>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-2xl border border-border bg-white p-4">
+                    <p className="text-sm font-black mb-2">Eventos (Order)</p>
+                    <div className="space-y-2">
+                      {(auditData.audit?.order || []).slice(0, 60).map((l: any) => (
+                        <div key={String(l.id) + String(l.createdAt)} className="rounded-xl border border-border/70 bg-muted/10 px-3 py-2">
+                          <p className="text-sm font-semibold">{l.action}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(l.createdAt).toLocaleString()}</p>
+                          {l.details && (
+                            <pre className="mt-2 max-h-28 overflow-auto rounded-lg bg-black/90 p-2 text-[11px] text-white">
+                              {JSON.stringify(l.details, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-white p-4">
+                    <p className="text-sm font-black mb-2">Eventos (Sale)</p>
+                    <div className="space-y-2">
+                      {(auditData.audit?.sale || []).slice(0, 60).map((l: any) => (
+                        <div key={String(l.id) + String(l.createdAt)} className="rounded-xl border border-border/70 bg-muted/10 px-3 py-2">
+                          <p className="text-sm font-semibold">{l.action}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(l.createdAt).toLocaleString()}</p>
+                          {l.details && (
+                            <pre className="mt-2 max-h-28 overflow-auto rounded-lg bg-black/90 p-2 text-[11px] text-white">
+                              {JSON.stringify(l.details, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={proofOpen} onOpenChange={setProofOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-primary" /> Comprovativo
+              </DialogTitle>
+            </DialogHeader>
+            {order?.paymentProof ? (
+              <div className="overflow-hidden rounded-2xl border border-border bg-black">
+                <img src={order.paymentProof} alt="" className="max-h-[70vh] w-full object-contain" />
+              </div>
+            ) : (
+              <div className="py-6 text-sm text-muted-foreground">Sem comprovativo.</div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {step !== 'tracking' && (
           <Card className="border-emerald-200 bg-emerald-50">

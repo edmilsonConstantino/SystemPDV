@@ -38,15 +38,39 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("users");
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [searchHistory, setSearchHistory] = useState('');
+  const [orderAuditCode, setOrderAuditCode] = useState('');
+  const [orderAuditData, setOrderAuditData] = useState<any>(null);
+  const [orderAuditOpen, setOrderAuditOpen] = useState(false);
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
-    queryFn: usersApi.getAll
+    queryFn: usersApi.getAll,
+    enabled: user?.role === 'admin' || user?.role === 'manager',
   });
 
   const { data: auditLogs = [], isLoading: auditLogsLoading } = useQuery({
     queryKey: ['/api/audit-logs'],
     queryFn: auditLogsApi.getAll
+  });
+
+  const orderAuditMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const c = code.trim().toUpperCase();
+      if (!c) throw new Error('Informe o código do pedido');
+      const res = await fetch(`/api/orders/${c}/audit`, { credentials: 'include' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Sem permissão ou pedido não encontrado');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setOrderAuditData(data);
+      setOrderAuditOpen(true);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Auditoria do pedido', description: error.message, variant: 'destructive' });
+    }
   });
 
   const { data: sales = [], isLoading: salesLoading } = useQuery({
@@ -272,10 +296,18 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="users" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
-          <TabsTrigger value="users" className="gap-2" data-testid="tab-users"><UserPlus className="h-4 w-4" /> Usuários</TabsTrigger>
-          <TabsTrigger value="permissions" className="gap-2" data-testid="tab-permissions"><Shield className="h-4 w-4" /> Permissões</TabsTrigger>
-          <TabsTrigger value="audit" className="gap-2" data-testid="tab-audit"><History className="h-4 w-4" /> Rastreio & Auditoria</TabsTrigger>
-          <TabsTrigger value="invoices" className="gap-2" data-testid="tab-invoices"><Receipt className="h-4 w-4" /> Recibos & Faturas</TabsTrigger>
+          {(user?.role === 'admin' || user?.role === 'manager') && (
+            <TabsTrigger value="users" className="gap-2" data-testid="tab-users"><UserPlus className="h-4 w-4" /> Usuários</TabsTrigger>
+          )}
+          {user?.role === 'admin' && (
+            <TabsTrigger value="permissions" className="gap-2" data-testid="tab-permissions"><Shield className="h-4 w-4" /> Permissões</TabsTrigger>
+          )}
+          {(user?.role === 'admin' || user?.role === 'manager') && (
+            <TabsTrigger value="audit" className="gap-2" data-testid="tab-audit"><History className="h-4 w-4" /> Rastreio & Auditoria</TabsTrigger>
+          )}
+          {(user?.role === 'admin' || user?.role === 'manager') && (
+            <TabsTrigger value="invoices" className="gap-2" data-testid="tab-invoices"><Receipt className="h-4 w-4" /> Recibos & Faturas</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -527,6 +559,97 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-6">
+          <Card className="border border-border/70">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                Rastrear pedido (por código)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                <div className="flex-1">
+                  <Label>Código do pedido</Label>
+                  <Input
+                    value={orderAuditCode}
+                    onChange={(e) => setOrderAuditCode(e.target.value)}
+                    placeholder="Ex: ABC12345"
+                    className="mt-2 font-mono"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="mt-6 md:mt-0"
+                  onClick={() => orderAuditMutation.mutate(orderAuditCode)}
+                  disabled={orderAuditMutation.isPending}
+                >
+                  {orderAuditMutation.isPending ? 'Consultando…' : 'Consultar auditoria'}
+                </Button>
+              </div>
+
+              <Dialog open={orderAuditOpen} onOpenChange={setOrderAuditOpen}>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Auditoria profunda do pedido</DialogTitle>
+                    <DialogDescription>
+                      Eventos do pedido e da venda associada (se existir).
+                    </DialogDescription>
+                  </DialogHeader>
+                  {!orderAuditData ? (
+                    <div className="py-6 text-sm text-muted-foreground">Sem dados.</div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-border bg-muted/20 p-4">
+                        <p className="text-sm font-black">
+                          Pedido <span className="font-mono">#{orderAuditData.order?.orderCode}</span> · {orderAuditData.order?.status}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          SaleId: {orderAuditData.order?.saleId || '—'} · Last3: {orderAuditData.order?.last3Phone || '—'} · Pagamento: {orderAuditData.order?.paymentMethod || '—'}
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded-2xl border border-border bg-white p-4">
+                          <p className="text-sm font-black mb-2">Eventos (Order)</p>
+                          <div className="space-y-2">
+                            {(orderAuditData.audit?.order || []).slice(0, 80).map((l: any) => (
+                              <div key={String(l.id) + String(l.createdAt)} className="rounded-xl border border-border/70 bg-muted/10 px-3 py-2">
+                                <p className="text-sm font-semibold">{l.action}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(l.createdAt).toLocaleString()}</p>
+                                {l.details && (
+                                  <pre className="mt-2 max-h-28 overflow-auto rounded-lg bg-black/90 p-2 text-[11px] text-white">
+                                    {JSON.stringify(l.details, null, 2)}
+                                  </pre>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border bg-white p-4">
+                          <p className="text-sm font-black mb-2">Eventos (Sale)</p>
+                          <div className="space-y-2">
+                            {(orderAuditData.audit?.sale || []).slice(0, 80).map((l: any) => (
+                              <div key={String(l.id) + String(l.createdAt)} className="rounded-xl border border-border/70 bg-muted/10 px-3 py-2">
+                                <p className="text-sm font-semibold">{l.action}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(l.createdAt).toLocaleString()}</p>
+                                {l.details && (
+                                  <pre className="mt-2 max-h-28 overflow-auto rounded-lg bg-black/90 p-2 text-[11px] text-white">
+                                    {JSON.stringify(l.details, null, 2)}
+                                  </pre>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+
           {/* Estatísticas de Auditoria */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="border-l-4 border-l-primary">

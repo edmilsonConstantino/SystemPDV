@@ -107,8 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== USER ROUTES ====================
   
-  // Get all users (admin only)
-  app.get("/api/users", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  // Get all users (admin + manager view)
+  app.get("/api/users", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users.map(u => ({ ...u, password: undefined }))); // Remove passwords
@@ -786,6 +786,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get order error:", error);
       res.status(500).json({ error: "Erro ao buscar pedido" });
+    }
+  });
+
+  // Auditoria profunda do pedido (admin/gestor)
+  app.get("/api/orders/:code/audit", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const order = await storage.getOrderByCode(req.params.code.toUpperCase());
+      if (!order) return res.status(404).json({ error: "Pedido não encontrado" });
+
+      const orderLogs = await storage.getAuditLogsByEntity('order', order.id);
+      const saleLogs = order.saleId ? await storage.getAuditLogsByEntity('sale', order.saleId) : [];
+
+      res.json({
+        order: {
+          id: order.id,
+          orderCode: order.orderCode,
+          status: order.status,
+          createdAt: order.createdAt,
+          acceptedAt: order.acceptedAt,
+          readyAt: order.readyAt,
+          completedAt: order.completedAt,
+          acceptedBy: order.acceptedBy,
+          completedBy: (order as any).completedBy,
+          saleId: (order as any).saleId,
+          paymentMethod: order.paymentMethod,
+          paymentProof: order.paymentProof,
+          last3Phone: (order as any).last3Phone,
+          customerNameOverride: (order as any).customerNameOverride,
+          staffMessage: order.staffMessage,
+          staffMessageAt: order.staffMessageAt,
+        },
+        audit: {
+          order: orderLogs,
+          sale: saleLogs,
+        }
+      });
+    } catch (error) {
+      console.error("Get order audit error:", error);
+      res.status(500).json({ error: "Erro ao buscar auditoria do pedido" });
     }
   });
 

@@ -74,6 +74,7 @@ export default function Dashboard() {
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
     queryFn: usersApi.getAll,
+    enabled: user?.role === 'admin',
   });
 
   const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
@@ -102,7 +103,7 @@ export default function Dashboard() {
     return s > 0 && s <= m;
   }).length;
   const stockAttentionTotal = outOfStockCount + lowBelowMinCount;
-  const activeUsers = users.length;
+  const activeUsers = user?.role === 'admin' ? users.length : null;
 
   const topProducts = sales
     .flatMap((s) => s.items)
@@ -154,7 +155,20 @@ export default function Dashboard() {
     return chartBase.map((d) => ({ ...d, meta: goalLine }));
   }, [chartBase]);
 
-  const isLoading = salesLoading || productsLoading || usersLoading || notificationsLoading;
+  const recentSales = useMemo(() => {
+    const cutoff = subDays(new Date(), chartRangeDays - 1);
+    return sales
+      .filter((s) => new Date(s.createdAt) >= cutoff)
+      .slice()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
+  }, [chartRangeDays, sales]);
+
+  const isLoading =
+    salesLoading ||
+    productsLoading ||
+    (user?.role === 'admin' ? usersLoading : false) ||
+    notificationsLoading;
   const firstName = user?.name?.split(' ')[0] ?? 'Utilizador';
   const dateLabel = format(new Date(), "EEE, dd MMM yyyy", { locale: ptBR });
 
@@ -247,25 +261,29 @@ export default function Dashboard() {
         </>
       ),
     },
-    {
-      id: 'team',
-      title: 'Equipa',
-      iconWrap: mk.softSky,
-      Icon: Users,
-      body: (
-        <>
-          <p
-            className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-            data-testid="text-active-users"
-          >
-            {activeUsers}
-          </p>
-          <p className="mt-2 text-xs font-bold text-accent">
-            <span className="rounded-lg bg-accent/12 px-2 py-0.5">Utilizadores</span>
-          </p>
-        </>
-      ),
-    },
+    ...(user?.role === 'admin'
+      ? ([
+          {
+            id: 'team',
+            title: 'Equipa',
+            iconWrap: mk.softSky,
+            Icon: Users,
+            body: (
+              <>
+                <p
+                  className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+                  data-testid="text-active-users"
+                >
+                  {activeUsers}
+                </p>
+                <p className="mt-2 text-xs font-bold text-accent">
+                  <span className="rounded-lg bg-accent/12 px-2 py-0.5">Utilizadores</span>
+                </p>
+              </>
+            ),
+          },
+        ] as KpiDef[])
+      : []),
   ];
 
   return (
@@ -444,8 +462,8 @@ export default function Dashboard() {
                   className={cn(
                     'h-9 flex-1 rounded-xl text-xs sm:flex-none',
                     chartRangeDays === d
-                      ? 'bg-card font-bold shadow-sm'
-                      : 'font-semibold text-muted-foreground',
+                      ? 'bg-card font-black text-foreground shadow-sm ring-1 ring-primary/20'
+                      : 'font-semibold text-muted-foreground hover:text-foreground',
                   )}
                   onClick={() => setChartRangeDays(d)}
                 >
@@ -621,8 +639,9 @@ export default function Dashboard() {
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/12">
                 <Activity className="h-5 w-5 text-accent" strokeWidth={2.25} />
               </span>
-              Feed de atividades
+              Atividade
             </CardTitle>
+            <CardDescription>Últimos {chartRangeDays} dias · vendas e alertas</CardDescription>
           </CardHeader>
           <CardContent className="max-h-[min(52vh,22rem)] overflow-y-auto pr-1 sm:max-h-[360px]">
             <div className="space-y-1">
@@ -652,11 +671,6 @@ export default function Dashboard() {
                 const todayStart = new Date();
                 todayStart.setHours(0, 0, 0, 0);
                 const yesterdayStart = subDays(todayStart, 1);
-                const twoDaysAgoStart = subDays(todayStart, 2);
-
-                const recentSales = sales
-                  .filter((s) => new Date(s.createdAt) >= twoDaysAgoStart)
-                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
                 const paymentLabel = (m: string) => {
                   if (m === 'card') return 'Cartão';
@@ -707,8 +721,7 @@ export default function Dashboard() {
                 });
               })()}
 
-              {notifications.length === 0 &&
-                sales.filter((s) => new Date(s.createdAt) >= subDays(new Date(), 2)).length === 0 && (
+              {notifications.length === 0 && recentSales.length === 0 && (
                   <p className="py-8 text-center text-sm font-medium text-muted-foreground">Sem atividade recente</p>
                 )}
             </div>
