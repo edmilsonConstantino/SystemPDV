@@ -7,11 +7,11 @@ import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 import { DateRange } from "react-day-picker"
-import { Calendar as CalendarIcon, Download, TrendingUp, Users, ShoppingBag, Clock, TrendingDown, Filter, Sparkles, ReceiptText, Layers, ArrowUpRight, ArrowDownRight, FileDown, Zap, BadgeAlert, Flame, Wand2 } from "lucide-react"
+import { Calendar as CalendarIcon, Download, TrendingUp, Users, ShoppingBag, Clock, TrendingDown, Filter, Sparkles, ReceiptText, Layers, ArrowUpRight, ArrowDownRight, FileDown, Zap, BadgeAlert, Flame, Wand2, BarChart2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
 import { salesApi, productsApi, categoriesApi, usersApi } from '@/lib/api';
@@ -520,294 +520,335 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* DESKTOP: cabeçalho normal */}
-      <div className="hidden md:flex md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Relatórios</h1>
-          <p className="text-muted-foreground">Insights, tendências e relatório detalhado do período.</p>
-        </div>
-        <div className="flex flex-col md:flex-row gap-2">
-          <Button
-            onClick={() =>
-              exportCsv(
-                `relatorio_resumo_${format(new Date(), 'dd-MM-yyyy')}.csv`,
-                [
-                  {
-                    periodo: date?.from ? `${format(date.from, 'dd/MM/yyyy')} - ${format((date.to || date.from), 'dd/MM/yyyy')}` : '—',
-                    receita_total: totals.revenue.toFixed(2),
-                    vendas: totals.count,
-                    ticket_medio: totals.avg.toFixed(2),
-                    itens_total: totals.items,
-                  },
-                ],
-              )
-            }
-            variant="outline"
-            className="gap-2 rounded-xl w-full md:w-auto"
-          >
-            <FileDown className="h-4 w-4" />
-            CSV (Resumo)
-          </Button>
-          <Button onClick={handleExportExcel} variant="outline" className="gap-2 rounded-xl w-full md:w-auto">
-            <Download className="h-4 w-4" />
-            Excel
-          </Button>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className={cn(
-                  "w-full md:w-[300px] justify-start text-left font-normal rounded-xl",
-                  !date && "text-muted-foreground"
-                )}
-                data-testid="button-date-range"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date?.from ? (
-                  date.to ? (
+      {/* ── CABEÇALHO — padrão do sistema ── */}
+      <div className="hidden md:block overflow-hidden rounded-3xl shadow-sm">
+        {/* Banner vermelho */}
+        <div className="relative bg-[#B71C1C] px-6 py-5">
+          <div className="banner-texture" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Título */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <BarChart2 className="h-5 w-5 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="text-xl font-extrabold tracking-tight text-white">
+                  Relatórios
+                  <span className="hidden sm:inline text-sm font-normal text-white/50 ml-2">— Insights &amp; Tendências</span>
+                </h1>
+                <p className="flex items-center gap-2 text-[11px] font-medium text-white/60 mt-0.5">
+                  <span>{totals.count} venda{totals.count !== 1 ? 's' : ''} no período</span>
+                  <span className="h-1 w-1 rounded-full bg-white/40" />
+                  <span className="text-emerald-200">{formatCurrency(totals.revenue)} receita</span>
+                  {totals.pct !== 0 && (
                     <>
-                      {format(date.from, "dd 'de' MMM", { locale: ptBR })} -{" "}
-                      {format(date.to, "dd 'de' MMM", { locale: ptBR })}
+                      <span className="h-1 w-1 rounded-full bg-amber-300/80" />
+                      <span className={totals.pct >= 0 ? 'text-emerald-200' : 'text-red-200'}>
+                        {totals.pct >= 0 ? '+' : ''}{totals.pct.toFixed(1)}% vs anterior
+                      </span>
                     </>
-                  ) : (
-                    format(date.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Selecione um período</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={date?.from}
-                selected={date}
-                onSelect={setDate}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      <div className="hidden md:flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2">
-          <Filter className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold">Atalhos</p>
-          <div className="flex gap-1.5">
-            {([7, 30, 90] as const).map((d) => {
-              const active = quickRange === d && rangeDays === d;
-              return (
-                <Button
-                  key={d}
-                  type="button"
-                  size="sm"
-                  variant={active ? 'default' : 'outline'}
-                  className="h-8 rounded-xl"
-                  onClick={() => applyQuickRange(d)}
-                >
-                  {d}d
-                </Button>
-              );
-            })}
+                  )}
+                </p>
+              </div>
+            </div>
+            {/* Acções: exportar + data */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => exportCsv(`relatorio_resumo_${format(new Date(), 'dd-MM-yyyy')}.csv`, [{
+                  periodo: date?.from ? `${format(date.from, 'dd/MM/yyyy')} - ${format((date.to || date.from), 'dd/MM/yyyy')}` : '—',
+                  receita_total: totals.revenue.toFixed(2),
+                  vendas: totals.count,
+                  ticket_medio: totals.avg.toFixed(2),
+                  itens_total: totals.items,
+                }])}
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                CSV
+              </button>
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Excel
+              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    data-testid="button-date-range"
+                    className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-[#B71C1C] shadow-md shadow-black/20 transition hover:bg-gray-50"
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    {date?.from ? (
+                      date.to
+                        ? `${format(date.from, "dd MMM", { locale: ptBR })} – ${format(date.to, "dd MMM", { locale: ptBR })}`
+                        : format(date.from, "dd MMM yyyy", { locale: ptBR })
+                    ) : 'Selecione período'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2">
-          <p className="text-sm font-semibold">Filtros</p>
-          <div className="w-[180px]">
+        {/* Tabs + filtros */}
+        <div className="bg-white px-6 py-4">
+          {/* Tabs de vista */}
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { id: 'overview',  label: 'Visão geral',  icon: Sparkles   },
+              { id: 'trends',    label: 'Tendências',   icon: TrendingUp  },
+              { id: 'breakdown', label: 'Breakdown',    icon: Users       },
+              { id: 'detailed',  label: 'Detalhado',    icon: ReceiptText },
+            ] as const).map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                    active
+                      ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/25'
+                      : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Filtros rápidos */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1">
+              <Filter className="h-3 w-3 text-gray-400 mr-0.5" />
+              <span className="text-[10px] font-bold text-gray-400 mr-1">Período</span>
+              {([7, 30, 90] as const).map((d) => {
+                const active = quickRange === d && rangeDays === d;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => applyQuickRange(d)}
+                    title={`Últimos ${d} dias`}
+                    className={`cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-bold transition-all select-none ${
+                      active
+                        ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/30'
+                        : 'border border-gray-200 bg-white text-gray-600 hover:border-[#B71C1C]/30 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C] active:scale-95'
+                    }`}
+                  >
+                    {d}d
+                  </button>
+                );
+              })}
+            </div>
+
             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-              <SelectTrigger className="h-9 rounded-xl">
+              <SelectTrigger className="h-8 w-[170px] rounded-xl border-gray-200 text-xs">
                 <SelectValue placeholder="Pagamento" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos pagamentos</SelectItem>
                 {Array.from(new Set((sales as any[]).map((s) => String(s.paymentMethod || ''))))
-                  .filter(Boolean)
-                  .sort()
-                  .map((pm) => (
-                    <SelectItem key={pm} value={pm}>
-                      {pm}
-                    </SelectItem>
+                  .filter(Boolean).sort().map((pm) => (
+                    <SelectItem key={pm} value={pm}>{pm}</SelectItem>
                   ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="w-[200px]">
+
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="h-9 rounded-xl">
+              <SelectTrigger className="h-8 w-[170px] rounded-xl border-gray-200 text-xs">
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas categorias</SelectItem>
                 {(categories as any[]).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          {!isSeller && (
-            <div className="w-[220px]">
+
+            {!isSeller && (
               <Select value={sellerFilter} onValueChange={setSellerFilter}>
-                <SelectTrigger className="h-9 rounded-xl">
+                <SelectTrigger className="h-8 w-[190px] rounded-xl border-gray-200 text-xs">
                   <SelectValue placeholder="Vendedor" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos vendedores</SelectItem>
                   {(users as any[]).map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name}
-                    </SelectItem>
+                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 rounded-xl"
-            onClick={() => {
-              setPaymentFilter('all');
-              setCategoryFilter('all');
-              setSellerFilter('all');
-              setDrillCategory(null);
-            }}
-          >
-            Limpar
-          </Button>
-        </div>
+            )}
 
-        {drillCategory && (
-          <div className="flex items-center gap-2 rounded-2xl border border-border bg-primary/5 px-3 py-2">
-            <p className="text-sm font-semibold">Drilldown</p>
-            <span className="text-sm font-black text-primary">{drillCategory}</span>
-            <Button type="button" size="sm" variant="outline" className="h-8 rounded-xl" onClick={() => setDrillCategory(null)}>
-              Remover
-            </Button>
+            {(paymentFilter !== 'all' || categoryFilter !== 'all' || sellerFilter !== 'all' || drillCategory) && (
+              <button
+                type="button"
+                onClick={() => { setPaymentFilter('all'); setCategoryFilter('all'); setSellerFilter('all'); setDrillCategory(null); }}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:bg-gray-50"
+              >
+                Limpar filtros
+              </button>
+            )}
+
+            {drillCategory && (
+              <div className="flex items-center gap-1.5 rounded-xl border border-[#B71C1C]/20 bg-[#B71C1C]/5 px-3 py-1.5">
+                <span className="text-[11px] font-black text-[#B71C1C]">{drillCategory}</span>
+                <button type="button" onClick={() => setDrillCategory(null)} className="text-[#B71C1C]/60 hover:text-[#B71C1C]">×</button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      <div className="hidden md:grid md:grid-cols-4 gap-4">
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" /> Receita
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-primary tabular-nums" data-testid="text-total-revenue">
-              {formatCurrency(totals.revenue)}
+      <div className="hidden md:grid md:grid-cols-4 gap-3">
+
+        {/* Receita */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Receita</p>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#B71C1C]/10">
+                <Sparkles className="h-3.5 w-3.5 text-[#B71C1C]" />
+              </div>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-              {totals.pct >= 0 ? <ArrowUpRight className="h-3 w-3 text-emerald-600" /> : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
-              <span className={totals.pct >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+            <p className="mt-1 text-lg font-black tabular-nums text-[#B71C1C]" data-testid="text-total-revenue">
+              {formatCurrency(totals.revenue)}
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-[11px]">
+              {totals.pct >= 0
+                ? <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
+              <span className={totals.pct >= 0 ? 'font-semibold text-emerald-700' : 'font-semibold text-rose-700'}>
                 {Math.abs(totals.pct).toFixed(1)}%
               </span>
-              vs período anterior
+              <span className="text-gray-400">vs anterior</span>
             </p>
-            <div className="mt-3 h-12">
+            <div className="mt-1.5 h-7">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailySeries}>
                   <defs>
                     <linearGradient id="mkMiniRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#B71C1C" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#B71C1C" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Area type="monotone" dataKey="total" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#mkMiniRev)" dot={false} />
+                  <Area type="monotone" dataKey="total" stroke="#B71C1C" strokeWidth={1.5} fill="url(#mkMiniRev)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <ReceiptText className="h-4 w-4 text-primary" /> Vendas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black tabular-nums" data-testid="text-total-sales">{totals.count}</div>
-            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
-              {totals.salesPct >= 0 ? <ArrowUpRight className="h-3 w-3 text-emerald-600" /> : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
-              <span className={totals.salesPct >= 0 ? 'text-emerald-700' : 'text-rose-700'}>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d]" />
+        </div>
+
+        {/* Vendas */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Vendas</p>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                <ReceiptText className="h-3.5 w-3.5 text-gray-700" />
+              </div>
+            </div>
+            <p className="mt-1 text-lg font-black tabular-nums text-gray-900" data-testid="text-total-sales">
+              {totals.count}
+            </p>
+            <p className="mt-1 flex items-center gap-1 text-[11px]">
+              {totals.salesPct >= 0
+                ? <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
+              <span className={totals.salesPct >= 0 ? 'font-semibold text-emerald-700' : 'font-semibold text-rose-700'}>
                 {Math.abs(totals.salesPct).toFixed(1)}%
               </span>
-              vs anterior
+              <span className="text-gray-400">vs anterior</span>
             </p>
-            <div className="mt-3 h-12">
+            <div className="mt-1.5 h-7">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dailyCountSeries}>
-                  <Line type="monotone" dataKey="value" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="value" stroke="#1A1A2E" strokeWidth={1.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-primary" /> Ticket médio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black tabular-nums" data-testid="text-avg-ticket">{formatCurrency(totals.avg)}</div>
-            <p className="text-xs text-muted-foreground">Receita / venda</p>
-            <div className="mt-3 h-12">
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1A1A2E]" />
+        </div>
+
+        {/* Ticket médio */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ticket médio</p>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#B71C1C]/10">
+                <ShoppingBag className="h-3.5 w-3.5 text-[#B71C1C]" />
+              </div>
+            </div>
+            <p className="mt-1 text-lg font-black tabular-nums text-gray-900" data-testid="text-avg-ticket">
+              {formatCurrency(totals.avg)}
+            </p>
+            <p className="mt-1 text-[11px] text-gray-400">Receita por venda</p>
+            <div className="mt-1.5 h-7">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={dailyAvgTicketSeries}>
-                  <Line type="monotone" dataKey="value" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="value" stroke="#B71C1C" strokeWidth={1.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Layers className="h-4 w-4 text-primary" /> Itens
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black tabular-nums">{totals.items}</div>
-            <p className="text-xs text-muted-foreground">Total de itens vendidos</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#B71C1C]/50" />
+        </div>
+
+        {/* Itens */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="px-4 pt-3 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Itens vendidos</p>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                <Layers className="h-3.5 w-3.5 text-gray-700" />
+              </div>
+            </div>
+            <p className="mt-1 text-lg font-black tabular-nums text-gray-900">{totals.items}</p>
+            <p className="mt-1 text-[11px] text-gray-400">Total no período</p>
+            <div className="mt-2 flex flex-wrap gap-1">
               {annotations.streak > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-2 py-1 text-[11px] font-black text-primary">
-                  <Flame className="h-3 w-3" /> {annotations.streak} dias seguidos
+                <span className="inline-flex items-center gap-1 rounded-md bg-[#B71C1C]/8 px-1.5 py-0.5 text-[10px] font-bold text-[#B71C1C]">
+                  <Flame className="h-2.5 w-2.5" /> {annotations.streak}d
                 </span>
               )}
               {annotations.topPayment && (
-                <span className="inline-flex items-center gap-1 rounded-xl bg-accent/10 px-2 py-1 text-[11px] font-black text-accent">
-                  <Wand2 className="h-3 w-3" /> top: {annotations.topPayment}
+                <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-600">
+                  <Wand2 className="h-2.5 w-2.5" /> {annotations.topPayment}
                 </span>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1A1A2E]" />
+        </div>
+
       </div>
 
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="hidden md:block space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="gap-2"><Sparkles className="h-4 w-4" /> Visão geral</TabsTrigger>
-          <TabsTrigger value="trends" className="gap-2"><TrendingUp className="h-4 w-4" /> Tendências</TabsTrigger>
-          <TabsTrigger value="breakdown" className="gap-2"><Users className="h-4 w-4" /> Breakdown</TabsTrigger>
-          <TabsTrigger value="detailed" className="gap-2"><ReceiptText className="h-4 w-4" /> Detalhado</TabsTrigger>
-        </TabsList>
+        <TabsList className="sr-only" />
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 overflow-hidden">
-              <div
-                className="h-1 w-full bg-gradient-to-r from-primary via-[hsl(var(--accent))] to-[hsl(262_72%_58%)]"
-                aria-hidden
-              />
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-primary" /> Pro Insights

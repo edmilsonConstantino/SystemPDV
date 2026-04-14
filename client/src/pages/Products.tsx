@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, Camera } from 'lucide-react';
+import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, Camera, Package, PackageX, TrendingDown, Clock } from 'lucide-react';
 import { BarcodeCameraScan } from '@/components/BarcodeCameraScan';
 import { formatCurrency } from '@/lib/utils';
 import { Product, productsApi, categoriesApi, systemApi } from '@/lib/api';
@@ -327,34 +327,86 @@ export default function Products() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Produtos</h1>
-          <p className="text-muted-foreground">Gerencie seu estoque e catálogo.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.xls" />
-          <Button variant="outline" onClick={handleImportClick} className="flex-1 sm:flex-none rounded-xl" data-testid="button-import">
-            <FileUp className="mr-2 h-4 w-4" />
-            Importar
-          </Button>
-          <Button variant="outline" onClick={handleExport} className="flex-1 sm:flex-none rounded-xl" data-testid="button-export">
-            <FileDown className="mr-2 h-4 w-4" />
-            Exportar
-          </Button>
+
+      {/* ── CABEÇALHO ── */}
+      <div className="overflow-hidden rounded-3xl shadow-sm">
+        {/* Banner vermelho — padrão POS */}
+        <div className="relative bg-[#B71C1C] px-6 py-5">
+          <div className="banner-texture" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Título */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <Package className="h-5 w-5 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="text-xl font-extrabold tracking-tight text-white">Produtos</h1>
+                  <span className="hidden text-sm font-normal text-white/50 sm:inline">Catálogo &amp; Inventário</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="text-xs font-semibold text-white/70">
+                    {products.length} produto{products.length !== 1 ? 's' : ''}
+                  </span>
+                  {outOfStockCount > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-200">
+                      <span className="h-1 w-1 rounded-full bg-red-300" />
+                      {outOfStockCount} sem estoque
+                    </span>
+                  )}
+                  {lowStockCount > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-200">
+                      <span className="h-1 w-1 rounded-full bg-amber-300" />
+                      {lowStockCount} abaixo do mínimo
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Acções */}
+            <div className="flex flex-wrap items-center gap-2">
+              <input type="file" ref={fileInputRef} onChange={handleImport} className="hidden" accept=".xlsx,.xls" title="Importar ficheiro Excel" aria-label="Importar ficheiro Excel" />
+              <button
+                type="button"
+                onClick={handleImportClick}
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                data-testid="button-import"
+              >
+                <FileUp className="h-3.5 w-3.5" />
+                Importar
+              </button>
+              <button
+                type="button"
+                onClick={handleExport}
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                data-testid="button-export"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                Exportar
+              </button>
 
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto rounded-xl shadow-lg shadow-primary/20" data-testid="button-add-product">
-                <Plus className="mr-2 h-4 w-4" />
+              <button
+                type="button"
+                className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-[#B71C1C] shadow-md shadow-black/20 transition hover:bg-gray-50 active:scale-[0.98]"
+                data-testid="button-add-product"
+              >
+                <Plus className="h-3.5 w-3.5" />
                 Novo Produto
-              </Button>
+              </button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Adicionar Produto</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
+            <DialogContent className="w-[95vw] max-w-2xl overflow-hidden rounded-[2rem] border-none bg-white p-0 shadow-2xl">
+              {/* Header */}
+              <div className="border-b border-gray-100 bg-gray-50/50 px-8 py-6">
+                <DialogTitle className="text-xl font-extrabold text-gray-900">Novo Produto</DialogTitle>
+                <p className="mt-0.5 text-sm text-gray-500">Preencha os detalhes para registar no inventário.</p>
+              </div>
+
+              {/* Body */}
+              <div className="max-h-[65vh] space-y-7 overflow-y-auto px-8 py-6">
+
                 {editCount && !editCount.canEdit && (
                   <Alert variant="destructive">
                     <AlertCircle className="h-4 w-4" />
@@ -363,198 +415,237 @@ export default function Products() {
                     </AlertDescription>
                   </Alert>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Nome do Produto</Label>
-                    <Input
-                      value={newProduct.name}
-                      onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-                      data-testid="input-product-name"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Código (SKU)</Label>
-                    <Input
-                      value={newProduct.sku}
-                      onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
-                      placeholder="Gerado automaticamente se vazio"
-                      data-testid="input-product-sku"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Código de Barras (opcional — escanear ou digitar)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newProduct.barcode}
-                      onChange={e => setNewProduct({...newProduct, barcode: e.target.value})}
-                      placeholder="EAN-13, UPC — ou use o botão para escanear"
-                      data-testid="input-product-barcode"
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setBarcodeScanOpen('add')}
-                      title="Escanear código de barras"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Pode registar barcode, SKU ou ambos. Se vazio, o sistema gera automaticamente — ambos servem para venda com scanner.</p>
-                </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Preço Venda (MT)</Label>
-                    <Input
-                      type="number"
-                      value={newProduct.price}
-                      onChange={e => setNewProduct({...newProduct, price: e.target.value})}
-                      data-testid="input-product-price"
-                    />
+                {/* Seção: Identificação */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Informações Básicas</h3>
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Preço Custo (MT)</Label>
-                    <Input
-                      type="number"
-                      value={newProduct.costPrice}
-                      onChange={e => setNewProduct({...newProduct, costPrice: e.target.value})}
-                      data-testid="input-product-cost"
-                    />
-                  </div>
-                  <div className="grid gap-2 col-span-2 sm:col-span-1">
-                    <Label>Unidade</Label>
-                    <Select
-                      value={newProduct.unit}
-                      onValueChange={(val: any) => setNewProduct({...newProduct, unit: val})}
-                    >
-                      <SelectTrigger data-testid="select-product-unit">
-                        <SelectValue placeholder="Unidade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="un">Unidade (un)</SelectItem>
-                        <SelectItem value="kg">Quilograma (kg)</SelectItem>
-                        <SelectItem value="g">Grama (g)</SelectItem>
-                        <SelectItem value="pack">Pacote</SelectItem>
-                        <SelectItem value="box">Caixa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Estoque Inicial</Label>
-                    <Input
-                      type="number"
-                      value={newProduct.stock}
-                      onChange={e => setNewProduct({...newProduct, stock: e.target.value})}
-                      data-testid="input-product-stock"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Estoque Mínimo (Alerta)</Label>
-                    <Input
-                      type="number"
-                      value={newProduct.minStock}
-                      onChange={e => setNewProduct({...newProduct, minStock: e.target.value})}
-                      data-testid="input-product-minstock"
-                    />
-                  </div>
-                  <div className="grid gap-2 col-span-2 sm:col-span-1">
-                    <Label>Categoria</Label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={newProduct.categoryId} 
-                        onValueChange={(val) => setNewProduct({...newProduct, categoryId: val})}
-                      >
-                        <SelectTrigger data-testid="select-product-category" className="flex-1">
-                          <SelectValue placeholder="Categoria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map(cat => (
-                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" type="button">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>Nova Categoria</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <Label>Nome da Categoria</Label>
-                              <Input 
-                                value={newCategory.name}
-                                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                                placeholder="Ex: Bebidas, Limpeza..."
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Cor da Categoria</Label>
-                              <Select 
-                                value={newCategory.color}
-                                onValueChange={(val) => setNewCategory({...newCategory, color: val})}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="bg-blue-100 text-blue-800">Azul</SelectItem>
-                                  <SelectItem value="bg-green-100 text-green-800">Verde</SelectItem>
-                                  <SelectItem value="bg-yellow-100 text-yellow-800">Amarelo</SelectItem>
-                                  <SelectItem value="bg-red-100 text-red-800">Vermelho</SelectItem>
-                                  <SelectItem value="bg-purple-100 text-purple-800">Roxo</SelectItem>
-                                  <SelectItem value="bg-orange-100 text-orange-800">Laranja</SelectItem>
-                                  <SelectItem value="bg-pink-100 text-pink-800">Rosa</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <Button 
-                            onClick={() => createCategoryMutation.mutate(newCategory)}
-                            disabled={!newCategory.name || createCategoryMutation.isPending}
-                          >
-                            {createCategoryMutation.isPending ? 'Criando...' : 'Criar Categoria'}
-                          </Button>
-                        </DialogContent>
-                      </Dialog>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Nome do Produto</Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        placeholder="Ex: Coca-Cola 2L"
+                        value={newProduct.name}
+                        onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                        data-testid="input-product-name"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Código (SKU)</Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 bg-gray-50/60 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        placeholder="Gerado automaticamente se vazio"
+                        value={newProduct.sku}
+                        onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
+                        data-testid="input-product-sku"
+                      />
                     </div>
                   </div>
-                </div>
 
-                <div className="grid gap-2">
-                  <Label>URL da Imagem (Opcional)</Label>
-                  <Input 
-                    value={newProduct.image} 
-                    onChange={e => setNewProduct({...newProduct, image: e.target.value})}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                    data-testid="input-product-image"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Se não adicionar uma imagem, será exibida a primeira letra do nome do produto.
-                  </p>
-                </div>
+                  <div className="space-y-1.5">
+                    <Label className="ml-1 text-xs font-bold text-gray-600">Código de Barras <span className="font-normal text-gray-400">(opcional)</span></Label>
+                    <div className="flex gap-2">
+                      <Input
+                        className="h-11 flex-1 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        placeholder="EAN-13, UPC — ou use o botão para escanear"
+                        value={newProduct.barcode}
+                        onChange={e => setNewProduct({...newProduct, barcode: e.target.value})}
+                        data-testid="input-product-barcode"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 w-11 shrink-0 rounded-xl border-gray-200 p-0 hover:border-[#B71C1C]/30 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C]"
+                        onClick={() => setBarcodeScanOpen('add')}
+                        title="Escanear código de barras"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="ml-1 text-[11px] text-gray-400">SKU e barcode são ambos aceites no scanner — o sistema gera automaticamente se vazio.</p>
+                  </div>
+                </section>
+
+                {/* Seção: Valores */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Valores e Quantidades</h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-[#B71C1C]">Preço Venda (MT)</Label>
+                      <Input
+                        type="number"
+                        className="h-11 rounded-xl border-red-100 bg-red-50/40 text-base font-bold text-[#B71C1C] focus-visible:border-[#B71C1C]/50 focus-visible:ring-[#B71C1C]/20"
+                        value={newProduct.price}
+                        onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                        data-testid="input-product-price"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Preço Custo (MT)</Label>
+                      <Input
+                        type="number"
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={newProduct.costPrice}
+                        onChange={e => setNewProduct({...newProduct, costPrice: e.target.value})}
+                        data-testid="input-product-cost"
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-1.5 sm:col-span-1">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Unidade de Medida</Label>
+                      <Select
+                        value={newProduct.unit}
+                        onValueChange={(val: any) => setNewProduct({...newProduct, unit: val})}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl border-gray-200" data-testid="select-product-unit">
+                          <SelectValue placeholder="Unidade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="un">Unidade (un)</SelectItem>
+                          <SelectItem value="kg">Quilograma (kg)</SelectItem>
+                          <SelectItem value="g">Grama (g)</SelectItem>
+                          <SelectItem value="pack">Pacote</SelectItem>
+                          <SelectItem value="box">Caixa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Estoque Inicial</Label>
+                      <Input
+                        type="number"
+                        className="h-11 rounded-xl border-gray-200 font-bold focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={newProduct.stock}
+                        onChange={e => setNewProduct({...newProduct, stock: e.target.value})}
+                        data-testid="input-product-stock"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Estoque Mínimo <span className="font-normal text-gray-400">(alerta)</span></Label>
+                      <Input
+                        type="number"
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={newProduct.minStock}
+                        onChange={e => setNewProduct({...newProduct, minStock: e.target.value})}
+                        data-testid="input-product-minstock"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Seção: Categoria e Imagem */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Categoria e Imagem</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Categoria</Label>
+                      <div className="flex gap-2">
+                        <Select
+                          value={newProduct.categoryId}
+                          onValueChange={(val) => setNewProduct({...newProduct, categoryId: val})}
+                        >
+                          <SelectTrigger className="h-11 flex-1 rounded-xl border-gray-200" data-testid="select-product-category">
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="icon" type="button" className="h-11 w-11 shrink-0 rounded-xl border-gray-200 hover:border-[#B71C1C]/30 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C]">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Nova Categoria</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                <Label>Nome da Categoria</Label>
+                                <Input
+                                  value={newCategory.name}
+                                  onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                                  placeholder="Ex: Bebidas, Limpeza..."
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Cor da Categoria</Label>
+                                <Select
+                                  value={newCategory.color}
+                                  onValueChange={(val) => setNewCategory({...newCategory, color: val})}
+                                >
+                                  <SelectTrigger><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="bg-blue-100 text-blue-800">Azul</SelectItem>
+                                    <SelectItem value="bg-green-100 text-green-800">Verde</SelectItem>
+                                    <SelectItem value="bg-yellow-100 text-yellow-800">Amarelo</SelectItem>
+                                    <SelectItem value="bg-red-100 text-red-800">Vermelho</SelectItem>
+                                    <SelectItem value="bg-purple-100 text-purple-800">Roxo</SelectItem>
+                                    <SelectItem value="bg-orange-100 text-orange-800">Laranja</SelectItem>
+                                    <SelectItem value="bg-pink-100 text-pink-800">Rosa</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => createCategoryMutation.mutate(newCategory)}
+                              disabled={!newCategory.name || createCategoryMutation.isPending}
+                            >
+                              {createCategoryMutation.isPending ? 'Criando...' : 'Criar Categoria'}
+                            </Button>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">URL da Imagem <span className="font-normal text-gray-400">(opcional)</span></Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        placeholder="https://exemplo.com/imagem.jpg"
+                        value={newProduct.image}
+                        onChange={e => setNewProduct({...newProduct, image: e.target.value})}
+                        data-testid="input-product-image"
+                      />
+                    </div>
+                  </div>
+                </section>
               </div>
-              <Button 
-                onClick={handleSaveProduct} 
-                disabled={createProductMutation.isPending || (editCount && !editCount.canEdit)}
-                data-testid="button-save-product"
-              >
-                {createProductMutation.isPending ? 'Salvando...' : 'Salvar Produto'}
-              </Button>
+
+              {/* Footer */}
+              <div className="border-t border-gray-100 bg-gray-50/50 px-8 py-5">
+                <Button
+                  className="h-13 w-full rounded-2xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] text-base font-bold text-white shadow-lg shadow-[#B71C1C]/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
+                  onClick={handleSaveProduct}
+                  disabled={createProductMutation.isPending || (editCount && !editCount.canEdit)}
+                  data-testid="button-save-product"
+                >
+                  {createProductMutation.isPending ? 'A guardar...' : 'Salvar Produto'}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+            </div>{/* end actions flex */}
+          </div>{/* end flex row */}
+        </div>{/* end bg-[#B71C1C] banner */}
+      </div>{/* end rounded-3xl wrapper */}
 
       {editCount && editCount.count > 0 && (
         <Alert>
@@ -566,31 +657,59 @@ export default function Products() {
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Card className="border-border/70">
-          <CardContent className="pt-5">
-            <p className="text-xs font-semibold text-muted-foreground">Total</p>
-            <p className="mt-1 font-heading text-2xl font-black tabular-nums">{products.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-destructive/20 bg-destructive/5">
-          <CardContent className="pt-5">
-            <p className="text-xs font-semibold text-muted-foreground">Sem estoque</p>
-            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-destructive">{outOfStockCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-[hsl(38_92%_72%)]/40 bg-[hsl(48_96%_96%)]">
-          <CardContent className="pt-5">
-            <p className="text-xs font-semibold text-muted-foreground">Abaixo do mínimo</p>
-            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-[hsl(38_92%_30%)]">{lowStockCount}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-5">
-            <p className="text-xs font-semibold text-muted-foreground">Editados (24h)</p>
-            <p className="mt-1 font-heading text-2xl font-black tabular-nums text-primary">{recentlyEditedCount}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {/* Total */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-400">Total</p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums text-gray-900">{products.length}</p>
+            </div>
+            <div className="rounded-xl bg-gray-100 p-2">
+              <Package className="h-5 w-5 text-gray-500" />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gray-300" />
+        </div>
+        {/* Sem estoque */}
+        <div className="relative overflow-hidden rounded-2xl border border-red-100 bg-red-50 p-5 shadow-sm transition hover:shadow-md">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[0.7rem] font-bold uppercase tracking-widest text-[#B71C1C]/70">Sem estoque</p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums text-[#B71C1C]">{outOfStockCount}</p>
+            </div>
+            <div className="rounded-xl bg-red-100 p-2">
+              <PackageX className="h-5 w-5 text-[#B71C1C]" />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-[#B71C1C]" />
+        </div>
+        {/* Abaixo do mínimo */}
+        <div className="relative overflow-hidden rounded-2xl border border-amber-100 bg-amber-50 p-5 shadow-sm transition hover:shadow-md">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[0.7rem] font-bold uppercase tracking-widest text-amber-500">Abaixo do mínimo</p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums text-amber-700">{lowStockCount}</p>
+            </div>
+            <div className="rounded-xl bg-amber-100 p-2">
+              <TrendingDown className="h-5 w-5 text-amber-600" />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-amber-400" />
+        </div>
+        {/* Editados 24h */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-400">Editados (24h)</p>
+              <p className="mt-1 text-2xl font-extrabold tabular-nums text-gray-900">{recentlyEditedCount}</p>
+            </div>
+            <div className="rounded-xl bg-gray-100 p-2">
+              <Clock className="h-5 w-5 text-gray-500" />
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gray-300" />
+        </div>
       </div>
 
       {/* Modal de Edição de Produtos */}
@@ -740,67 +859,52 @@ export default function Products() {
         </DialogContent>
       </Dialog>
 
-      <Card className="border-primary/10">
-        <CardHeader className="pb-2">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="relative max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome ou SKU..."
-                className="pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                data-testid="input-search-products"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant={view === 'all' ? 'secondary' : 'outline'}
-                className="h-9 rounded-xl"
-                onClick={() => setView('all')}
-              >
-                Todos
-              </Button>
-              <Button
-                type="button"
-                variant={view === 'out' ? 'secondary' : 'outline'}
-                className="h-9 rounded-xl"
-                onClick={() => setView('out')}
-              >
-                Sem estoque
-              </Button>
-              <Button
-                type="button"
-                variant={view === 'low' ? 'secondary' : 'outline'}
-                className="h-9 rounded-xl"
-                onClick={() => setView('low')}
-              >
-                Abaixo do mínimo
-              </Button>
-              <Button
-                type="button"
-                variant={view === 'recent' ? 'secondary' : 'outline'}
-                className="h-9 rounded-xl"
-                onClick={() => setView('recent')}
-              >
-                Recentes
-              </Button>
-            </div>
+      <div className="rounded-3xl border border-gray-200 bg-white shadow-sm">
+        {/* Barra de pesquisa + filtros */}
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-6 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Buscar por nome ou SKU..."
+              className="h-9 rounded-full border-gray-200 pl-9 text-sm focus-visible:ring-red-400/30"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              data-testid="input-search-products"
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="flex flex-wrap gap-1.5">
+            {(['all','out','low','recent'] as const).map((v) => {
+              const labels = { all: 'Todos', out: 'Sem estoque', low: 'Abaixo do mínimo', recent: 'Recentes' };
+              const active = view === v;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={`h-8 rounded-full px-4 text-xs font-semibold transition-all ${
+                    active
+                      ? 'bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] text-white shadow-md shadow-[#B71C1C]/25'
+                      : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {labels[v]}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Tabela */}
+        <div className="overflow-x-auto">
             <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Produto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Estoque</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+              <TableRow className="border-gray-100 bg-gray-50/60">
+                <TableHead className="text-xs font-bold uppercase tracking-wider text-gray-500">Produto</TableHead>
+                <TableHead className="text-xs font-bold uppercase tracking-wider text-gray-500">Categoria</TableHead>
+                <TableHead className="text-xs font-bold uppercase tracking-wider text-gray-500">Preço</TableHead>
+                <TableHead className="text-xs font-bold uppercase tracking-wider text-gray-500">Estoque</TableHead>
+                <TableHead className="text-xs font-bold uppercase tracking-wider text-gray-500">Unidade</TableHead>
+                <TableHead className="text-right text-xs font-bold uppercase tracking-wider text-gray-500">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -810,68 +914,71 @@ export default function Products() {
                 const parsedMinStock = parseFloat(product.minStock);
 
                 return (
-                  <TableRow key={product.id} data-testid={`row-product-${product.id}`}>
-                    <TableCell className="font-medium">
+                  <TableRow key={product.id} className="group border-b border-gray-50 transition-colors hover:bg-red-50/30" data-testid={`row-product-${product.id}`}>
+                    <TableCell className="py-3.5 font-medium">
                       <div className="flex items-center gap-3">
-                        {product.image ? (
-                          <img 
-                            src={product.image} 
-                            alt={product.name}
-                            className="h-10 w-10 rounded-lg object-cover border border-border"
-                          />
-                        ) : (
-                          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-border">
-                            {product.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center">
+                              <Package className="h-5 w-5 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
                             {parsedStock <= parsedMinStock && (
-                              <AlertTriangle className="h-4 w-4 text-destructive" />
+                              <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
                             )}
-                            {product.name}
+                            <p className="truncate font-bold leading-none text-gray-900">{product.name}</p>
                           </div>
-                          <div className="text-xs text-muted-foreground">{product.sku}</div>
+                          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-gray-400">{product.sku}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={category?.color}>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${category?.color || 'bg-gray-100 text-gray-600'}`}>
                         {category?.name || 'Geral'}
-                      </Badge>
+                      </span>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span>{formatCurrency(parseFloat(product.price))}</span>
-                        <span className="text-[10px] text-muted-foreground">Custo: {formatCurrency(parseFloat(product.costPrice))}</span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-base font-extrabold tabular-nums text-[#CC2936]">{formatCurrency(parseFloat(product.price))}</span>
+                        <span className="text-[10px] tabular-nums text-gray-400">Custo: {formatCurrency(parseFloat(product.costPrice))}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className={parsedStock <= parsedMinStock ? "text-destructive font-bold" : ""}>
+                      <span className={parsedStock <= parsedMinStock ? 'font-bold text-[#B71C1C]' : 'font-semibold text-gray-700'}>
                         {parsedStock}
                       </span>
                     </TableCell>
-                    <TableCell className="uppercase">{product.unit}</TableCell>
-                    <TableCell className="text-right flex gap-2 justify-end">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
+                    <TableCell className="text-xs font-semibold uppercase text-gray-500">{product.unit}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-white hover:text-amber-600 hover:shadow-sm"
                         onClick={() => handleEditProduct(product)}
+                        title="Editar produto"
                         data-testid={`button-edit-${product.id}`}
                       >
-                        <Pencil className="h-4 w-4 text-amber-600" />
-                      </Button>
+                        <Pencil className="h-4 w-4" />
+                      </button>
                       <Dialog open={increaseStockOpen && selectedProductId === product.id} onOpenChange={(open) => { setIncreaseStockOpen(open); if (!open) setSelectedProductId(''); }}>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8"
+                        <button
+                          type="button"
+                          className="rounded-lg p-2 text-gray-400 transition-all hover:bg-white hover:text-[#B71C1C] hover:shadow-sm"
                           onClick={() => { setSelectedProductId(product.id); setIncreaseStockOpen(true); }}
+                          title="Aumentar estoque"
                           data-testid={`button-increase-stock-${product.id}`}
                         >
                           <ArrowUp className="h-4 w-4" />
-                        </Button>
+                        </button>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Aumentar Estoque: {product.name}</DialogTitle>
@@ -919,25 +1026,25 @@ export default function Products() {
                           </div>
                         </DialogContent>
                       </Dialog>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 text-gray-400 transition-all hover:bg-white hover:text-red-600 hover:shadow-sm disabled:opacity-50"
                         onClick={() => handleDeleteProduct(product.id)}
                         disabled={deleteProductMutation.isPending}
+                        title="Eliminar produto"
                         data-testid={`button-delete-${product.id}`}
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Dialog open={!!barcodeScanOpen} onOpenChange={(o) => !o && setBarcodeScanOpen(null)}>
         <DialogContent className="sm:max-w-md">

@@ -11,57 +11,70 @@
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
 
-  /* Makira — teal + índigo, alto contraste e limpo */
-  --color-background: hsl(230 48% 97%);
-  --color-foreground: hsl(222 47% 11%);
+  /* Makira / Nerion Group — vermelho · preto · branco */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(0 0% 10%);
 
-  --color-primary: hsl(172 76% 32%);
+  --color-primary: hsl(0 75% 44%);
   --color-primary-foreground: hsl(0 0% 100%);
 
-  --color-secondary: hsl(230 55% 95%);
-  --color-secondary-foreground: hsl(239 48% 28%);
+  --color-secondary: hsl(0 10% 94%);
+  --color-secondary-foreground: hsl(0 0% 16%);
 
-  --color-accent: hsl(239 82% 56%);
+  --color-accent: hsl(0 75% 44%);
   --color-accent-foreground: hsl(0 0% 100%);
 
-  --color-muted: hsl(230 32% 93%);
-  --color-muted-foreground: hsl(215 18% 42%);
+  --color-muted: hsl(0 8% 92%);
+  --color-muted-foreground: hsl(0 4% 44%);
 
   --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222 47% 11%);
+  --color-card-foreground: hsl(0 0% 10%);
 
   --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222 47% 11%);
+  --color-popover-foreground: hsl(0 0% 10%);
 
-  --color-border: hsl(230 26% 86%);
-  --color-input: hsl(230 26% 86%);
-  --color-ring: hsl(172 72% 34%);
+  --color-border: hsl(0 8% 88%);
+  --color-input: hsl(0 8% 88%);
+  --color-ring: hsl(0 75% 44%);
 
   --color-destructive: hsl(0 76% 52%);
   --color-destructive-foreground: hsl(0 0% 100%);
 
-  --color-sidebar: hsl(0 0% 100%);
-  --color-sidebar-foreground: hsl(222 40% 14%);
-  --color-sidebar-primary: hsl(172 72% 34%);
+  --color-sidebar: hsl(0 0% 18%);
+  --color-sidebar-foreground: hsl(0 0% 90%);
+  --color-sidebar-primary: hsl(0 75% 44%);
   --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(230 60% 96%);
-  --color-sidebar-accent-foreground: hsl(239 45% 30%);
-  --color-sidebar-border: hsl(230 26% 88%);
-  --color-sidebar-ring: hsl(172 72% 34%);
+  --color-sidebar-accent: hsl(0 0% 22%);
+  --color-sidebar-accent-foreground: hsl(0 0% 90%);
+  --color-sidebar-border: hsl(0 0% 24%);
+  --color-sidebar-ring: hsl(0 75% 44%);
 
   /* Botões (shadcn / Replit variants) */
-  --color-primary-border: hsl(172 65% 28%);
-  --color-secondary-border: hsl(230 28% 82%);
+  --color-primary-border: hsl(0 70% 36%);
+  --color-secondary-border: hsl(0 8% 82%);
   --color-destructive-border: hsl(0 70% 42%);
 
-  /* Destaques de marca — usar em gradientes */
-  --color-mk-teal: hsl(172 72% 38%);
+  /* Destaques de marca */
+  --color-mk-red: hsl(0 75% 44%);
+  --color-mk-dark: hsl(0 0% 10%);
   --color-mk-indigo: hsl(239 78% 58%);
-  --color-mk-violet: hsl(262 72% 58%);
-  --color-mk-coral: hsl(16 88% 54%);
+  --color-mk-amber: hsl(38 95% 50%);
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-14px); }
+    to   { opacity: 1; transform: translateX(0);     }
+  }
+  @keyframes soft-glow {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 0.8; }
+  }
 
   @keyframes accordion-down {
     from { height: 0 }
@@ -97,7 +110,7 @@
 
 @layer base {
   :root {
-    --button-outline: hsl(230 26% 84%);
+    --button-outline: hsl(0 8% 82%);
   }
 
   * {
@@ -107,10 +120,81 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  button, [role="button"], [role="tab"], a, label[for], select {
+    cursor: pointer;
+  }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold tracking-tight;
   }
 }
+
+/* Dashboard entry animations */
+.dash-hero        { animation: fade-up 0.45s ease-out both; }
+
+/* Banner diagonal texture — shared across page headers */
+.banner-texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.10;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    105deg,
+    transparent,
+    transparent 18px,
+    rgba(255,255,255,0.35) 18px,
+    rgba(255,255,255,0.35) 19px
+  );
+}
+
+/* Hero shapes */
+.hero-red-shape {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 70%;
+  background: linear-gradient(105deg, #7f1d1d 0%, #b91c1c 45%, #ef4444 100%);
+  clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+.hero-dark-overlay {
+  position: absolute;
+  right: -5rem;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  background: rgba(0,0,0,0.20);
+  clip-path: ellipse(80% 100% at 100% 50%);
+}
+.hero-white-curve {
+  position: absolute;
+  bottom: -3rem;
+  right: -3rem;
+  height: 10rem;
+  width: 20rem;
+  background: white;
+  border-radius: 50%;
+  transform: rotate(-15deg);
+}
+.dash-receita-bg  { background: hsl(350 60% 10%); }
+.dash-stat-bg     { background: hsl(0 0% 13%); }
+
+/* Header */
+.hdr-root     { background: #ffffff; }
+.hdr-logomark { background: linear-gradient(135deg,#dc2626 0%,#991b1b 100%); }
+.hdr-avatar   { background: linear-gradient(135deg,#dc2626 0%,#991b1b 100%); }
+
+/* Sidebar */
+.sdb-root       { background: #ffffff; }
+.sdb-item-active { background: linear-gradient(90deg,rgba(220,38,38,0.08) 0%,rgba(220,38,38,0.02) 100%); }
+.dash-kpi     { animation: fade-up 0.5s ease-out 0.1s both; }
+.dash-kpi-1   { animation: fade-up 0.45s ease-out 0.10s both; }
+.dash-kpi-2   { animation: fade-up 0.45s ease-out 0.15s both; }
+.dash-kpi-3   { animation: fade-up 0.45s ease-out 0.20s both; }
+.dash-kpi-4   { animation: fade-up 0.45s ease-out 0.25s both; }
+.dash-row-1   { animation: fade-up 0.5s ease-out 0.20s both; }
+.dash-row-2   { animation: fade-up 0.5s ease-out 0.28s both; }
+.dash-glow    { animation: soft-glow 6s ease-in-out infinite; }
+.dash-shimmer { animation: soft-glow 4s ease-in-out infinite; }
 
 /* Custom Scrollbar for efficient dashboards */
 ::-webkit-scrollbar {

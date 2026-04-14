@@ -410,27 +410,27 @@ export default function POS() {
     return (
       <div
         className={cn(
-          'flex min-h-[56px] w-full items-stretch overflow-hidden rounded-xl border bg-card shadow-sm transition-all',
-          parsedStock <= 0 && 'pointer-events-none border-border/50 opacity-50',
-          parsedStock > 0 && cartItem && 'border-primary/50 bg-primary/5 ring-1 ring-primary/15',
-          parsedStock > 0 && !cartItem && isLowStock && 'border-amber-400/70 bg-amber-50/55 dark:border-amber-700/50 dark:bg-amber-950/30',
-          parsedStock > 0 && !cartItem && !isLowStock && 'border-border',
+          'flex min-h-[56px] w-full items-stretch overflow-hidden rounded-xl border bg-white shadow-sm transition-all',
+          parsedStock <= 0 && 'pointer-events-none border-gray-100 opacity-50',
+          parsedStock > 0 && cartItem && 'border-[#B71C1C]/20 bg-[#B71C1C]/5 ring-1 ring-[#B71C1C]/15',
+          parsedStock > 0 && !cartItem && isLowStock && 'border-amber-200 bg-amber-50/60',
+          parsedStock > 0 && !cartItem && !isLowStock && 'border-gray-200 hover:border-gray-300',
         )}
         data-testid={`card-product-${product.id}`}
       >
         <div
           className={cn(
             'w-1 shrink-0 self-stretch',
-            cartItem && 'bg-gradient-to-b from-primary to-accent',
-            !cartItem && isLowStock && 'bg-gradient-to-b from-amber-500 to-amber-600',
+            cartItem && 'bg-[#B71C1C]',
+            !cartItem && isLowStock && 'bg-amber-400',
             !cartItem && !isLowStock && 'bg-transparent',
           )}
         />
-        <div className="relative m-1.5 flex aspect-square w-9 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-primary/15 bg-primary/5">
+        <div className="relative m-1.5 flex aspect-square w-9 shrink-0 items-center justify-center self-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
           {product.image ? (
             <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
           ) : (
-            <span className="text-sm font-bold text-primary">{product.name.charAt(0).toUpperCase()}</span>
+            <span className="text-sm font-bold text-gray-600">{product.name.charAt(0).toUpperCase()}</span>
           )}
           {parsedStock <= 0 && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/60">
@@ -441,7 +441,7 @@ export default function POS() {
         <div className="flex min-w-0 flex-1 flex-col justify-end overflow-hidden pb-2 pr-1 pt-1">
           <p className="max-w-[120px] truncate text-xs font-semibold leading-tight text-gray-800">{product.name}</p>
           <div className="mt-0.5 flex items-center gap-1">
-            <span className="text-xs font-bold text-primary">{formatCurrency(parsedPrice)}</span>
+            <span className="text-xs font-bold text-[#CC2936]">{formatCurrency(parsedPrice)}</span>
             <span className="shrink-0 text-[9px] text-gray-400">/{product.unit}</span>
             {product.unit === 'kg' && <Scale className="h-2.5 w-2.5 shrink-0 text-accent" />}
           </div>
@@ -466,7 +466,7 @@ export default function POS() {
               <>
                 <button
                   type="button"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 transition-colors active:scale-95"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[#B71C1C] transition-colors active:scale-95"
                   onClick={() => handleQuantityChange(product.id, -1)}
                   data-testid={`button-decrease-list-${product.id}`}
                 >
@@ -477,7 +477,7 @@ export default function POS() {
             )}
             <button
               type="button"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-colors hover:brightness-110 active:scale-95 disabled:opacity-40"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#B71C1C] text-white shadow-sm transition-all hover:bg-[#C62828] active:scale-95 disabled:opacity-40"
               onClick={(e) => {
                 e.stopPropagation();
                 if (disponivel > 0) handleAddProduct(product);
@@ -488,8 +488,8 @@ export default function POS() {
               <Plus className="h-3 w-3 text-white" />
             </button>
           </div>
-          <span className="w-full text-center text-[9px] font-semibold tabular-nums text-muted-foreground">
-            Disp.: {formatStockRemaining(product.unit, disponivel)}
+          <span className="w-full text-center text-[9px] font-semibold tabular-nums text-gray-400">
+            Disp.:{formatStockRemaining(product.unit, disponivel)}
           </span>
         </div>
       </div>
@@ -591,7 +591,7 @@ export default function POS() {
       <div className="shrink-0 lg:hidden">
         <div className="relative mb-3 flex h-[3.25rem] rounded-[1.35rem] border border-border/80 bg-muted/40 p-1 shadow-inner">
           <motion.div
-            className="pointer-events-none absolute inset-y-1 rounded-[1.05rem] bg-gradient-to-r from-primary to-[hsl(239_68%_46%)] shadow-md shadow-primary/20"
+            className="pointer-events-none absolute inset-y-1 rounded-[1.05rem] bg-gradient-to-r from-[#B71C1C] to-[#1A1A2E] shadow-md shadow-[#B71C1C]/20"
             style={{ width: 'calc(50% - 0.375rem)' }}
             initial={false}
             animate={{
@@ -656,7 +656,7 @@ export default function POS() {
               className="pointer-events-auto w-full max-w-md cursor-grab active:cursor-grabbing"
               data-testid="wrapper-floating-cart"
             >
-              <div className="flex flex-col gap-1 rounded-[1.35rem] border border-white/25 bg-gradient-to-r from-primary via-[hsl(239_62%_44%)] to-accent p-1.5 text-primary-foreground shadow-[0_20px_50px_-14px_hsl(239_55%_22%/0.65)] ring-2 ring-white/20">
+              <div className="flex flex-col gap-1 rounded-[1.35rem] border border-white/25 bg-gradient-to-r from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] p-1.5 text-primary-foreground shadow-[0_20px_50px_-14px_rgba(183,28,28,0.4)] ring-2 ring-white/20">
                 <div
                   className="flex flex-col items-center gap-0.5 rounded-xl bg-white/10 py-1.5"
                   title="Arraste para o lado se estiver a tapar um produto"
@@ -697,7 +697,7 @@ export default function POS() {
           className="flex h-[min(90dvh,720px)] max-h-[720px] flex-col gap-0 overflow-hidden rounded-t-[2rem] border-0 border-t border-border/60 bg-card p-0 shadow-[0_-20px_60px_-20px_rgba(15,23,42,0.2)] lg:hidden"
         >
           <div className="mx-auto mt-2 h-1 w-12 shrink-0 rounded-full bg-muted-foreground/25" aria-hidden />
-          <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary via-[hsl(239_65%_48%)] to-accent px-5 pb-7 pt-4 text-primary-foreground">
+          <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-5 pb-7 pt-4 text-primary-foreground">
             <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
             <SheetHeader className="space-y-1 text-left">
               <SheetTitle className="font-heading text-2xl font-bold tracking-tight text-white">
@@ -750,7 +750,7 @@ export default function POS() {
                     >
                       <div className="flex gap-3 p-3">
                         <div className="relative shrink-0">
-                          <span className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-[11px] font-black text-primary-foreground shadow-md">
+                          <span className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#B71C1C] to-[#1B3A5C] text-[11px] font-black text-primary-foreground shadow-md">
                             {idx + 1}
                           </span>
                           <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-xl border border-border bg-muted">
@@ -803,7 +803,7 @@ export default function POS() {
                         />
                         <button
                           type="button"
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 transition active:scale-95"
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-[#B71C1C]/25 transition active:scale-95"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleQuantityChange(item.productId, 1);
@@ -852,7 +852,7 @@ export default function POS() {
                 <Trash2 className="mr-2 h-4 w-4" /> Limpar
               </Button>
               <Button
-                className="h-12 rounded-xl border-0 bg-gradient-to-r from-primary to-accent font-bold text-primary-foreground shadow-lg disabled:opacity-50"
+                className="h-12 rounded-xl border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] font-bold text-primary-foreground shadow-lg disabled:opacity-50"
                 disabled={cart.length === 0}
                 onClick={() => openCheckout()}
                 data-testid="button-checkout-mobile"
@@ -865,18 +865,24 @@ export default function POS() {
       </Sheet>
 
       {/* Produtos — grelha / lista */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_50px_-36px_hsl(239_40%_25%/0.12)] lg:rounded-3xl">
-        <div className="sticky top-0 z-30 border-b border-border/80 bg-card/90 px-3 py-3 shadow-[0_8px_30px_-12px_rgba(15,23,42,0.12)] backdrop-blur-lg lg:static lg:z-0 lg:bg-gradient-to-b lg:from-muted/40 lg:to-card lg:px-4 lg:py-4 lg:shadow-none lg:backdrop-blur-none">
-          <div className="mb-2 flex items-end justify-between gap-2">
-            <div>
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-primary">Pesquisa e filtro</p>
-              <p className="text-xs text-muted-foreground">Nome, SKU ou código — uso intensivo</p>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:rounded-3xl">
+        {/* Header vermelho — PDV */}
+        <div className="shrink-0 bg-[#B71C1C] px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <ShoppingCart className="h-5 w-5 text-white" strokeWidth={2.5} />
+              <h2 className="text-base font-extrabold tracking-tight text-white">
+                PDV <span className="font-medium opacity-80">- Ponto de Venda</span>
+              </h2>
             </div>
-            <div className="flex shrink-0 gap-1 rounded-xl border border-border bg-muted/30 p-0.5">
+            <div className="flex shrink-0 gap-1 rounded-xl border border-white/20 bg-white/10 p-0.5">
               <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                variant="ghost"
                 size="sm"
-                className="h-9 rounded-lg px-3 text-xs font-bold"
+                className={cn(
+                  'h-8 rounded-lg px-3 text-xs font-bold transition-all',
+                  viewMode === 'list' ? 'bg-white text-[#CC2936] shadow-sm' : 'text-white hover:bg-white/15',
+                )}
                 onClick={() => setViewMode('list')}
                 data-testid="button-view-list"
               >
@@ -884,95 +890,71 @@ export default function POS() {
                 Lista
               </Button>
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                variant="ghost"
                 size="sm"
-                className="h-9 rounded-lg px-3 text-xs font-bold"
+                className={cn(
+                  'h-8 rounded-lg px-3 text-xs font-bold transition-all',
+                  viewMode === 'grid' ? 'bg-white text-[#CC2936] shadow-sm' : 'text-white hover:bg-white/15',
+                )}
                 onClick={() => setViewMode('grid')}
                 data-testid="button-view-grid"
               >
                 <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
-                Grelha
+                Grade
               </Button>
             </div>
           </div>
+        </div>
 
+        <div className="sticky top-0 z-30 border-b border-gray-100 bg-white px-4 pb-3 pt-3 lg:static lg:z-0">
+          {/* Search */}
           <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary" strokeWidth={2.5} />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
             <Input
-              placeholder="Escreva para filtrar ou foco aqui e passe o código de barras…"
-              className="h-14 rounded-2xl border-2 border-primary/20 bg-background pl-12 pr-4 text-base font-medium shadow-inner placeholder:text-muted-foreground/65 focus-visible:border-primary/45 focus-visible:ring-2 focus-visible:ring-primary/25"
+              placeholder="Nome, SKU ou código de barras..."
+              className="h-10 rounded-xl border-gray-200 bg-gray-50 pl-10 pr-28 text-sm font-medium placeholder:text-gray-400 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               ref={barcodeInputRef}
               data-testid="input-search-products"
             />
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground/80">
-                /
-              </kbd>
-              <span>Pesquisa · leitor no mesmo campo</span>
-            </span>
-            <span className="tabular-nums">
-              <span className="font-semibold text-foreground">{filteredProducts.length}</span>
-              <span className="text-muted-foreground/80">/{products.length}</span>
-              {lowStockLineCount > 0 ? (
-                <span className="ml-2 font-semibold text-amber-800 dark:text-amber-200">
-                  · {lowStockLineCount} stock baixo
-                </span>
-              ) : null}
+            {/* Inline count */}
+            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] tabular-nums">
               {productsFetching && !productsLoading ? (
-                <span className="ml-2 inline-flex items-center gap-1 font-medium text-primary">
-                  <Sparkles className="h-3 w-3 animate-pulse" />
-                  A sincronizar…
+                <Sparkles className="h-3 w-3 animate-pulse text-[#CC2936]" />
+              ) : null}
+              <span className="font-semibold text-gray-600">{filteredProducts.length}</span>
+              <span className="text-gray-300">/</span>
+              <span className="text-gray-400">{products.length}</span>
+              {lowStockLineCount > 0 ? (
+                <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                  {lowStockLineCount}↓
                 </span>
               ) : null}
-            </span>
+            </div>
           </div>
 
-          {!isMobileViewport && recentProducts.length > 0 && (
-            <div className="mt-3">
-              <p className="mb-1.5 flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                <History className="h-3.5 w-3.5" />
-                Recentes (toque para adicionar)
-              </p>
-              <div className="flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {recentProducts.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className="max-w-[9rem] shrink-0 truncate rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-left text-xs font-semibold text-primary transition hover:border-primary/40 hover:bg-primary/10"
-                    onClick={() => handleAddProduct(p)}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className={cn('mt-3 flex flex-wrap items-center gap-2', isMobileViewport && 'flex-col')}>
-            <Button
+          {/* Scanner buttons */}
+          <div className={cn('mt-2.5 flex items-center gap-2', isMobileViewport && 'flex-col')}>
+            <button
               type="button"
-              variant="default"
               className={cn(
-                'h-12 rounded-xl border-0 bg-gradient-to-r from-primary/95 to-[hsl(239_60%_42%)] font-bold text-primary-foreground shadow-md shadow-primary/20',
-                isMobileViewport ? 'w-full' : 'min-w-[7.5rem] flex-1 sm:flex-none sm:h-11',
+                'flex items-center gap-2 rounded-lg border border-[#B71C1C] bg-[#B71C1C] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#C62828] active:scale-[0.98]',
+                isMobileViewport ? 'w-full justify-center py-3' : '',
               )}
               onClick={() => setCameraScanOpen(true)}
             >
-              <Camera className="mr-2 h-5 w-5" />
-              {isMobileViewport ? 'Ler código · câmera' : 'Câmera'}
-            </Button>
+              <Camera className="h-4 w-4" />
+              {isMobileViewport ? 'Ler código — câmera' : 'Câmera'}
+            </button>
             {!isMobileViewport && (
-              <Button
+              <button
                 type="button"
-                variant={scannerToken ? 'default' : 'outline'}
                 className={cn(
-                  'h-11 min-w-[7.5rem] flex-1 rounded-xl font-semibold sm:flex-none',
-                  scannerToken && 'border-0 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md',
+                  'flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-semibold shadow-sm transition active:scale-[0.98]',
+                  scannerToken
+                    ? 'border-[#B71C1C] bg-[#B71C1C]/8 text-[#B71C1C] hover:bg-[#B71C1C]/15'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50',
                 )}
                 onClick={async () => {
                   if (scannerToken) {
@@ -990,20 +972,49 @@ export default function POS() {
                   }
                 }}
               >
-                <Smartphone className="mr-2 h-4 w-4" />
+                <Smartphone className="h-4 w-4" />
                 {scannerToken ? 'Scanner remoto' : 'Outro telemóvel'}
-              </Button>
+              </button>
             )}
+            {/* Hint pill */}
+            <div className="ml-auto hidden items-center gap-1.5 text-[11px] text-gray-400 sm:flex">
+              <kbd className="rounded border border-gray-200 bg-gray-100 px-1.5 py-px font-mono text-[10px] font-semibold text-gray-500">
+                /
+              </kbd>
+              <span>foca a pesquisa</span>
+            </div>
           </div>
 
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {!isMobileViewport && recentProducts.length > 0 && (
+            <div className="mt-2.5 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+              <p className="mb-1.5 flex items-center gap-1.5 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-gray-400">
+                <History className="h-3 w-3" />
+                Recentes
+              </p>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {recentProducts.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className="max-w-[9rem] shrink-0 truncate rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-left text-[11px] font-semibold text-gray-700 shadow-sm transition hover:border-[#B71C1C]/30 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C]"
+                    onClick={() => handleAddProduct(p)}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
+          <div className="mt-2.5 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               type="button"
               className={cn(
-                'h-10 shrink-0 rounded-full border px-4 text-xs font-bold transition-all',
+                'h-8 shrink-0 rounded-lg px-3.5 text-[11px] font-bold tracking-wide transition-all',
                 selectedCategory === 'all'
-                  ? 'border-primary bg-gradient-to-r from-primary to-[hsl(239_65%_48%)] text-primary-foreground shadow-md shadow-primary/20'
-                  : 'border-border bg-background text-muted-foreground hover:border-primary/40',
+                  ? 'bg-[#B71C1C] text-white shadow-sm'
+                  : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
               )}
               onClick={() => setSelectedCategory('all')}
               data-testid="button-category-all"
@@ -1015,10 +1026,10 @@ export default function POS() {
                 key={cat.id}
                 type="button"
                 className={cn(
-                  'h-10 shrink-0 whitespace-nowrap rounded-full border px-4 text-xs font-bold transition-all',
+                  'h-8 shrink-0 whitespace-nowrap rounded-lg px-3.5 text-[11px] font-bold tracking-wide transition-all',
                   selectedCategory === cat.id
-                    ? 'border-primary bg-gradient-to-r from-primary to-[hsl(239_65%_48%)] text-primary-foreground shadow-md shadow-primary/20'
-                    : 'border-border bg-background text-muted-foreground hover:border-primary/40',
+                    ? 'bg-[#B71C1C] text-white shadow-sm'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
                 )}
                 onClick={() => setSelectedCategory(cat.id)}
                 data-testid={`button-category-${cat.id}`}
@@ -1097,13 +1108,13 @@ export default function POS() {
                           )}
                           {cartItem && (
                             <div className="absolute inset-0 flex items-end justify-center bg-primary/10 pb-2">
-                              <div className="rounded-full bg-gradient-to-r from-primary to-accent px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                              <div className="rounded-full bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] px-2 py-0.5 text-xs font-bold text-primary-foreground">
                                 {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)} {product.unit}
                               </div>
                             </div>
                           )}
                           {parsedStock <= parsedMinStock && parsedStock > 0 && (
-                            <Badge className="absolute top-2 right-2 text-[10px] px-1.5 h-5 bg-orange-500 hover:bg-orange-600">Pouco</Badge>
+                            <Badge className="absolute top-2 right-2 text-[10px] px-1.5 h-5 bg-amber-600 hover:bg-amber-700">Pouco</Badge>
                           )}
                           {parsedStock <= 0 && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -1165,7 +1176,7 @@ export default function POS() {
       </div>
 
       <div className="hidden h-full w-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-[0_24px_60px_-40px_hsl(172_50%_30%/0.2)] lg:flex lg:w-[400px] xl:w-[420px]">
-        <div className="relative shrink-0 overflow-hidden border-b border-white/10 bg-gradient-to-br from-primary via-[hsl(239_60%_45%)] to-accent px-4 py-4 text-primary-foreground">
+        <div className="relative shrink-0 overflow-hidden border-b border-white/10 bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-4 py-4 text-primary-foreground">
           <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
           <h2 className="font-heading flex items-center gap-2 text-lg font-bold tracking-tight">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
@@ -1329,7 +1340,7 @@ export default function POS() {
               Limpar
             </Button>
             <Button 
-              className="w-full font-bold shadow-md shadow-primary/20" 
+              className="w-full font-bold shadow-md shadow-[#B71C1C]/20" 
               disabled={cart.length === 0}
               onClick={openCheckout}
               data-testid="button-checkout"
@@ -1386,7 +1397,7 @@ export default function POS() {
       {/* Confirmação final — recibo mental */}
       <Dialog open={showPreviewConfirm} onOpenChange={setShowPreviewConfirm}>
         <DialogContent className="max-h-[min(90dvh,640px)] overflow-y-auto rounded-2xl border-0 p-0 sm:max-w-lg">
-          <div className="bg-gradient-to-br from-primary via-[hsl(239_60%_45%)] to-accent px-6 pb-6 pt-6 text-primary-foreground">
+          <div className="bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-6 pb-6 pt-6 text-primary-foreground">
             <DialogHeader className="space-y-1 text-left">
               <DialogTitle className="font-heading text-xl font-bold text-white">Confirmar venda</DialogTitle>
               <DialogDescription className="text-sm text-white/85">
@@ -1463,7 +1474,7 @@ export default function POS() {
             </Button>
             <Button
               onClick={handleConfirmPreview}
-              className="h-12 w-full rounded-xl border-0 bg-gradient-to-r from-primary to-accent font-bold text-primary-foreground shadow-lg"
+              className="h-12 w-full rounded-xl border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] font-bold text-primary-foreground shadow-lg"
             >
               <Check className="mr-2 h-4 w-4" />
               Confirmar e registar
@@ -1474,7 +1485,7 @@ export default function POS() {
 
       <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
         <DialogContent className="max-h-[min(94dvh,780px)] overflow-y-auto rounded-2xl border-0 p-0 sm:max-w-2xl">
-          <div className="relative overflow-hidden bg-gradient-to-br from-primary via-[hsl(239_58%_46%)] to-accent px-6 pb-8 pt-6 text-primary-foreground">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-6 pb-8 pt-6 text-primary-foreground">
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
             <DialogHeader className="relative space-y-1 text-left">
               <DialogTitle className="font-heading text-2xl font-bold tracking-tight text-white">Finalizar venda</DialogTitle>
@@ -1638,7 +1649,7 @@ export default function POS() {
           )}
           aria-describedby="camera-scan-desc"
         >
-          <div className="max-md:bg-gradient-to-br max-md:from-primary max-md:via-[hsl(239_58%_44%)] max-md:to-accent max-md:px-5 max-md:pb-4 max-md:pt-5 max-md:text-primary-foreground sm:contents">
+          <div className="max-md:bg-gradient-to-br max-md:from-[#B71C1C] max-md:via-[#1A1A2E] max-md:to-[#1B3A5C] max-md:px-5 max-md:pb-4 max-md:pt-5 max-md:text-primary-foreground sm:contents">
             <DialogHeader className="space-y-1 px-5 pt-4 text-left sm:space-y-1.5 sm:px-0 sm:pt-0 sm:text-left">
               <DialogTitle className="flex items-center gap-2 font-heading text-lg sm:text-xl">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 max-md:text-white sm:bg-primary/10 sm:text-primary sm:ring-primary/20">
@@ -1800,7 +1811,7 @@ function RemoteScannerDialog({
         className="mx-auto flex max-h-[min(92dvh,720px)] w-full max-w-md flex-col overflow-hidden rounded-[1.75rem] border-0 p-0 sm:max-w-lg"
         aria-describedby="remote-scanner-desc"
       >
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary via-[hsl(239_62%_48%)] to-accent px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-5 pb-6 pt-5 text-primary-foreground">
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="flex items-start gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30">
@@ -1859,7 +1870,7 @@ function RemoteScannerDialog({
                         value={url}
                         size={200}
                         level="M"
-                        fgColor="hsl(172, 76%, 22%)"
+                        fgColor="#1A1A2E"
                         bgColor="#ffffff"
                         style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
                       />
@@ -1869,7 +1880,7 @@ function RemoteScannerDialog({
                     {!isMobileViewport && (
                       <Button
                         type="button"
-                        className="h-11 flex-1 rounded-xl border-0 bg-gradient-to-r from-primary to-accent font-bold text-primary-foreground shadow-md"
+                        className="h-11 flex-1 rounded-xl border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] font-bold text-primary-foreground shadow-md"
                         onClick={handleShareLink}
                       >
                         <Share2 className="mr-2 h-4 w-4" />
@@ -1882,7 +1893,7 @@ function RemoteScannerDialog({
                       className={cn(
                         'h-11 rounded-xl font-semibold',
                         isMobileViewport
-                          ? 'border-0 bg-gradient-to-r from-primary to-accent font-bold text-primary-foreground shadow-md'
+                          ? 'border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] font-bold text-primary-foreground shadow-md'
                           : 'flex-1',
                       )}
                       onClick={() => {
@@ -1912,7 +1923,7 @@ function RemoteScannerDialog({
                         'h-11 rounded-xl font-bold',
                         !isMobileViewport && 'flex-1',
                         isMobileViewport &&
-                          'border-0 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md',
+                          'border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] text-primary-foreground shadow-md',
                       )}
                       onClick={() => {
                         navigator.clipboard.writeText(url);
@@ -1952,7 +1963,7 @@ function RemoteScannerDialog({
           ) : (
             <Button
               onClick={handleNewLink}
-              className="h-12 w-full rounded-2xl border-0 bg-gradient-to-r from-primary via-[hsl(239_65%_48%)] to-accent text-base font-bold text-primary-foreground shadow-lg"
+              className="h-12 w-full rounded-2xl border-0 bg-gradient-to-r from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] text-base font-bold text-primary-foreground shadow-lg"
             >
               <Smartphone className="mr-2 h-5 w-5" />
               Gerar sessão e QR

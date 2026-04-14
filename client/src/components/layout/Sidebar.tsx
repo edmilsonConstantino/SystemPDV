@@ -87,61 +87,62 @@ export function Sidebar({ collapsed: controlledCollapsed, onCollapsedChange }: S
 
   return (
     <aside className={cn(
-      "hidden md:flex flex-col bg-sidebar border-r border-sidebar-border h-screen fixed left-0 top-0 z-20 transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
+      "sdb-root hidden md:flex flex-col h-screen fixed left-0 top-0 z-20 transition-all duration-300 border-r border-gray-200",
+      collapsed ? "w-16" : "w-[220px]"
     )}>
-      <div className={cn("p-4 flex items-center gap-3", collapsed ? "justify-center" : "px-6")}>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-[hsl(239_78%_48%)] to-accent shadow-lg shadow-primary/30 ring-2 ring-primary/20">
-          <Store className="h-5 w-5 text-primary-foreground" strokeWidth={2.25} />
+
+
+      {/* Logo */}
+      <div className={cn("flex items-center gap-3 border-b border-gray-200 py-4", collapsed ? "justify-center px-2" : "px-5")}>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-800 shadow-md ring-2 ring-red-100">
+          <Store className="h-5 w-5 text-white" strokeWidth={2.25} />
         </div>
         {!collapsed && (
           <div>
-            <h1 className="font-heading font-bold text-xl tracking-tight text-sidebar-foreground leading-none">
-              Makira Sales
-            </h1>
-            <span className="text-xs font-medium text-muted-foreground">Sistema de vendas</span>
+            <h1 className="font-heading text-[17px] font-bold leading-none tracking-tight text-gray-900">Makira Sales</h1>
+            <span className="text-[11px] font-medium text-gray-400">Sistema de vendas</span>
           </div>
         )}
       </div>
 
+      {/* Collapse toggle */}
       <Button
         variant="ghost"
         size="icon"
         onClick={toggleCollapsed}
-        className="absolute -right-3 top-20 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md z-30"
+        className="absolute -right-3 top-[68px] h-6 w-6 rounded-full border border-gray-200 bg-white text-gray-500 shadow-md z-30 hover:bg-gray-100 hover:text-gray-800"
         data-testid="button-toggle-sidebar"
       >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </Button>
 
-      <nav className={cn("flex-1 py-4 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-4")}>
+      {/* Nav */}
+      <nav className={cn("flex-1 overflow-y-auto py-6", collapsed ? "px-2" : "px-4")}>
+        {!collapsed && (
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-gray-400">Principal</p>
+        )}
         {filteredNav.map((item) => {
           const isActive = !item.openInNewTab && location === item.href;
           const showOrdersBadge = item.href === '/orders' && newOrdersUnread > 0;
-          const itemClass = (compact: boolean) =>
-            cn(
-              compact
-                ? 'flex items-center justify-center p-2.5 rounded-md transition-all duration-200 group no-underline'
-                : 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group no-underline',
-              isActive
-                ? 'bg-gradient-to-r from-primary to-[hsl(239_70%_48%)] text-primary-foreground shadow-md shadow-primary/25 font-semibold ring-1 ring-primary/20'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-            );
 
-          const iconClass = cn(
-            'h-5 w-5 shrink-0',
-            isActive ? 'text-current' : 'text-muted-foreground group-hover:text-current',
+          const itemClass = (compact: boolean) => cn(
+            'no-underline transition-colors duration-150 group',
+            compact
+              ? 'flex items-center justify-center rounded-lg p-2.5'
+              : 'flex items-center gap-2.5 rounded-lg px-3 py-[9px] text-[13.5px] font-medium',
+            isActive
+              ? 'sdb-item-active border-l-[3px] border-red-600 pl-[9px] text-red-700'
+              : 'border-l-[3px] border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900',
           );
+
+          const iconClass = cn('h-[18px] w-[18px] shrink-0 opacity-70 group-hover:opacity-100', isActive && 'opacity-100');
 
           const inner = (
             <>
               <span className="relative">
                 <item.icon className={iconClass} />
                 {showOrdersBadge && (
-                  <span
-                    className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-black text-accent-foreground ring-2 ring-background"
-                    aria-label={`${newOrdersUnread} novos pedidos`}
-                  >
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#C41C1C] px-1 text-[10px] font-bold text-white">
                     {newOrdersUnread > 9 ? '9+' : newOrdersUnread}
                   </span>
                 )}
@@ -149,89 +150,71 @@ export function Sidebar({ collapsed: controlledCollapsed, onCollapsedChange }: S
               {!collapsed && (
                 <>
                   <span className="flex-1">{item.label}</span>
-                  {item.openInNewTab && (
-                    <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-                  )}
+                  {item.openInNewTab && <ExternalLink className="h-3 w-3 shrink-0 opacity-50" aria-hidden />}
                 </>
               )}
             </>
           );
 
           if (item.openInNewTab) {
-            if (collapsed) {
-              return (
-                <Tooltip key={item.href} delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={itemClass(true)}
-                    >
-                      <item.icon className={iconClass} />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="font-medium">
-                    {item.label} (abre novo separador)
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
+            if (collapsed) return (
+              <Tooltip key={item.href} delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <a href={item.href} target="_blank" rel="noopener noreferrer" title={item.label} className={itemClass(true)}>
+                    <item.icon className={iconClass} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-medium">{item.label} (abre novo separador)</TooltipContent>
+              </Tooltip>
+            );
             return (
-              <a
-                key={item.href}
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={itemClass(false)}
-              >
+              <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer"
+                className={itemClass(false)}>
                 {inner}
               </a>
             );
           }
 
-          if (collapsed) {
-            return (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <Link href={item.href} className={itemClass(true)}>
-                    <item.icon className={iconClass} />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
-            );
-          }
+          if (collapsed) return (
+            <Tooltip key={item.href} delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link href={item.href} className={itemClass(true)}>
+                  <item.icon className={iconClass} />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">{item.label}</TooltipContent>
+            </Tooltip>
+          );
 
           return (
-            <Link key={item.href} href={item.href} className={itemClass(false)}>
-              <item.icon className={iconClass} />
-              <span>{item.label}</span>
+            <Link key={item.href} href={item.href} className={itemClass(false)}
+             >
+              {inner}
             </Link>
           );
         })}
       </nav>
 
-      <div className={cn("p-4 border-t border-sidebar-border bg-sidebar/50 backdrop-blur-sm", collapsed && "px-2")}>
+      {/* Bottom */}
+      <div className={cn("border-t border-gray-200 p-4", collapsed ? "px-2" : "")}>
         {!collapsed ? (
           <>
-            <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-sm font-bold text-primary-foreground ring-2 ring-primary/15">
+            {/* User row */}
+            <div className="flex items-center gap-2.5 px-1 mb-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#C41C1C] to-[#5A0000] text-sm font-bold text-white">
                 {user.avatar || user.name.charAt(0).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground capitalize truncate">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-medium text-gray-900">{user.name}</p>
+                <p className="truncate text-[11px] capitalize text-gray-400">
                   {user.role === 'manager' ? 'Gestor' : user.role === 'seller' ? 'Vendedor' : 'Admin'}
                 </p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="ghost"
               data-testid="button-logout"
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+              className="w-full justify-start rounded-lg border border-gray-200 bg-transparent text-[13px] text-gray-500 hover:bg-gray-100 hover:text-gray-900"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -241,11 +224,11 @@ export function Sidebar({ collapsed: controlledCollapsed, onCollapsedChange }: S
         ) : (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="ghost"
                 size="icon"
                 data-testid="button-logout"
-                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                className="w-full rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                 onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4" />

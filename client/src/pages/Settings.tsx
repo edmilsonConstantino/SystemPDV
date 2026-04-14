@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
@@ -15,11 +15,10 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, UserPlus, Lock, Activity, History, Search, Eye, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, TrendingUp, Users, Receipt } from 'lucide-react';
+import { Shield, UserPlus, Activity, History, Search, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, Users, Receipt } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { formatCurrency } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi, auditLogsApi, salesApi, productsApi } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -73,12 +72,12 @@ export default function SettingsPage() {
     }
   });
 
-  const { data: sales = [], isLoading: salesLoading } = useQuery({
+  const { isLoading: salesLoading } = useQuery({
     queryKey: ['/api/sales'],
     queryFn: salesApi.getAll
   });
 
-  const { data: products = [], isLoading: productsLoading } = useQuery({
+  const { isLoading: productsLoading } = useQuery({
     queryKey: ['/api/products'],
     queryFn: productsApi.getAll
   });
@@ -285,38 +284,94 @@ export default function SettingsPage() {
     );
   }
 
+  const tabDefs = [
+    ...(user?.role === 'admin' || user?.role === 'manager'
+      ? [{ id: 'users', label: 'Utilizadores', icon: Users, testId: 'tab-users' }]
+      : []),
+    ...(user?.role === 'admin'
+      ? [{ id: 'permissions', label: 'Permissões', icon: Shield, testId: 'tab-permissions' }]
+      : []),
+    ...(user?.role === 'admin' || user?.role === 'manager'
+      ? [
+          { id: 'audit', label: 'Rastreio & Auditoria', icon: History, testId: 'tab-audit' },
+          { id: 'invoices', label: 'Recibos & Faturas', icon: Receipt, testId: 'tab-invoices' },
+        ]
+      : []),
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Administração</h1>
-          <p className="text-muted-foreground">Gerenciamento de usuários, permissões e auditoria.</p>
+
+      {/* ── CABEÇALHO — padrão POS/Produtos/Pedidos ── */}
+      <div className="overflow-hidden rounded-3xl shadow-sm">
+        {/* Banner vermelho */}
+        <div className="relative bg-[#B71C1C] px-6 py-5">
+          <div className="banner-texture" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+              <Shield className="h-5 w-5 text-white" strokeWidth={2.5} />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-xl font-extrabold tracking-tight text-white">Administração</h1>
+                <span className="hidden text-sm font-normal text-white/50 sm:inline">Sistema &amp; Permissões</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-xs font-semibold text-white/70">
+                  {users.length} utilizador{users.length !== 1 ? 'es' : ''}
+                </span>
+                {auditLogs.length > 0 && (
+                  <span className="flex items-center gap-1 text-xs font-semibold text-white/60">
+                    <span className="h-1 w-1 rounded-full bg-white/40" />
+                    {auditLogs.length} evento{auditLogs.length !== 1 ? 's' : ''} de auditoria
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white px-6 py-3">
+          <div className="flex flex-wrap gap-2">
+            {tabDefs.map((t) => {
+              const Icon = t.icon;
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTab(t.id)}
+                  data-testid={t.testId}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                    active
+                      ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/25'
+                      : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <Tabs defaultValue="users" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          {(user?.role === 'admin' || user?.role === 'manager') && (
-            <TabsTrigger value="users" className="gap-2" data-testid="tab-users"><UserPlus className="h-4 w-4" /> Usuários</TabsTrigger>
-          )}
-          {user?.role === 'admin' && (
-            <TabsTrigger value="permissions" className="gap-2" data-testid="tab-permissions"><Shield className="h-4 w-4" /> Permissões</TabsTrigger>
-          )}
-          {(user?.role === 'admin' || user?.role === 'manager') && (
-            <TabsTrigger value="audit" className="gap-2" data-testid="tab-audit"><History className="h-4 w-4" /> Rastreio & Auditoria</TabsTrigger>
-          )}
-          {(user?.role === 'admin' || user?.role === 'manager') && (
-            <TabsTrigger value="invoices" className="gap-2" data-testid="tab-invoices"><Receipt className="h-4 w-4" /> Recibos & Faturas</TabsTrigger>
-          )}
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+        <TabsList className="sr-only" />
 
         <TabsContent value="users" className="space-y-4">
-          <div className="flex justify-end">
-             <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+          {/* Barra de acções */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">{users.length} utilizador{users.length !== 1 ? 'es' : ''} registado{users.length !== 1 ? 's' : ''}</p>
+            </div>
+            <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
               <DialogTrigger asChild>
-                <Button className="shadow-lg shadow-primary/20" disabled={user?.role !== 'admin'} data-testid="button-add-user">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Novo Usuário
+                <Button size="sm" className="h-9 gap-2 rounded-xl" disabled={user?.role !== 'admin'} data-testid="button-add-user">
+                  <UserPlus className="h-4 w-4" />
+                  Novo Utilizador
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -376,43 +431,50 @@ export default function SettingsPage() {
             </Dialog>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Usuários do Sistema</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto -mx-6 px-6">
-                <Table>
+          <Card className="overflow-hidden border border-border/60 shadow-sm">
+            <CardContent className="p-0">
+              <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Grupo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="py-3 pl-5 text-xs font-bold uppercase tracking-wider text-muted-foreground">Utilizador</TableHead>
+                    <TableHead className="py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Username</TableHead>
+                    <TableHead className="py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Grupo</TableHead>
+                    <TableHead className="py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">Estado</TableHead>
+                    <TableHead className="py-3 pr-5 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground">Acções</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users.map((u) => (
-                    <TableRow key={u.id} data-testid={`row-user-${u.id}`}>
-                      <TableCell className="font-medium flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex items-center justify-center text-sm font-bold">
-                          {u.avatar ? (
-                            <img src={u.avatar} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            u.name.charAt(0).toUpperCase()
-                          )}
+                    <TableRow key={u.id} className="border-border/50 hover:bg-muted/20" data-testid={`row-user-${u.id}`}>
+                      <TableCell className="py-3.5 pl-5">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-accent/20 text-xs font-bold text-primary">
+                            {u.avatar ? (
+                              <img src={u.avatar} alt="" className="h-full w-full rounded-full object-cover" />
+                            ) : (
+                              u.name.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold text-foreground">{u.name}</span>
                         </div>
-                        {u.name}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{u.username}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
+                      <TableCell className="py-3.5 font-mono text-xs text-muted-foreground">{u.username}</TableCell>
+                      <TableCell className="py-3.5">
+                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                          u.role === 'admin' ? 'bg-primary/10 text-primary' :
+                          u.role === 'manager' ? 'bg-accent/10 text-accent' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
                           {u.role === 'manager' ? 'Gestor' : u.role === 'seller' ? 'Vendedor' : 'Admin'}
-                        </Badge>
+                        </span>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="bg-green-100 text-green-800">Ativo</Badge></TableCell>
-                      <TableCell className="text-right gap-2 flex justify-end">
+                      <TableCell className="py-3.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          Activo
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3.5 pr-5 text-right">
                         <Dialog open={isEditOpen && editingUser?.id === u.id} onOpenChange={(open) => { setIsEditOpen(open); if (!open) setEditingUser(null); }}>
                           <Button 
                             variant="ghost" 
@@ -505,7 +567,6 @@ export default function SettingsPage() {
                   ))}
                 </TableBody>
               </Table>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -558,33 +619,33 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="audit" className="space-y-6">
+        <TabsContent value="audit" className="space-y-4">
           <Card className="border border-border/70">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5 text-primary" />
-                Rastrear pedido (por código)
+                Rastrear Pedido (Por Código)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <div className="flex-1">
-                  <Label>Código do pedido</Label>
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm font-medium">Código do pedido</Label>
+                <div className="flex items-center gap-2">
                   <Input
                     value={orderAuditCode}
                     onChange={(e) => setOrderAuditCode(e.target.value)}
                     placeholder="Ex: ABC12345"
-                    className="mt-2 font-mono"
+                    className="font-mono"
                   />
+                  <Button
+                    type="button"
+                    className="shrink-0"
+                    onClick={() => orderAuditMutation.mutate(orderAuditCode)}
+                    disabled={orderAuditMutation.isPending}
+                  >
+                    {orderAuditMutation.isPending ? 'Consultando…' : 'Consultar auditoria'}
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  className="mt-6 md:mt-0"
-                  onClick={() => orderAuditMutation.mutate(orderAuditCode)}
-                  disabled={orderAuditMutation.isPending}
-                >
-                  {orderAuditMutation.isPending ? 'Consultando…' : 'Consultar auditoria'}
-                </Button>
               </div>
 
               <Dialog open={orderAuditOpen} onOpenChange={setOrderAuditOpen}>
@@ -650,105 +711,64 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Estatísticas de Auditoria */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-primary">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {[
+              { label: 'Total de ações', value: auditStats.total, Icon: Activity, color: 'text-primary bg-primary/10' },
+              { label: 'Hoje', value: auditStats.today, Icon: Calendar, color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'Criações', value: auditStats.creates, Icon: Plus, color: 'text-blue-600 bg-blue-50' },
+              { label: 'Vendas', value: auditStats.sales, Icon: DollarSign, color: 'text-orange-600 bg-orange-50' },
+            ].map(({ label, value, Icon, color }) => (
+              <Card key={label} className="border border-border/60 shadow-sm">
+                <CardContent className="flex items-center justify-between p-4">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total de Ações</p>
-                    <h3 className="text-3xl font-bold mt-2">{auditStats.total}</h3>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
                   </div>
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Activity className="h-6 w-6 text-primary" />
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${color}`}>
+                    <Icon className="h-4 w-4" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Hoje</p>
-                    <h3 className="text-3xl font-bold mt-2">{auditStats.today}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-emerald-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-green-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Criações</p>
-                    <h3 className="text-3xl font-bold mt-2">{auditStats.creates}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                    <Plus className="h-6 w-6 text-green-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-orange-500">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Vendas</p>
-                    <h3 className="text-3xl font-bold mt-2">{auditStats.sales}</h3>
-                  </div>
-                  <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                    <DollarSign className="h-6 w-6 text-orange-600" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          {/* Filtros e Busca */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Buscar ação, usuário ou entidade..." 
-                    className="pl-9" 
-                    value={searchHistory}
-                    onChange={(e) => setSearchHistory(e.target.value)}
-                    data-testid="input-search-audit"
-                  />
-                </div>
-                <Select value={actionFilter} onValueChange={setActionFilter}>
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <SelectValue placeholder="Serviço" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos Serviços</SelectItem>
-                    <SelectItem value="product">Produtos</SelectItem>
-                    <SelectItem value="user">Usuários</SelectItem>
-                    <SelectItem value="sale">Vendas</SelectItem>
-                    <SelectItem value="stock">Estoque</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={userFilter} onValueChange={setUserFilter}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Filtrar por usuário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Todos Usuários</SelectItem>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Filtros */}
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar ação, usuário ou entidade..."
+                className="h-9 pl-9 text-sm"
+                value={searchHistory}
+                onChange={(e) => setSearchHistory(e.target.value)}
+                data-testid="input-search-audit"
+              />
+            </div>
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="h-9 w-full text-sm md:w-[160px]">
+                <SelectValue placeholder="Serviço" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Serviços</SelectItem>
+                <SelectItem value="product">Produtos</SelectItem>
+                <SelectItem value="user">Usuários</SelectItem>
+                <SelectItem value="sale">Vendas</SelectItem>
+                <SelectItem value="stock">Estoque</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={userFilter} onValueChange={setUserFilter}>
+              <SelectTrigger className="h-9 w-full text-sm md:w-[180px]">
+                <SelectValue placeholder="Utilizador" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Todos Usuários</SelectItem>
+                {users.map(u => (
+                  <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Timeline de Auditoria */}
           <Card>
@@ -766,7 +786,7 @@ export default function SettingsPage() {
                     <p>Nenhuma atividade encontrada</p>
                   </div>
                 ) : (
-                  filteredAuditLogs.map((log, index) => {
+                  filteredAuditLogs.map((log) => {
                     const logUser = users.find(u => u.id === log.userId);
                     return (
                       <div 
@@ -823,166 +843,200 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-primary" />
-                  Recibos & Faturas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label>Nome da loja</Label>
-                    <Input
-                      value={invoiceSettings.seller.name}
-                      onChange={(e) =>
-                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, name: e.target.value } }))
-                      }
-                      placeholder="Ex: Makira Sales"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>NIF (opcional)</Label>
-                    <Input
-                      value={invoiceSettings.seller.taxId ?? ''}
-                      onChange={(e) =>
-                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, taxId: e.target.value } }))
-                      }
-                      placeholder="Ex: 400123456"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Telefone (opcional)</Label>
-                    <Input
-                      value={invoiceSettings.seller.phone ?? ''}
-                      onChange={(e) =>
-                        setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, phone: e.target.value } }))
-                      }
-                      placeholder="Ex: +258 84 000 0000"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Moeda</Label>
-                    <Input
-                      value={invoiceSettings.currencyLabel}
-                      onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, currencyLabel: e.target.value }))}
-                      placeholder="Ex: MT"
-                    />
-                  </div>
+          <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+
+            {/* Formulário */}
+            <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+
+              {/* Header da secção */}
+              <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/60 px-6 py-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#B71C1C]/10">
+                  <Receipt className="h-4 w-4 text-[#B71C1C]" />
                 </div>
+                <div>
+                  <p className="text-sm font-extrabold text-gray-900">Recibos &amp; Faturas</p>
+                  <p className="text-[11px] text-gray-500">Configurações impressas em cada fatura gerada</p>
+                </div>
+              </div>
 
-                <Separator />
+              <div className="space-y-7 px-6 py-6">
 
-                <div className="space-y-3">
+                {/* Seção: Identidade */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Identidade da Loja</h3>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Nome da loja</Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={invoiceSettings.seller.name}
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, name: e.target.value } }))}
+                        placeholder="Ex: Makira Sales"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">NIF <span className="font-normal text-gray-400">(opcional)</span></Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={invoiceSettings.seller.taxId ?? ''}
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, taxId: e.target.value } }))}
+                        placeholder="Ex: 400123456"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Telefone <span className="font-normal text-gray-400">(opcional)</span></Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={invoiceSettings.seller.phone ?? ''}
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, seller: { ...prev.seller, phone: e.target.value } }))}
+                        placeholder="Ex: +258 84 000 0000"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Moeda</Label>
+                      <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                        value={invoiceSettings.currencyLabel}
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, currencyLabel: e.target.value }))}
+                        placeholder="Ex: MT"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                {/* Seção: Endereço */}
+                <section className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label>Endereço</Label>
-                    <Button
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                      <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Endereço</h3>
+                    </div>
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
                       onClick={() => setAddressLines((prev) => [...prev, ''])}
+                      className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-600 transition hover:border-[#B71C1C]/30 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C]"
                     >
-                      + Adicionar linha
-                    </Button>
+                      <Plus className="h-3.5 w-3.5" /> Adicionar linha
+                    </button>
                   </div>
                   <div className="space-y-2">
                     {(addressLines.length ? addressLines : ['']).map((val, idx) => (
                       <div key={idx} className="flex gap-2">
                         <Input
+                          className="h-11 flex-1 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                           value={val}
-                          onChange={(e) =>
-                            setAddressLines((prev) => prev.map((x, i) => (i === idx ? e.target.value : x)))
-                          }
+                          onChange={(e) => setAddressLines((prev) => prev.map((x, i) => (i === idx ? e.target.value : x)))}
                           placeholder={idx === 0 ? 'Ex: Av. 25 de Setembro' : 'Ex: Maputo'}
                         />
-                        <Button
+                        <button
                           type="button"
-                          variant="outline"
                           onClick={() => setAddressLines((prev) => prev.filter((_, i) => i !== idx))}
                           disabled={addressLines.length <= 1}
+                          className="rounded-xl border border-gray-200 px-3 text-xs font-semibold text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
                         >
                           Remover
-                        </Button>
+                        </button>
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
 
-                <Separator />
-
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm font-black">Transferências (Mpesa/Emola)</p>
-                    <p className="text-xs text-muted-foreground">
-                      Estes números aparecem no checkout do cliente quando ele escolher Mpesa/Emola.
-                    </p>
+                {/* Seção: Transferências */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <div>
+                      <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Transferências (Mpesa / Emola)</h3>
+                      <p className="mt-0.5 text-[10px] text-gray-400">Visíveis no checkout quando o cliente escolhe transferência</p>
+                    </div>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label>Número Mpesa</Label>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Número Mpesa</Label>
                       <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                         value={invoiceSettings.transferAccounts?.mpesa ?? ''}
-                        onChange={(e) =>
-                          setInvoiceSettings((prev) => ({
-                            ...prev,
-                            transferAccounts: { ...(prev.transferAccounts ?? {}), mpesa: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, transferAccounts: { ...(prev.transferAccounts ?? {}), mpesa: e.target.value } }))}
                         placeholder="Ex: 84 000 0000"
                       />
                     </div>
-                    <div className="grid gap-2">
-                      <Label>Número Emola</Label>
+                    <div className="space-y-1.5">
+                      <Label className="ml-1 text-xs font-bold text-gray-600">Número Emola</Label>
                       <Input
+                        className="h-11 rounded-xl border-gray-200 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                         value={invoiceSettings.transferAccounts?.emola ?? ''}
-                        onChange={(e) =>
-                          setInvoiceSettings((prev) => ({
-                            ...prev,
-                            transferAccounts: { ...(prev.transferAccounts ?? {}), emola: e.target.value },
-                          }))
-                        }
+                        onChange={(e) => setInvoiceSettings((prev) => ({ ...prev, transferAccounts: { ...(prev.transferAccounts ?? {}), emola: e.target.value } }))}
                         placeholder="Ex: 86 000 0000"
                       />
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <Separator />
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label>Modelo padrão</Label>
-                    <Select
-                      value={invoiceSettings.defaultModel}
-                      onValueChange={(v) => setInvoiceSettings((prev) => ({ ...prev, defaultModel: v as any }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Escolher modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="classic">Clássico</SelectItem>
-                        <SelectItem value="compact">Compacto</SelectItem>
-                      </SelectContent>
-                    </Select>
+                {/* Seção: Modelo e Opções */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Modelo &amp; Opções</h3>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {(['classic', 'compact'] as const).map((m) => {
+                      const active = invoiceSettings.defaultModel === m;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setInvoiceSettings((prev) => ({ ...prev, defaultModel: m }))}
+                          className={`overflow-hidden rounded-2xl border text-left transition-all ${
+                            active
+                              ? 'border-[#B71C1C]/40 bg-[#B71C1C]/3 ring-2 ring-[#B71C1C]/20'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3">
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{m === 'classic' ? 'Clássico' : 'Compacto'}</p>
+                              <p className="text-[11px] text-gray-400">Toque para definir como padrão</p>
+                            </div>
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                              active ? 'bg-[#B71C1C] text-white' : 'border border-gray-200 text-gray-500'
+                            }`}>
+                              {active ? 'Padrão' : 'Selecionar'}
+                            </span>
+                          </div>
+                          <div className="bg-gray-50 p-4">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="h-2.5 rounded-md bg-gray-200" />
+                              <div className="h-2.5 rounded-md bg-gray-200/80" />
+                              <div className="h-2.5 rounded-md bg-gray-200/60" />
+                              <div className="col-span-3 h-10 rounded-md bg-gray-200/70" />
+                              <div className="col-span-2 h-7 rounded-md bg-gray-200/60" />
+                              <div className="h-7 rounded-md bg-gray-200/60" />
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3">
                       <div>
-                        <p className="text-sm font-semibold">Mostrar QR</p>
-                        <p className="text-xs text-muted-foreground">Exibe QR na fatura</p>
+                        <p className="text-sm font-semibold text-gray-800">Mostrar QR Code</p>
+                        <p className="text-[11px] text-gray-400">Exibe QR na fatura impressa</p>
                       </div>
                       <Checkbox
                         checked={invoiceSettings.showQr}
                         onCheckedChange={(v) => setInvoiceSettings((prev) => ({ ...prev, showQr: Boolean(v) }))}
                       />
                     </div>
-                    <div className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+                    <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3">
                       <div>
-                        <p className="text-sm font-semibold">Mostrar Barcode</p>
-                        <p className="text-xs text-muted-foreground">Exibe código de barras</p>
+                        <p className="text-sm font-semibold text-gray-800">Mostrar Barcode</p>
+                        <p className="text-[11px] text-gray-400">Exibe código de barras na fatura</p>
                       </div>
                       <Checkbox
                         checked={invoiceSettings.showBarcode}
@@ -990,49 +1044,14 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                </div>
+                </section>
 
-                <div className="grid gap-3 md:grid-cols-2">
-                  {(['classic', 'compact'] as const).map((m) => {
-                    const active = invoiceSettings.defaultModel === m;
-                    return (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setInvoiceSettings((prev) => ({ ...prev, defaultModel: m }))}
-                        className={`overflow-hidden rounded-2xl border text-left transition ${
-                          active ? 'border-primary/40 ring-2 ring-primary/20' : 'border-border hover:bg-muted/30'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                          <div>
-                            <p className="text-sm font-black">{m === 'classic' ? 'Clássico' : 'Compacto'}</p>
-                            <p className="text-xs text-muted-foreground">Toque para definir como padrão</p>
-                          </div>
-                          <Badge variant={active ? 'default' : 'outline'} className="rounded-xl">
-                            {active ? 'Padrão' : 'Selecionar'}
-                          </Badge>
-                        </div>
-                        <div className="bg-muted/20 p-4">
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="h-3 rounded bg-white" />
-                            <div className="h-3 rounded bg-white/80" />
-                            <div className="h-3 rounded bg-white/60" />
-                            <div className="col-span-3 h-12 rounded bg-white/70" />
-                            <div className="col-span-2 h-8 rounded bg-white/60" />
-                            <div className="h-8 rounded bg-white/60" />
-                          </div>
-                          <p className="mt-3 text-xs text-muted-foreground">
-                            Preview completo ao lado.
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label>Notas padrão (uma por linha)</Label>
+                {/* Seção: Notas */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <h3 className="text-[0.65rem] font-bold uppercase tracking-wider text-gray-400">Notas Padrão</h3>
+                  </div>
                   <Textarea
                     value={notesText}
                     onChange={(e) => {
@@ -1042,56 +1061,63 @@ export default function SettingsPage() {
                         defaultNotes: e.target.value.split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 5),
                       }));
                     }}
-                    placeholder="Ex:\nObrigado pela preferência\nTrocas até 7 dias"
-                    className="min-h-[90px]"
+                    placeholder={"Obrigado pela preferência\nTrocas até 7 dias"}
+                    className="min-h-[80px] rounded-xl border-gray-200 text-sm focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                   />
-                </div>
+                  <p className="ml-1 text-[11px] text-gray-400">Máximo 5 linhas — aparecem no rodapé da fatura</p>
+                </section>
 
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      const merged: InvoiceSettings = {
-                        ...invoiceSettings,
-                        seller: { ...invoiceSettings.seller, addressLines: addressLines.map((x) => x.trim()).filter(Boolean).slice(0, 6) },
-                      };
-                      setInvoiceSettings(merged);
-                      saveInvoiceSettings(merged);
-                      toast({ title: 'Salvo', description: 'Configurações de fatura aplicadas.' });
-                    }}
-                  >
-                    Salvar configurações
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const fresh = loadInvoiceSettings();
-                      setInvoiceSettings(fresh);
-                      setAddressLines(fresh.seller.addressLines ?? []);
-                      setNotesText(fresh.defaultNotes.join('\n'));
-                      toast({ title: 'Recarregado', description: 'Configuração atual recarregada.' });
-                    }}
-                  >
-                    Recarregar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card className="h-fit lg:sticky lg:top-20">
-              <CardHeader>
-                <CardTitle className="text-base">Preview (A7)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mx-auto w-fit rounded-2xl border border-border bg-white p-3 shadow-sm">
+              {/* Footer com botões */}
+              <div className="flex flex-wrap gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const merged: InvoiceSettings = {
+                      ...invoiceSettings,
+                      seller: { ...invoiceSettings.seller, addressLines: addressLines.map((x) => x.trim()).filter(Boolean).slice(0, 6) },
+                    };
+                    setInvoiceSettings(merged);
+                    saveInvoiceSettings(merged);
+                    toast({ title: 'Salvo', description: 'Configurações de fatura aplicadas.' });
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-[#B71C1C]/20 transition hover:opacity-90 active:scale-[0.98]"
+                >
+                  Salvar configurações
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fresh = loadInvoiceSettings();
+                    setInvoiceSettings(fresh);
+                    setAddressLines(fresh.seller.addressLines ?? []);
+                    setNotesText(fresh.defaultNotes.join('\n'));
+                    toast({ title: 'Recarregado', description: 'Configuração atual recarregada.' });
+                  }}
+                  className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+                >
+                  Recarregar
+                </button>
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="h-fit overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-20">
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/60 px-5 py-3.5">
+                <div className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Preview (A7)</p>
+              </div>
+              <div className="p-5">
+                <div className="mx-auto w-fit rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
                   <InvoiceA7Template model={invoiceSettings.defaultModel} data={invoicePreviewData} />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Este preview muda em tempo real conforme você edita.
+                <p className="mt-3 text-center text-[11px] text-gray-400">
+                  Actualiza em tempo real conforme edita
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
           </div>
         </TabsContent>
       </Tabs>

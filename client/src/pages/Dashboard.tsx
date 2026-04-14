@@ -10,7 +10,6 @@ import {
   TrendingUp,
   Users,
   Activity,
-  ChevronRight,
   CheckCircle2,
   Star,
 } from 'lucide-react';
@@ -24,27 +23,27 @@ import { salesApi, productsApi, usersApi, notificationsApi } from '@/lib/api';
 import { KpiCarousel } from '@/components/dashboard/KpiCarousel';
 import type { LucideIcon } from 'lucide-react';
 
-/** Tokens visuais — alinhados ao tema global (teal + índigo, nítidos) */
+/** Tokens visuais — Nerion Group: vermelho · preto · branco */
 const mk = {
-  page: 'relative min-h-[min(100%,48rem)] -mx-3 -mt-1 px-1 pb-10 pt-2 sm:-mx-4 sm:px-2 md:-mx-6 md:px-0',
-  heroBg: `
-    radial-gradient(ellipse 90% 70% at 100% 0%, rgba(255,255,255,0.55) 0%, transparent 45%),
-    radial-gradient(ellipse 55% 45% at 0% 100%, hsl(172 72% 45% / 0.2) 0%, transparent 50%),
-    linear-gradient(125deg, hsl(230 85% 92%) 0%, hsl(172 55% 88%) 42%, hsl(239 75% 90%) 100%)
-  `,
-  softTeal: 'bg-primary/12 text-primary',
-  softPeri: 'bg-accent/12 text-accent',
-  softAmber: 'bg-[hsl(32_95%_95%)] text-[hsl(24_90%_38%)]',
-  softRose: 'bg-destructive/10 text-destructive',
-  softSky: 'bg-[hsl(199_90%_94%)] text-[hsl(200_85%_32%)]',
-  chartStroke: 'hsl(172 72% 36%)',
-  chartMeta: 'hsl(239 78% 58%)',
-  kpiBase:
-    'border border-border bg-card shadow-[0_22px_56px_-32px_hsl(239_40%_22%/0.14)] transition-shadow duration-300 hover:shadow-[0_28px_64px_-36px_hsl(172_50%_30%/0.12)]',
+  page: 'relative min-h-screen bg-white px-6 py-6',
+  // acento colorido por card (linha no topo)
+  kpiAccent: [
+    'bg-gradient-to-r from-red-700 via-red-500 to-transparent',           // vendas  — vermelho
+    'bg-gradient-to-r from-gray-900 via-gray-600 to-transparent',         // pedidos — preto
+    'bg-gradient-to-r from-amber-500 via-amber-400 to-transparent',       // stock   — âmbar
+    'bg-gradient-to-r from-red-800 via-red-600 to-transparent',            // equipa  — vermelho escuro
+  ],
+  softRed:    'bg-red-50    text-red-700',
+  softDark:   'bg-gray-100  text-gray-800',
+  softAmber:  'bg-amber-50  text-amber-600',
+  softIndigo: 'bg-red-50    text-red-700',
+  chartStroke: 'hsl(0 75% 44%)',
+  chartMeta:   'hsl(0 0% 20%)',
+  kpiBase: 'border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5',
 };
 
 const KPI_DESKTOP_COL = [
-  'md:col-span-6 lg:col-span-5 xl:ring-2 xl:ring-primary/18 xl:shadow-[0_32px_70px_-40px_hsl(172_72%_28%/0.22)]',
+  'md:col-span-6 lg:col-span-5',
   'md:col-span-6 lg:col-span-3',
   'md:col-span-6 lg:col-span-2',
   'md:col-span-6 lg:col-span-2',
@@ -164,43 +163,19 @@ export default function Dashboard() {
       .slice(0, 10);
   }, [chartRangeDays, sales]);
 
-  const isLoading =
-    salesLoading ||
-    productsLoading ||
-    (user?.role === 'admin' ? usersLoading : false) ||
-    notificationsLoading;
   const firstName = user?.name?.split(' ')[0] ?? 'Utilizador';
   const dateLabel = format(new Date(), "EEE, dd MMM yyyy", { locale: ptBR });
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-border/60 bg-card">
-        <div className="space-y-4 text-center">
-          <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25" />
-          <p className="text-sm font-semibold text-muted-foreground">A carregar dashboard…</p>
-        </div>
-      </div>
-    );
-  }
 
   const kpis: KpiDef[] = [
     {
       id: 'sales',
       title: 'Vendas hoje',
-      iconWrap: mk.softTeal,
+      iconWrap: mk.softRed,
       Icon: DollarSign,
       body: (
         <>
-          <p
-            className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl"
-            data-testid="text-sales-today"
-          >
+          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-sales-today">
             {formatCurrency(totalSalesToday)}
-          </p>
-          <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-primary">
-            <TrendingUp className="h-3.5 w-3.5 shrink-0" />
-            <span className="rounded-lg bg-primary/15 px-2 py-0.5 font-bold text-primary">+12.5%</span>
-            <span className="text-muted-foreground">vs. média semanal</span>
           </p>
         </>
       ),
@@ -208,23 +183,16 @@ export default function Dashboard() {
     {
       id: 'orders',
       title: 'Pedidos',
-      iconWrap: mk.softAmber,
+      iconWrap: mk.softDark,
       Icon: ShoppingBag,
       body: (
         <>
-          <p
-            className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-            data-testid="text-orders-today"
-          >
+          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-orders-today">
             {totalOrdersToday}
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {ordersDelta >= 0 ? (
-              <span className="font-bold text-[hsl(24_90%_38%)]">+{ordersDelta}</span>
-            ) : (
-              <span className="font-bold text-foreground">{ordersDelta}</span>
-            )}{' '}
-            vs. ontem · <span className="text-muted-foreground/80">{ordersYesterday} ontem</span>
+          <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
+            <span className="font-bold text-gray-800">{ordersDelta >= 0 ? `+${ordersDelta}` : ordersDelta}</span>
+            {' '}vs. ontem
           </p>
         </>
       ),
@@ -232,32 +200,18 @@ export default function Dashboard() {
     {
       id: 'stock',
       title: 'Alertas stock',
-      iconWrap: mk.softRose,
+      iconWrap: mk.softAmber,
       Icon: AlertTriangle,
       body: (
         <>
-          <p
-            className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-            data-testid="text-low-stock"
-          >
+          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-low-stock">
             {stockAttentionTotal}
           </p>
-          <p className="mt-2">
-            <span
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
-                stockAttentionTotal > 0 ? 'bg-destructive/15 text-destructive' : 'bg-primary/15 text-primary'
-              }`}
-            >
+          <p className="mt-1.5">
+            <span className={`rounded px-2 py-0.5 text-[0.7rem] font-bold ${stockAttentionTotal > 0 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
               {stockAttentionTotal > 0 ? 'Atenção' : 'Normal'}
             </span>
           </p>
-          {stockAttentionTotal > 0 && (
-            <p className="mt-1 text-[0.65rem] font-medium text-muted-foreground">
-              {lowBelowMinCount > 0 && <span>{lowBelowMinCount} abaixo do mín.</span>}
-              {lowBelowMinCount > 0 && outOfStockCount > 0 && <span> · </span>}
-              {outOfStockCount > 0 && <span>{outOfStockCount} esgotado{outOfStockCount !== 1 ? 's' : ''}</span>}
-            </p>
-          )}
         </>
       ),
     },
@@ -266,18 +220,15 @@ export default function Dashboard() {
           {
             id: 'team',
             title: 'Equipa',
-            iconWrap: mk.softSky,
+            iconWrap: mk.softIndigo,
             Icon: Users,
             body: (
               <>
-                <p
-                  className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-                  data-testid="text-active-users"
-                >
+                <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-active-users">
                   {activeUsers}
                 </p>
-                <p className="mt-2 text-xs font-bold text-accent">
-                  <span className="rounded-lg bg-accent/12 px-2 py-0.5">Utilizadores</span>
+                <p className="mt-1.5 text-[0.7rem]">
+                  <span className="rounded bg-red-50 px-1.5 py-0.5 font-bold text-red-700">Utilizadores</span>
                 </p>
               </>
             ),
@@ -286,167 +237,140 @@ export default function Dashboard() {
       : []),
   ];
 
+
   return (
     <div className={mk.page}>
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-64 max-w-4xl opacity-40 blur-3xl md:h-80"
-        style={{
-          background:
-            'radial-gradient(ellipse at 50% 0%, hsl(172 72% 45% / 0.25) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, hsl(239 78% 60% / 0.2) 0%, transparent 50%)',
-        }}
-        aria-hidden
-      />
+      {/* ── HERO DASHBOARD (ESTILO FIEL À IMAGEM) ── */}
+      <div className="dash-hero relative mb-8 overflow-hidden rounded-[2rem] bg-[#1a1a1a] p-8 shadow-2xl text-white border border-white/5">
 
-      {/* Breadcrumb + data */}
-      <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-        <nav className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-          <span className="font-bold text-accent">Makira Sales</span>
-          <ChevronRight className="h-4 w-4 text-border" aria-hidden />
-          <span className="font-semibold text-foreground">Dashboard</span>
-        </nav>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:text-sm sm:normal-case">
-          {dateLabel}
-        </p>
-      </div>
+        {/* Camadas de Fundo (Shapes) */}
+        <div className="absolute inset-0 z-0">
+          <div className="hero-red-shape" />
+          <div className="hero-dark-overlay" />
+          <div className="hero-white-curve" />
+        </div>
 
-      {/* Hero — mobile: coluna; desktop: grelha + painel lateral “glass” */}
-      <div
-        className="relative mb-6 overflow-hidden rounded-3xl border border-white/60 shadow-[0_28px_64px_-32px_hsl(239_45%_25%/0.35)] sm:mb-8 lg:rounded-[2rem]"
-        style={{ background: mk.heroBg }}
-      >
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/40 blur-3xl sm:h-56 sm:w-56" />
-        <div className="pointer-events-none absolute -bottom-12 left-0 h-36 w-36 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute right-1/4 top-1/2 h-24 w-24 rounded-full bg-accent/15 blur-2xl" />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07] lg:opacity-[0.09]"
-          style={{
-            backgroundImage: `linear-gradient(hsl(239 30% 40%) 1px, transparent 1px), linear-gradient(90deg, hsl(239 30% 40%) 1px, transparent 1px)`,
-            backgroundSize: '28px 28px',
-          }}
-          aria-hidden
-        />
+        {/* CONTEÚDO REAL */}
+        <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[1fr_auto]">
 
-        <div className="relative z-10 grid gap-8 p-5 sm:p-7 lg:grid-cols-12 lg:items-center lg:gap-10 lg:p-10 xl:p-12">
-          <div className="space-y-3 sm:space-y-4 lg:col-span-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/55 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-primary shadow-sm backdrop-blur-sm">
-              Resumo do dia
-            </div>
-            <h1 className="font-heading text-[1.35rem] font-bold leading-tight tracking-tight text-foreground sm:text-2xl lg:text-4xl xl:text-[2.35rem]">
-              Olá, {firstName}
-              <span className="mt-1 block font-medium text-muted-foreground lg:mt-2 lg:text-[1.35rem] lg:font-normal xl:text-[1.45rem]">
-                — aqui está o seu resumo em tempo real
+          {/* LEFT */}
+          <div className="flex flex-col gap-5">
+            {/* Badge Resumo */}
+            <div className="flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 backdrop-blur-md">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+              <span className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-200">
+                Resumo do dia
               </span>
-            </h1>
-            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base lg:text-lg">
-              Tudo sob controlo hoje
-              {stockAttentionTotal > 0 ? (
-                <>
-                  .{' '}
-                  <span className="font-bold text-[hsl(24_90%_38%)]">
-                    {stockAttentionTotal} alerta{stockAttentionTotal !== 1 ? 's' : ''} de stock
-                  </span>{' '}
-                  para rever.
-                </>
-              ) : (
-                <>.</>
-              )}
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 pt-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:overflow-visible lg:pt-2 [&::-webkit-scrollbar]:hidden">
-              <Link href="/pos" className="shrink-0">
-                <Button className="h-11 rounded-2xl border-0 bg-gradient-to-r from-primary via-[hsl(239_70%_50%)] to-accent px-5 font-bold text-primary-foreground shadow-[0_14px_32px_-10px_hsl(172_72%_28%/0.55)] hover:brightness-[1.05] lg:h-12 lg:px-7">
-                  Nova venda
-                </Button>
+            </div>
+
+            {/* Texto Principal */}
+            <div className="space-y-1">
+              <h1 className="text-4xl font-bold tracking-tight">
+                Olá, <span className="font-extrabold">{firstName}</span> 👋
+              </h1>
+              <p className="font-medium text-gray-300 opacity-90">
+                Tudo sob controlo hoje. Bom trabalho.
+              </p>
+            </div>
+
+            {/* Botões */}
+            <div className="flex flex-wrap gap-3">
+              <Link href="/pos">
+                <button type="button" className="flex items-center gap-2 rounded-full bg-[#e11d1d] px-7 py-3 text-sm font-bold shadow-lg shadow-red-900/20 transition-all hover:scale-105 hover:bg-red-500 active:scale-95">
+                  + Nova venda
+                </button>
               </Link>
-              <Link href="/reports" className="shrink-0">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-2xl border-border bg-white/85 font-semibold text-foreground shadow-sm backdrop-blur-sm hover:bg-card lg:h-12"
-                >
+              <Link href="/reports">
+                <button type="button" className="rounded-full border border-white/10 bg-white/10 px-7 py-3 text-sm font-bold backdrop-blur-md transition-all hover:bg-white/20">
                   Relatórios
-                </Button>
+                </button>
               </Link>
-              <Link href="/products" className="shrink-0">
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-2xl border-border bg-white/85 font-semibold text-foreground shadow-sm backdrop-blur-sm hover:bg-card lg:h-12"
-                >
+              <Link href="/products">
+                <button type="button" className="rounded-full border border-white/10 bg-white/10 px-7 py-3 text-sm font-bold backdrop-blur-md transition-all hover:bg-white/20">
                   Produtos
-                </Button>
+                </button>
               </Link>
             </div>
           </div>
 
-          <div className="hidden flex-col gap-3 lg:col-span-5 lg:flex">
-            <div className="group relative overflow-hidden rounded-2xl border border-white/50 bg-white/45 p-5 shadow-[0_20px_50px_-28px_hsl(172_40%_30%/0.25)] backdrop-blur-md transition hover:border-primary/30 hover:bg-white/55">
-              <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br from-primary/25 to-transparent blur-xl transition group-hover:from-primary/35" />
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-primary">Receita hoje</p>
-              <p className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground xl:text-4xl">
+          {/* RIGHT — stats */}
+          <div className="hidden shrink-0 flex-col gap-3 lg:flex">
+            {/* Receita hoje */}
+            <div className="min-w-[185px] rounded-xl border border-black/20 bg-black/30 px-5 py-4 backdrop-blur-sm">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white/50">Receita hoje</p>
+              <p className="mt-1.5 font-heading text-[1.65rem] font-extrabold tracking-tight text-white">
                 {formatCurrency(totalSalesToday)}
               </p>
-              <p className="mt-2 text-xs font-medium text-muted-foreground">Atualizado ao abrir o painel</p>
+              <p className="mt-1 text-[0.67rem] text-white/35">Actualizado ao abrir o painel</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/45 bg-gradient-to-br from-accent/10 to-primary/5 p-4 shadow-inner backdrop-blur-sm">
-                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-accent">Pedidos</p>
-                <p className="mt-1 font-heading text-2xl font-bold text-foreground">{totalOrdersToday}</p>
-              </div>
-              <div className="rounded-2xl border border-white/45 bg-gradient-to-br from-primary/10 to-accent/5 p-4 shadow-inner backdrop-blur-sm">
-                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-primary">Stock</p>
-                <p className="mt-1 font-heading text-2xl font-bold text-foreground">{stockAttentionTotal}</p>
-                <p className="text-[0.65rem] font-semibold text-muted-foreground">stock</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between rounded-2xl border border-dashed border-primary/25 bg-white/35 px-4 py-3 text-xs font-semibold text-muted-foreground backdrop-blur-sm">
-              <span className="text-foreground">Equipa activa</span>
-              <span className="rounded-lg bg-primary/15 px-2 py-1 font-bold text-primary">{activeUsers}</span>
+            {/* Mini stats */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: 'Pedidos', value: totalOrdersToday },
+                { label: 'Alertas', value: stockAttentionTotal },
+                { label: 'Equipa',  value: activeUsers ?? '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-lg border border-black/20 bg-black/30 px-3 py-2.5 text-center backdrop-blur-sm">
+                  <p className="text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-white/40">{label}</p>
+                  <p className="mt-1 font-heading text-lg font-bold text-white">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* KPIs — mobile: carrossel + dots + setas + auto; desktop: bento 12 colunas */}
+      {/* KPIs — mobile: carrossel */}
       <KpiCarousel>
         {kpis.map((k) => {
           const KIcon = k.Icon;
           return (
-            <Card key={k.id} className={cn('w-full rounded-2xl', mk.kpiBase)}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">{k.title}</CardTitle>
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${k.iconWrap}`}>
-                  <KIcon className="h-5 w-5" strokeWidth={2.25} />
+            <Card key={k.id} className={cn('w-full overflow-hidden rounded-xl', mk.kpiBase)}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k.title}</CardTitle>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${k.iconWrap}`}>
+                  <KIcon className="h-4 w-4" strokeWidth={2.25} />
                 </div>
               </CardHeader>
-              <CardContent>{k.body}</CardContent>
+              <CardContent className="px-4 pb-4 pt-0">{k.body}</CardContent>
             </Card>
           );
         })}
       </KpiCarousel>
 
-      <div className="mb-8 hidden grid-cols-12 gap-4 md:grid md:gap-5 lg:gap-6">
+      {/* KPIs — desktop */}
+      <div className="dash-kpi mb-6 hidden grid-cols-12 gap-4 md:grid">
         {kpis.map((k, i) => {
           const KIcon = k.Icon;
+          const kpiDelayClass = (['dash-kpi-1', 'dash-kpi-2', 'dash-kpi-3', 'dash-kpi-4'] as const)[i] ?? 'dash-kpi-1';
           return (
-            <Card key={k.id} className={cn('rounded-2xl', mk.kpiBase, KPI_DESKTOP_COL[i])}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground">{k.title}</CardTitle>
-                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${k.iconWrap}`}>
-                  <KIcon className="h-5 w-5" strokeWidth={2.25} />
+            <Card
+              key={k.id}
+              className={cn('overflow-hidden rounded-2xl', mk.kpiBase, KPI_DESKTOP_COL[i], kpiDelayClass)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
+                <CardTitle className="text-[0.7rem] font-bold uppercase tracking-widest text-muted-foreground">{k.title}</CardTitle>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${k.iconWrap}`}>
+                  <KIcon className="h-4 w-4" strokeWidth={2.25} />
                 </div>
               </CardHeader>
-              <CardContent>{k.body}</CardContent>
+              <CardContent className="px-5 pb-5 pt-1">{k.body}</CardContent>
             </Card>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
-        <Card className="relative overflow-hidden border border-border bg-card shadow-[0_24px_56px_-32px_hsl(239_40%_20%/0.14)] lg:col-span-2">
+      {/* ── MAIN CONTENT ROW: Chart (2/3) + Right column (1/3) ── */}
+      <div className="dash-row-1 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr] lg:gap-6">
+
+        {/* Chart card */}
+        <Card className="relative overflow-hidden border border-border bg-card shadow-sm">
           <div
-            className="absolute inset-x-0 top-0 z-10 h-1 bg-gradient-to-r from-primary via-accent to-[hsl(262_72%_58%)]"
+            className="absolute inset-x-0 top-0 z-10 h-1 bg-gradient-to-r from-red-800 via-red-700 to-red-950"
             aria-hidden
           />
           <CardHeader className="relative flex flex-col gap-4 pt-7 sm:flex-row sm:items-start sm:justify-between">
-            <div className="border-l-4 border-primary pl-3">
+            <div className="border-l-4 border-red-800 pl-3">
               <CardTitle className="text-lg font-bold text-foreground">Desempenho</CardTitle>
               <CardDescription>
                 Últimos {chartRangeDays} dias · receita diária vs. meta de referência
@@ -462,7 +386,7 @@ export default function Dashboard() {
                   className={cn(
                     'h-9 flex-1 rounded-xl text-xs sm:flex-none',
                     chartRangeDays === d
-                      ? 'bg-card font-black text-foreground shadow-sm ring-1 ring-primary/20'
+                      ? 'bg-card font-black text-foreground shadow-sm ring-1 ring-red-500/20'
                       : 'font-semibold text-muted-foreground hover:text-foreground',
                   )}
                   onClick={() => setChartRangeDays(d)}
@@ -478,11 +402,11 @@ export default function Dashboard() {
                 <AreaChart data={chartData} margin={{ top: 10, right: 8, left: -18, bottom: 0 }}>
                   <defs>
                     <linearGradient id="mkArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={mk.chartStroke} stopOpacity={0.45} />
+                      <stop offset="5%" stopColor={mk.chartStroke} stopOpacity={0.35} />
                       <stop offset="95%" stopColor={mk.chartStroke} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(230 26% 88%)" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(0 0% 90%)" />
                   <XAxis
                     dataKey="date"
                     tick={{ fill: 'hsl(215 18% 42%)', fontSize: 10 }}
@@ -503,14 +427,14 @@ export default function Dashboard() {
                     contentStyle={{
                       borderRadius: '14px',
                       border: '1px solid hsl(230 26% 88%)',
-                      boxShadow: '0 16px 48px -16px hsl(239 40% 30% / 0.2)',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
                     }}
                     formatter={(value: number, name: string) => [
                       formatCurrency(value),
                       name === 'total' ? 'Receita' : 'Meta',
                     ]}
                   />
-                  <Area type="monotone" dataKey="total" stroke={mk.chartStroke} strokeWidth={2.5} fill="url(#mkArea)" />
+                  <Area type="monotone" dataKey="total" stroke={mk.chartStroke} strokeWidth={2} fill="url(#mkArea)" />
                   <Line
                     type="monotone"
                     dataKey="meta"
@@ -525,70 +449,178 @@ export default function Dashboard() {
             </div>
             <div className="mt-3 flex flex-wrap gap-4 px-2 text-xs font-semibold text-muted-foreground">
               <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-primary" /> Receita
+                <span className="h-2 w-2 rounded-full bg-red-800" /> Receita
               </span>
               <span className="flex items-center gap-2">
-                <span className="h-0.5 w-5 border-t-2 border-dashed border-accent" /> Meta
+                <span className="h-0.5 w-5 border-t-2 border-dashed border-gray-800" /> Meta
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-border bg-card shadow-[0_24px_56px_-32px_hsl(239_40%_20%/0.14)]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/12">
-                <Star className="h-5 w-5 text-accent" strokeWidth={2.25} />
-              </span>
-              Top produtos
-            </CardTitle>
-            <CardDescription>Por unidades vendidas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {topProducts.length === 0 ? (
-              <p className="py-8 text-center text-sm font-medium text-muted-foreground">Ainda sem vendas registadas</p>
-            ) : (
-              topProducts.map((p, idx) => (
-                <div
-                  key={p.productId}
-                  className="flex items-center justify-between rounded-2xl border border-border/80 bg-muted/25 px-3 py-3 transition hover:border-primary/25 hover:bg-muted/40"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 text-sm font-bold text-accent">
-                      #{idx + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">{p.quantity} vendas</p>
+        {/* Right column: Top produtos + Atividade stacked */}
+        <div className="flex flex-col gap-5 lg:gap-6">
+          {/* Top produtos */}
+          <Card className="border border-border bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50">
+                  <Star className="h-5 w-5 text-red-700" strokeWidth={2.25} />
+                </span>
+                Top produtos
+              </CardTitle>
+              <CardDescription>Por unidades vendidas</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {topProducts.length === 0 ? (
+                <p className="py-8 text-center text-sm font-medium text-muted-foreground">Ainda sem vendas registadas</p>
+              ) : (
+                topProducts.map((p, idx) => (
+                  <div
+                    key={p.productId}
+                    className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-3 py-3 shadow-sm transition hover:border-red-200 hover:shadow-md"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-100 to-rose-50 text-sm font-bold text-red-800">
+                        #{idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.quantity} vendas</p>
+                      </div>
+                    </div>
+                    <p className="shrink-0 text-sm font-bold text-red-700">{formatCurrency(p.revenue)}</p>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Atividade */}
+          <Card className="flex flex-1 flex-col border border-border bg-card shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-900/8">
+                  <Activity className="h-5 w-5 text-gray-800" strokeWidth={2.25} />
+                </span>
+                Atividade
+              </CardTitle>
+              <CardDescription>Últimos {chartRangeDays} dias · vendas e alertas</CardDescription>
+            </CardHeader>
+            <CardContent className="max-h-[min(52vh,18rem)] overflow-y-auto pr-1">
+              <div className="space-y-1">
+                {notifications.slice(0, 4).map((notif) => (
+                  <div key={notif.id} className="flex gap-3 border-b border-border py-2.5 last:border-0">
+                    <div
+                      className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-card ${
+                        notif.type === 'warning'
+                          ? 'bg-[hsl(32_95%_50%)]'
+                          : notif.type === 'success'
+                            ? 'bg-primary'
+                            : notif.type === 'error'
+                              ? 'bg-destructive'
+                              : 'bg-gray-700'
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium leading-snug text-foreground">{notif.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(notif.createdAt), 'HH:mm', { locale: ptBR })}
+                      </p>
                     </div>
                   </div>
-                  <p className="shrink-0 text-sm font-bold text-primary">{formatCurrency(p.revenue)}</p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                ))}
+
+                {(() => {
+                  const todayStart = new Date();
+                  todayStart.setHours(0, 0, 0, 0);
+                  const yesterdayStart = subDays(todayStart, 1);
+
+                  const paymentLabel = (m: string) => {
+                    if (m === 'card') return 'Cartão';
+                    if (m === 'pix' || m === 'mpesa') return 'M-Pesa';
+                    if (m === 'emola') return 'e-Mola';
+                    if (m === 'pos') return 'POS';
+                    if (m === 'bank') return 'Transferência';
+                    return 'Dinheiro';
+                  };
+
+                  let lastGroup = '';
+                  return recentSales.map((sale) => {
+                    const saleDate = new Date(sale.createdAt);
+                    saleDate.setHours(0, 0, 0, 0);
+                    const group =
+                      saleDate.getTime() === todayStart.getTime()
+                        ? 'Hoje'
+                        : saleDate.getTime() === yesterdayStart.getTime()
+                          ? 'Ontem'
+                          : format(saleDate, 'dd/MM', { locale: ptBR });
+                    const showHeader = group !== lastGroup;
+                    lastGroup = group;
+                    return (
+                      <div key={sale.id}>
+                        {showHeader && (
+                          <p className="pb-1 pt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            {group}
+                          </p>
+                        )}
+                        <div className="flex gap-3 border-b border-border py-2.5 last:border-0">
+                          <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary ring-2 ring-card" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-foreground">Venda #{sale.id.slice(-4)}</p>
+                              <span className="shrink-0 rounded-lg bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
+                                {formatCurrency(parseFloat(sale.total))}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'} ·{' '}
+                              {paymentLabel(sale.paymentMethod ?? '')} ·{' '}
+                              {format(new Date(sale.createdAt), 'HH:mm', { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+
+                {notifications.length === 0 && recentSales.length === 0 && (
+                  <p className="py-8 text-center text-sm font-medium text-muted-foreground">Sem atividade recente</p>
+                )}
+              </div>
+            </CardContent>
+            <div className="mt-auto border-t border-border bg-muted/20 px-4 py-3">
+              <Link href="/reports">
+                <Button variant="ghost" className="w-full rounded-xl text-sm font-bold text-red-700 hover:bg-red-50">
+                  Ver histórico completo
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-5 lg:mt-6 lg:grid-cols-2 lg:gap-6">
-        <Card className="border border-border bg-card shadow-[0_24px_56px_-32px_hsl(239_40%_20%/0.14)]">
+      {/* ── STOCK ALERTS (full width) ── */}
+      <div className="dash-row-2 mt-5 lg:mt-6">
+        <Card className="border border-border bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12">
-                <Package className="h-5 w-5 text-primary" strokeWidth={2.25} />
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50">
+                <Package className="h-5 w-5 text-red-700" strokeWidth={2.25} />
               </span>
               Alertas de stock
             </CardTitle>
           </CardHeader>
           <CardContent>
             {lowStockProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/25 bg-primary/5 py-10 text-center sm:py-12">
-                <CheckCircle2 className="mb-3 h-12 w-12 text-primary" strokeWidth={2} />
+              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 bg-red-50/50 py-10 text-center sm:py-12">
+                <CheckCircle2 className="mb-3 h-12 w-12 text-red-700" strokeWidth={2} />
                 <p className="font-bold text-foreground">Tudo em ordem!</p>
                 <p className="mt-1 text-sm text-muted-foreground">Sem produtos abaixo do mínimo</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {lowStockProducts.map((p) => {
                   const s = parseFloat(p.stock);
                   const m = parseFloat(p.minStock);
@@ -630,109 +662,6 @@ export default function Dashboard() {
               </div>
             )}
           </CardContent>
-        </Card>
-
-        {/* Feed */}
-        <Card className="border border-border bg-card shadow-[0_24px_56px_-32px_hsl(239_40%_20%/0.14)]">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/12">
-                <Activity className="h-5 w-5 text-accent" strokeWidth={2.25} />
-              </span>
-              Atividade
-            </CardTitle>
-            <CardDescription>Últimos {chartRangeDays} dias · vendas e alertas</CardDescription>
-          </CardHeader>
-          <CardContent className="max-h-[min(52vh,22rem)] overflow-y-auto pr-1 sm:max-h-[360px]">
-            <div className="space-y-1">
-              {notifications.slice(0, 4).map((notif) => (
-                <div key={notif.id} className="flex gap-3 border-b border-border py-2.5 last:border-0">
-                  <div
-                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-card ${
-                      notif.type === 'warning'
-                        ? 'bg-[hsl(32_95%_50%)]'
-                        : notif.type === 'success'
-                          ? 'bg-primary'
-                          : notif.type === 'error'
-                            ? 'bg-destructive'
-                            : 'bg-accent'
-                    }`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-snug text-foreground">{notif.message}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(notif.createdAt), 'HH:mm', { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {(() => {
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
-                const yesterdayStart = subDays(todayStart, 1);
-
-                const paymentLabel = (m: string) => {
-                  if (m === 'card') return 'Cartão';
-                  if (m === 'pix' || m === 'mpesa') return 'M-Pesa';
-                  if (m === 'emola') return 'e-Mola';
-                  if (m === 'pos') return 'POS';
-                  if (m === 'bank') return 'Transferência';
-                  return 'Dinheiro';
-                };
-
-                let lastGroup = '';
-                return recentSales.map((sale) => {
-                  const saleDate = new Date(sale.createdAt);
-                  saleDate.setHours(0, 0, 0, 0);
-                  const group =
-                    saleDate.getTime() === todayStart.getTime()
-                      ? 'Hoje'
-                      : saleDate.getTime() === yesterdayStart.getTime()
-                        ? 'Ontem'
-                        : format(saleDate, 'dd/MM', { locale: ptBR });
-                  const showHeader = group !== lastGroup;
-                  lastGroup = group;
-                  return (
-                    <div key={sale.id}>
-                      {showHeader && (
-                        <p className="pb-1 pt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          {group}
-                        </p>
-                      )}
-                      <div className="flex gap-3 border-b border-border py-2.5 last:border-0">
-                        <div className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary ring-2 ring-card" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-foreground">Venda #{sale.id.slice(-4)}</p>
-                            <span className="shrink-0 rounded-lg bg-accent/12 px-2 py-0.5 text-xs font-bold text-accent">
-                              {formatCurrency(parseFloat(sale.total))}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'} ·{' '}
-                            {paymentLabel(sale.paymentMethod ?? '')} ·{' '}
-                            {format(new Date(sale.createdAt), 'HH:mm', { locale: ptBR })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
-
-              {notifications.length === 0 && recentSales.length === 0 && (
-                  <p className="py-8 text-center text-sm font-medium text-muted-foreground">Sem atividade recente</p>
-                )}
-            </div>
-          </CardContent>
-          <div className="border-t border-border bg-muted/20 px-4 py-3">
-            <Link href="/reports">
-              <Button variant="ghost" className="w-full rounded-xl text-sm font-bold text-accent hover:bg-accent/10">
-                Ver histórico completo
-              </Button>
-            </Link>
-          </div>
         </Card>
       </div>
     </div>

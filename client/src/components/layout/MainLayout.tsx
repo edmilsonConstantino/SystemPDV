@@ -56,7 +56,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
           'flex min-w-0 flex-1 flex-col transition-all duration-300',
           /* Mobile: altura natural → scroll no documento; Desktop: painel com scroll interno */
           'md:h-[100dvh] md:min-h-0 md:overflow-hidden',
-          sidebarCollapsed ? 'md:ml-16' : 'md:ml-64',
+          sidebarCollapsed ? 'md:ml-16' : 'md:ml-[220px]',
         )}
       >
         <Header onMenuClick={() => setMobileMenuOpen(true)} />

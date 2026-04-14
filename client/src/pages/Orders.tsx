@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { Check, X, Clock, AlertTriangle, RotateCcw, Search, PackageCheck, Truck, Copy, MessageSquareText, ReceiptText } from 'lucide-react';
+import { Check, X, Clock, AlertTriangle, RotateCcw, Search, PackageCheck, Truck, Copy, MessageSquareText, ReceiptText, ClipboardList } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { notificationsApi, ordersApi, type Order } from '@/lib/api';
 import { Textarea } from '@/components/ui/textarea';
@@ -285,47 +285,71 @@ export default function Orders() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-          <p className="text-muted-foreground">Aceita, prepara, responde e entrega — tudo num só lugar.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="rounded-xl">
-            {filteredOrders.length} pedidos
-          </Badge>
-        </div>
-      </div>
 
-      {/* Search Bar */}
-      <Card className="border-border/70">
-        <CardContent className="pt-6">
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      {/* ── CABEÇALHO — padrão POS/Produtos ── */}
+      <div className="overflow-hidden rounded-3xl shadow-sm">
+        {/* Banner vermelho */}
+        <div className="relative bg-[#B71C1C] px-6 py-5">
+          <div className="banner-texture" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Título */}
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <ClipboardList className="h-5 w-5 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="text-xl font-extrabold tracking-tight text-white">Pedidos</h1>
+                  <span className="hidden text-sm font-normal text-white/50 sm:inline">Gestão &amp; Entrega</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="text-xs font-semibold text-white/70">
+                    {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}
+                  </span>
+                  {byStatus.pending.length > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-200">
+                      <span className="h-1 w-1 rounded-full bg-amber-300" />
+                      {byStatus.pending.length} aguardando aceitação
+                    </span>
+                  )}
+                  {byStatus.cancelled.length > 0 && (
+                    <span className="flex items-center gap-1 text-xs font-semibold text-red-200">
+                      <span className="h-1 w-1 rounded-full bg-red-300" />
+                      {byStatus.cancelled.length} cancelado{byStatus.cancelled.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search + Tabs + hint */}
+        <div className="bg-white px-6 py-4">
+          {/* Search */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
               <Input
                 placeholder="Buscar por código do pedido (ex: ABC1234)..."
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
-                className="pl-10"
+                className="h-10 rounded-xl border-gray-200 bg-gray-50 pl-10 text-sm focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
               />
             </div>
             {searchCode && (
-              <Button
-                variant="outline"
+              <button
+                type="button"
                 onClick={() => setSearchCode('')}
+                className="rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-600 transition hover:bg-gray-50"
               >
                 Limpar
-              </Button>
+              </button>
             )}
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tabs */}
-      <Card className="border-border/70">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-2">
+          {/* Tabs */}
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {tabDefs.map((t) => {
               const Icon = t.icon;
               const active = tab === t.id;
@@ -335,16 +359,17 @@ export default function Orders() {
                   type="button"
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    'group flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition',
+                    'flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold transition-all',
                     active
-                      ? 'border-primary/30 bg-primary/10 text-primary'
-                      : 'border-border/70 bg-card hover:bg-muted/40 text-muted-foreground hover:text-foreground',
+                      ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/30'
+                      : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
                   )}
                 >
-                  <Icon className={cn('h-4 w-4', active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} />
-                  <span>{t.label}</span>
-                  <span className={cn('ml-0.5 rounded-xl px-2 py-0.5 text-xs font-bold tabular-nums',
-                    active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                  <Icon className="h-3.5 w-3.5" />
+                  {t.label}
+                  <span className={cn(
+                    'ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums',
+                    active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
                   )}>
                     {t.count}
                   </span>
@@ -352,11 +377,13 @@ export default function Orders() {
               );
             })}
           </div>
-          <p className="mt-3 text-xs font-medium text-muted-foreground">
+
+          {/* Hint */}
+          <p className="mt-2 text-[11px] font-medium text-gray-400">
             {tabDefs.find((t) => t.id === tab)?.hint}
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Lista */}
       <Card className="border-border/70">
