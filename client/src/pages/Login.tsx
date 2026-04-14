@@ -112,19 +112,24 @@ export default function Login() {
         />
 
         <div className="relative z-20 flex h-full min-h-[min(46vh,360px)] flex-col items-center justify-center px-6 pb-[5.5rem] pt-10 text-center sm:min-h-[min(48vh,380px)] sm:pb-[6.25rem]">
-          <div className="animate-[login-float_5.5s_ease-in-out_infinite] mb-5 flex h-[4.75rem] w-[4.75rem] items-center justify-center rounded-2xl border border-white/55 bg-white/30 shadow-[0_12px_40px_-12px_rgba(80,100,160,0.35)] backdrop-blur-md ring-1 ring-white/40">
-            <span className="bg-gradient-to-br from-[#3d8a7a] to-[#5a6fd0] bg-clip-text font-heading text-[2rem] font-bold tracking-tight text-transparent drop-shadow-sm">
-              M
-            </span>
+          {/* Logo + nome em linha */}
+          <div className="flex items-center gap-3">
+            <div className="animate-[login-float_5.5s_ease-in-out_infinite] flex h-[3.5rem] w-[3.5rem] shrink-0 items-center justify-center rounded-2xl border border-white/55 bg-white/30 shadow-[0_12px_40px_-12px_rgba(80,100,160,0.35)] backdrop-blur-md ring-1 ring-white/40">
+              <span className="bg-gradient-to-br from-[#3d8a7a] to-[#5a6fd0] bg-clip-text font-heading text-[1.75rem] font-bold tracking-tight text-transparent drop-shadow-sm">
+                M
+              </span>
+            </div>
+            <div className="text-left">
+              <h1 className="font-heading text-[1.65rem] font-bold tracking-tight text-slate-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] sm:text-3xl">
+                <span className="bg-gradient-to-r from-primary via-accent to-[hsl(262_72%_52%)] bg-clip-text text-transparent">
+                  Makira Sales
+                </span>
+              </h1>
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.32em] text-slate-600/80">
+                Sistema de vendas
+              </p>
+            </div>
           </div>
-          <h1 className="font-heading text-[1.65rem] font-bold tracking-tight text-slate-800 drop-shadow-[0_1px_0_rgba(255,255,255,0.5)] sm:text-3xl">
-            <span className="bg-gradient-to-r from-primary via-accent to-[hsl(262_72%_52%)] bg-clip-text text-transparent">
-              Makira Sales
-            </span>
-          </h1>
-          <p className="mt-2 text-[0.65rem] font-semibold uppercase tracking-[0.38em] text-slate-600/85">
-            Sistema de vendas
-          </p>
         </div>
 
         {/* Ondas em camadas + reflexo */}

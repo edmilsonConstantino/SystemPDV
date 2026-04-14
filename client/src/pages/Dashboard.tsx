@@ -250,39 +250,61 @@ export default function Dashboard() {
           <div className="banner-texture opacity-[0.08]" />
         </div>
 
-        <div className="relative z-10 grid min-h-[200px] items-center gap-6 p-7 sm:p-8 lg:grid-cols-[1fr_auto]">
+        <div className="relative z-10 grid items-center gap-5 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:gap-6 lg:p-8">
 
           {/* ── LEFT ── */}
-          <div className="flex flex-col gap-4">
-            {/* badge */}
-            <div className="flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3.5 py-1 backdrop-blur-sm">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {/* badge — data curta em mobile */}
+            <div className="flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 backdrop-blur-sm">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-white">Resumo do dia · {dateLabel}</span>
+              <span className="text-[0.6rem] font-bold uppercase tracking-[0.12em] text-white sm:text-[0.65rem]">
+                <span className="sm:hidden">Hoje · {format(new Date(), "dd MMM", { locale: ptBR })}</span>
+                <span className="hidden sm:inline">Resumo do dia · {dateLabel}</span>
+              </span>
             </div>
 
             {/* saudação */}
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                Olá, {firstName} <span className="font-normal">👋</span>
+              <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl lg:text-4xl">
+                Olá, {firstName} <span className="font-normal text-xl sm:text-3xl">👋</span>
               </h1>
-              <p className="mt-1 text-sm font-medium text-white/75">
+              <p className="mt-0.5 text-[0.8rem] font-medium text-white/70 sm:mt-1 sm:text-sm">
                 Tudo sob controlo hoje. Bom trabalho.
               </p>
             </div>
 
+            {/* receita — visível só mobile (painel direito hidden em mobile) */}
+            <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm lg:hidden">
+              <div className="flex-1">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Receita hoje</p>
+                <p className="mt-0.5 text-lg font-black text-white tabular-nums">{formatCurrency(totalSalesToday)}</p>
+              </div>
+              <div className="flex gap-2 text-center">
+                {[
+                  { label: 'Pedidos', value: totalOrdersToday },
+                  { label: 'Alertas', value: stockAttentionTotal },
+                ].map(({ label, value }) => (
+                  <div key={label} className="rounded-lg border border-white/10 bg-white/8 px-2.5 py-1.5">
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">{label}</p>
+                    <p className="text-sm font-black text-white">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* acções */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2">
               <Link href="/pos">
-                <button type="button" className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#B71C1C] shadow-lg shadow-black/20 transition-all hover:bg-gray-100 active:scale-95">
+                <button type="button" className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#B71C1C] shadow-lg shadow-black/20 transition-all hover:bg-gray-100 active:scale-95 sm:px-5 sm:py-2.5">
                   <span className="text-base leading-none">+</span> Nova venda
                 </button>
               </Link>
               <Link href="/reports">
-                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30">
+                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 sm:px-5 sm:py-2.5">
                   Relatórios
                 </button>
               </Link>
-              <Link href="/products">
+              <Link href="/products" className="hidden sm:block">
                 <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30">
                   Produtos
                 </button>
@@ -290,12 +312,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ── RIGHT — painel de stats ── */}
+          {/* ── RIGHT — painel de stats (desktop only) ── */}
           <div className="hidden shrink-0 flex-col gap-2 lg:flex">
-            {/* receita principal */}
             <div className="min-w-[210px] rounded-2xl border border-white/8 bg-white/6 px-5 py-4 backdrop-blur-md">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Receita hoje</p>
-              <p className="mt-2 text-[2rem] font-black tracking-tight text-white leading-none" data-testid="text-sales-today">
+              <p className="mt-2 text-[2rem] font-black tracking-tight text-white leading-none">
                 {formatCurrency(totalSalesToday)}
               </p>
               <div className="mt-2 flex items-center gap-1.5">
@@ -303,7 +324,6 @@ export default function Dashboard() {
                 <p className="text-[10px] text-white/30">Actualizado ao abrir o painel</p>
               </div>
             </div>
-            {/* mini KPIs */}
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: 'Pedidos', value: totalOrdersToday, dot: 'bg-white/30' },

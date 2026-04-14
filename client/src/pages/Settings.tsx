@@ -374,59 +374,123 @@ export default function SettingsPage() {
                   Novo Utilizador
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Adicionar Usuário</DialogTitle>
-                  <DialogDescription>Crie um novo perfil de acesso ao sistema.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label>Nome Completo</Label>
-                    <Input 
-                      placeholder="Ex: João Silva" 
-                      value={newUser.name}
-                      onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                      data-testid="input-user-name"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Nome de Usuário</Label>
-                    <Input 
-                      placeholder="Ex: joao.silva" 
-                      value={newUser.username}
-                      onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                      data-testid="input-username"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Senha</Label>
-                    <Input 
-                      type="password" 
-                      placeholder="Senha inicial" 
-                      value={newUser.password}
-                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                      data-testid="input-password"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Função (Grupo)</Label>
-                    <Select value={newUser.role} onValueChange={(val: any) => setNewUser({...newUser, role: val})}>
-                      <SelectTrigger data-testid="select-user-role">
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="manager">Gestor</SelectItem>
-                        <SelectItem value="seller">Vendedor</SelectItem>
-                      </SelectContent>
-                    </Select>
+              <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto rounded-[2rem] border-none p-0 shadow-2xl sm:max-w-md">
+                {/* cabeçalho */}
+                <div className="relative overflow-hidden rounded-t-[2rem] bg-[#B71C1C] px-6 py-5">
+                  <div className="banner-texture" />
+                  <div className="relative flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                      <UserPlus className="h-5 w-5 text-white" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-base font-extrabold text-white">Novo Utilizador</DialogTitle>
+                      <DialogDescription className="text-[11px] text-white/60">Crie um novo perfil de acesso ao sistema</DialogDescription>
+                    </div>
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button onClick={handleSaveUser} disabled={createUserMutation.isPending} data-testid="button-save-user">
-                    {createUserMutation.isPending ? 'Salvando...' : 'Salvar'}
-                  </Button>
-                </DialogFooter>
+
+                {/* corpo */}
+                <div className="space-y-4 px-6 py-5">
+                  {/* avatar preview */}
+                  <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#B71C1C]/10 text-base font-black text-[#B71C1C]">
+                      {newUser.name ? newUser.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{newUser.name || 'Nome do utilizador'}</p>
+                      <p className="text-[11px] text-gray-400">@{newUser.username || 'username'}</p>
+                    </div>
+                  </div>
+
+                  {/* divider */}
+                  <div className="flex items-center gap-2">
+                    <span className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Dados de acesso</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2 space-y-1.5">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Nome completo</Label>
+                      <Input
+                        placeholder="Ex: João Silva"
+                        value={newUser.name}
+                        onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                        data-testid="input-user-name"
+                        className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Username</Label>
+                      <Input
+                        placeholder="joao.silva"
+                        value={newUser.username}
+                        onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                        data-testid="input-username"
+                        className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Senha inicial</Label>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        value={newUser.password}
+                        onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                        data-testid="input-password"
+                        className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                      />
+                    </div>
+                  </div>
+
+                  {/* divider função */}
+                  <div className="flex items-center gap-2">
+                    <span className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Função & permissões</span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {(['admin', 'manager', 'seller'] as const).map((role) => {
+                      const labels = { admin: 'Administrador', manager: 'Gestor', seller: 'Vendedor' };
+                      const active = newUser.role === role;
+                      return (
+                        <button
+                          key={role}
+                          type="button"
+                          onClick={() => setNewUser({...newUser, role})}
+                          className={`flex-1 rounded-xl border py-2.5 text-[11px] font-bold transition-all ${
+                            active
+                              ? 'border-[#B71C1C]/30 bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/25'
+                              : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100'
+                          }`}
+                        >
+                          {labels[role]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* hidden select para manter data-testid */}
+                  <select className="sr-only" value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value as any})} data-testid="select-user-role">
+                    <option value="admin">Administrador</option>
+                    <option value="manager">Gestor</option>
+                    <option value="seller">Vendedor</option>
+                  </select>
+                </div>
+
+                {/* rodapé */}
+                <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4 rounded-b-[2rem]">
+                  <button type="button" onClick={() => setIsAddUserOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveUser}
+                    disabled={createUserMutation.isPending}
+                    data-testid="button-save-user"
+                    className="rounded-xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-[#B71C1C]/25 hover:opacity-90 disabled:opacity-60"
+                  >
+                    {createUserMutation.isPending ? 'A guardar...' : 'Criar utilizador'}
+                  </button>
+                </div>
               </DialogContent>
             </Dialog>
           </div>
@@ -484,57 +548,116 @@ export default function SettingsPage() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Editar Usuário: {editingUser?.name}</DialogTitle>
-                            </DialogHeader>
-                            {editingUser && (
-                              <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                  <Label>Nome Completo</Label>
-                                  <Input 
-                                    value={editingUser.name}
-                                    onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                                    data-testid="input-edit-name"
-                                  />
+                          <DialogContent className="w-[calc(100%-2rem)] max-h-[90dvh] overflow-y-auto rounded-[2rem] border-none p-0 shadow-2xl sm:max-w-md">
+                            {/* cabeçalho */}
+                            <div className="relative overflow-hidden rounded-t-[2rem] bg-[#1A1A2E] px-6 py-5">
+                              <div className="banner-texture" />
+                              <div className="relative flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                                  <Edit className="h-5 w-5 text-white" strokeWidth={2.5} />
                                 </div>
-                                <div className="grid gap-2">
-                                  <Label>Nome de Usuário</Label>
-                                  <Input 
-                                    value={editingUser.username}
-                                    onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
-                                    data-testid="input-edit-username"
-                                  />
-                                </div>
-                                <div className="grid gap-2">
-                                  <Label>Nova Senha (deixe em branco para manter)</Label>
-                                  <Input 
-                                    type="password" 
-                                    placeholder="Nova senha"
-                                    onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
-                                    data-testid="input-edit-password"
-                                  />
-                                </div>
-                                <div className="grid gap-2">
-                                  <Label>Função</Label>
-                                  <Select value={editingUser.role} onValueChange={(val) => setEditingUser({...editingUser, role: val})}>
-                                    <SelectTrigger data-testid="select-edit-role">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="admin">Administrador</SelectItem>
-                                      <SelectItem value="manager">Gestor</SelectItem>
-                                      <SelectItem value="seller">Vendedor</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                <div>
+                                  <DialogTitle className="text-base font-extrabold text-white">Editar Utilizador</DialogTitle>
+                                  <DialogDescription className="text-[11px] text-white/50">{editingUser?.name}</DialogDescription>
                                 </div>
                               </div>
+                            </div>
+
+                            {editingUser && (
+                              <div className="space-y-4 px-6 py-5">
+                                {/* avatar */}
+                                <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A1A2E]/10 text-base font-black text-[#1A1A2E]">
+                                    {editingUser.name?.charAt(0).toUpperCase() || '?'}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-800">{editingUser.name}</p>
+                                    <p className="text-[11px] text-gray-400">@{editingUser.username}</p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="h-4 w-1 rounded-full bg-[#1A1A2E]" />
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Dados de acesso</span>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="col-span-2 space-y-1.5">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Nome completo</Label>
+                                    <Input
+                                      value={editingUser.name}
+                                      onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                                      data-testid="input-edit-name"
+                                      className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#1A1A2E]/30 focus-visible:ring-[#1A1A2E]/10"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Username</Label>
+                                    <Input
+                                      value={editingUser.username}
+                                      onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
+                                      data-testid="input-edit-username"
+                                      className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#1A1A2E]/30 focus-visible:ring-[#1A1A2E]/10"
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Nova senha</Label>
+                                    <Input
+                                      type="password"
+                                      placeholder="deixe vazio p/ manter"
+                                      onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
+                                      data-testid="input-edit-password"
+                                      className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#1A1A2E]/30 focus-visible:ring-[#1A1A2E]/10"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="h-4 w-1 rounded-full bg-[#1A1A2E]" />
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Função</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  {(['admin', 'manager', 'seller'] as const).map((role) => {
+                                    const labels = { admin: 'Admin', manager: 'Gestor', seller: 'Vendedor' };
+                                    const active = editingUser.role === role;
+                                    return (
+                                      <button
+                                        key={role}
+                                        type="button"
+                                        onClick={() => setEditingUser({...editingUser, role})}
+                                        className={`flex-1 rounded-xl border py-2.5 text-[11px] font-bold transition-all ${
+                                          active
+                                            ? 'border-[#1A1A2E]/30 bg-[#1A1A2E] text-white'
+                                            : 'border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        {labels[role]}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                                <select className="sr-only" value={editingUser.role} onChange={(e) => setEditingUser({...editingUser, role: e.target.value})} data-testid="select-edit-role">
+                                  <option value="admin">Administrador</option>
+                                  <option value="manager">Gestor</option>
+                                  <option value="seller">Vendedor</option>
+                                </select>
+                              </div>
                             )}
-                            <DialogFooter>
-                              <Button onClick={() => updateUserMutation.mutate({ id: editingUser.id, data: editingUser })} disabled={updateUserMutation.isPending} data-testid="button-save-edit-user">
-                                {updateUserMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-                              </Button>
-                            </DialogFooter>
+
+                            <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4 rounded-b-[2rem]">
+                              <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                                Cancelar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => updateUserMutation.mutate({ id: editingUser!.id, data: editingUser! })}
+                                disabled={updateUserMutation.isPending}
+                                data-testid="button-save-edit-user"
+                                className="rounded-xl bg-[#1A1A2E] px-5 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+                              >
+                                {updateUserMutation.isPending ? 'A guardar...' : 'Guardar alterações'}
+                              </button>
+                            </div>
                           </DialogContent>
                         </Dialog>
                         <Dialog open={deletingUserId === u.id} onOpenChange={(open) => { if (!open) setDeletingUserId(null); }}>
@@ -547,19 +670,30 @@ export default function SettingsPage() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Confirmar Exclusão</DialogTitle>
-                              <DialogDescription>
-                                Tem certeza que deseja deletar o usuário "{u.name}"? Esta ação não pode ser desfeita.
+                          <DialogContent className="w-[calc(100%-2rem)] rounded-[2rem] border-none p-0 shadow-2xl sm:max-w-sm">
+                            <div className="px-6 pt-6 pb-5 text-center">
+                              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 border border-red-100">
+                                <Trash2 className="h-6 w-6 text-red-600" strokeWidth={2} />
+                              </div>
+                              <DialogTitle className="text-base font-bold text-gray-900">Eliminar utilizador</DialogTitle>
+                              <DialogDescription className="mt-1.5 text-sm text-gray-500">
+                                Tem a certeza que pretende eliminar <span className="font-semibold text-gray-800">"{u.name}"</span>? Esta acção não pode ser desfeita.
                               </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter>
-                              <Button variant="outline" onClick={() => setDeletingUserId(null)}>Cancelar</Button>
-                              <Button variant="destructive" onClick={() => deleteUserMutation.mutate(u.id)} disabled={deleteUserMutation.isPending} data-testid="button-confirm-delete-user">
-                                {deleteUserMutation.isPending ? 'Deletando...' : 'Deletar'}
-                              </Button>
-                            </DialogFooter>
+                            </div>
+                            <div className="flex gap-2 border-t border-gray-100 bg-gray-50/60 px-6 py-4 rounded-b-[2rem]">
+                              <button type="button" onClick={() => setDeletingUserId(null)} className="flex-1 rounded-xl border border-gray-200 bg-white py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                                Cancelar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteUserMutation.mutate(u.id)}
+                                disabled={deleteUserMutation.isPending}
+                                data-testid="button-confirm-delete-user"
+                                className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                              >
+                                {deleteUserMutation.isPending ? 'A eliminar...' : 'Eliminar'}
+                              </button>
+                            </div>
                           </DialogContent>
                         </Dialog>
                       </TableCell>

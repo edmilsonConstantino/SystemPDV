@@ -714,103 +714,82 @@ export default function Products() {
 
       {/* Modal de Edição de Produtos */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Produto</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] border-none p-0 shadow-2xl">
+          {/* cabeçalho */}
+          <div className="relative overflow-hidden rounded-t-[2rem] bg-[#B71C1C] px-5 py-4 sm:px-6 sm:py-5">
+            <div className="banner-texture" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <Package className="h-4 w-4 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-extrabold text-white sm:text-base">Editar Produto</DialogTitle>
+                <p className="text-[11px] text-white/60">{editingProduct?.name}</p>
+              </div>
+            </div>
+          </div>
+
           {editingProduct && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Nome do Produto</Label>
-                  <Input 
-                    value={editingProduct.name} 
-                    onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
-                    data-testid="input-edit-product-name"
-                  />
+            <div className="space-y-4 px-5 py-4 sm:px-6 sm:py-5">
+              {/* Identificação */}
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Identificação</span>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Nome</Label>
+                  <Input value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} data-testid="input-edit-product-name" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Código (SKU)</Label>
-                  <Input
-                    value={editingProduct.sku}
-                    onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})}
-                    data-testid="input-edit-product-sku"
-                  />
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">SKU</Label>
+                  <Input value={editingProduct.sku} onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})} data-testid="input-edit-product-sku" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label>Código de Barras (opcional — escanear ou digitar)</Label>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Código de barras</Label>
                 <div className="flex gap-2">
-                  <Input
-                    value={(editingProduct as any).barcode || ''}
-                    onChange={e => setEditingProduct({...editingProduct, barcode: e.target.value} as any)}
-                    placeholder="EAN-13, UPC — ou use o botão para escanear"
-                    data-testid="input-edit-product-barcode"
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setBarcodeScanOpen('edit')}
-                    title="Escanear código de barras"
-                  >
+                  <Input value={(editingProduct as any).barcode || ''} onChange={e => setEditingProduct({...editingProduct, barcode: e.target.value} as any)} placeholder="EAN-13, UPC…" data-testid="input-edit-product-barcode" className="h-10 flex-1 rounded-xl border-gray-200 bg-gray-50" />
+                  <Button type="button" variant="outline" size="icon" onClick={() => setBarcodeScanOpen('edit')} title="Escanear" className="h-10 w-10 rounded-xl border-gray-200">
                     <Camera className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Pode registar barcode, SKU ou ambos — ambos servem para venda com scanner.</p>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                  <Label>Preço Venda (MT)</Label>
-                  <Input 
-                    type="number" 
-                    value={editingProduct.price} 
-                    onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
-                    data-testid="input-edit-product-price"
-                  />
+              {/* Preços */}
+              <div className="flex items-center gap-2 pt-1">
+                <span className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Preços & Stock</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Preço venda</Label>
+                  <Input type="number" value={editingProduct.price} onChange={e => setEditingProduct({...editingProduct, price: e.target.value})} data-testid="input-edit-product-price" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Preço Custo (MT)</Label>
-                  <Input 
-                    type="number" 
-                    value={editingProduct.costPrice} 
-                    onChange={e => setEditingProduct({...editingProduct, costPrice: e.target.value})}
-                    data-testid="input-edit-product-cost"
-                  />
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Preço custo</Label>
+                  <Input type="number" value={editingProduct.costPrice} onChange={e => setEditingProduct({...editingProduct, costPrice: e.target.value})} data-testid="input-edit-product-cost" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Estoque</Label>
-                  <Input 
-                    type="number" 
-                    value={editingProduct.stock} 
-                    onChange={e => setEditingProduct({...editingProduct, stock: e.target.value})}
-                    data-testid="input-edit-product-stock"
-                  />
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Stock actual</Label>
+                  <Input type="number" value={editingProduct.stock} onChange={e => setEditingProduct({...editingProduct, stock: e.target.value})} data-testid="input-edit-product-stock" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Estoque Mínimo</Label>
-                  <Input 
-                    type="number" 
-                    value={editingProduct.minStock} 
-                    onChange={e => setEditingProduct({...editingProduct, minStock: e.target.value})}
-                    data-testid="input-edit-product-minstock"
-                  />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Stock mínimo</Label>
+                  <Input type="number" value={editingProduct.minStock} onChange={e => setEditingProduct({...editingProduct, minStock: e.target.value})} data-testid="input-edit-product-minstock" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Unidade</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Unidade</Label>
                   <Select value={editingProduct.unit} onValueChange={(val) => setEditingProduct({...editingProduct, unit: val as any})}>
-                    <SelectTrigger data-testid="select-edit-product-unit">
+                    <SelectTrigger data-testid="select-edit-product-unit" className="h-10 rounded-xl border-gray-200 bg-gray-50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="un">Un (Unidade)</SelectItem>
-                      <SelectItem value="kg">Kg (Quilograma)</SelectItem>
-                      <SelectItem value="g">g (Grama)</SelectItem>
+                      <SelectItem value="un">Un</SelectItem>
+                      <SelectItem value="kg">Kg</SelectItem>
+                      <SelectItem value="g">g</SelectItem>
                       <SelectItem value="pack">Pack</SelectItem>
                       <SelectItem value="box">Box</SelectItem>
                     </SelectContent>
@@ -818,44 +797,40 @@ export default function Products() {
                 </div>
               </div>
 
-              <div className="grid gap-2">
-                <Label>Categoria</Label>
-                <Select 
-                  value={editingProduct.categoryId || ''} 
-                  onValueChange={(val) => setEditingProduct({...editingProduct, categoryId: val})}
-                >
-                  <SelectTrigger data-testid="select-edit-product-category">
-                    <SelectValue placeholder="Selecione categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Categoria & Imagem */}
+              <div className="flex items-center gap-2 pt-1">
+                <span className="h-4 w-1 rounded-full bg-[#B71C1C]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Categoria & Imagem</span>
               </div>
-
-              <div className="grid gap-2">
-                <Label>URL da Imagem (Opcional)</Label>
-                <Input 
-                  value={editingProduct.image || ''} 
-                  onChange={e => setEditingProduct({...editingProduct, image: e.target.value})}
-                  placeholder="https://exemplo.com/imagem.jpg"
-                  data-testid="input-edit-product-image"
-                />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Categoria</Label>
+                  <Select value={editingProduct.categoryId || ''} onValueChange={(val) => setEditingProduct({...editingProduct, categoryId: val})}>
+                    <SelectTrigger data-testid="select-edit-product-category" className="h-10 rounded-xl border-gray-200 bg-gray-50">
+                      <SelectValue placeholder="Selecione…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">URL imagem</Label>
+                  <Input value={editingProduct.image || ''} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} placeholder="https://…" data-testid="input-edit-product-image" className="h-10 rounded-xl border-gray-200 bg-gray-50" />
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
-            <Button 
-              onClick={handleSaveEdit}
-              disabled={updateProductMutation.isPending}
-              data-testid="button-save-edit-product"
-            >
-              {updateProductMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </DialogFooter>
+
+          {/* rodapé */}
+          <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-gray-50/60 px-5 py-4 rounded-b-[2rem] sm:px-6">
+            <button type="button" onClick={() => setIsEditOpen(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button type="button" onClick={handleSaveEdit} disabled={updateProductMutation.isPending} data-testid="button-save-edit-product" className="rounded-xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90 disabled:opacity-60">
+              {updateProductMutation.isPending ? 'A guardar...' : 'Guardar alterações'}
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 
