@@ -173,11 +173,9 @@ export default function Dashboard() {
       iconWrap: mk.softRed,
       Icon: DollarSign,
       body: (
-        <>
-          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-sales-today">
-            {formatCurrency(totalSalesToday)}
-          </p>
-        </>
+        <p className="text-xl font-black tabular-nums text-[#B71C1C]" data-testid="text-sales-today">
+          {formatCurrency(totalSalesToday)}
+        </p>
       ),
     },
     {
@@ -187,11 +185,13 @@ export default function Dashboard() {
       Icon: ShoppingBag,
       body: (
         <>
-          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-orders-today">
+          <p className="text-xl font-black tabular-nums text-gray-900" data-testid="text-orders-today">
             {totalOrdersToday}
           </p>
-          <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
-            <span className="font-bold text-gray-800">{ordersDelta >= 0 ? `+${ordersDelta}` : ordersDelta}</span>
+          <p className="mt-1 text-[11px] text-gray-400">
+            <span className={`font-bold ${ordersDelta >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              {ordersDelta >= 0 ? `+${ordersDelta}` : ordersDelta}
+            </span>
             {' '}vs. ontem
           </p>
         </>
@@ -204,11 +204,11 @@ export default function Dashboard() {
       Icon: AlertTriangle,
       body: (
         <>
-          <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-low-stock">
+          <p className="text-xl font-black tabular-nums text-gray-900" data-testid="text-low-stock">
             {stockAttentionTotal}
           </p>
-          <p className="mt-1.5">
-            <span className={`rounded px-2 py-0.5 text-[0.7rem] font-bold ${stockAttentionTotal > 0 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+          <p className="mt-1">
+            <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold ${stockAttentionTotal > 0 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
               {stockAttentionTotal > 0 ? 'Atenção' : 'Normal'}
             </span>
           </p>
@@ -224,11 +224,11 @@ export default function Dashboard() {
             Icon: Users,
             body: (
               <>
-                <p className="font-heading text-xl font-bold tracking-tight text-foreground" data-testid="text-active-users">
+                <p className="text-xl font-black tabular-nums text-gray-900" data-testid="text-active-users">
                   {activeUsers}
                 </p>
-                <p className="mt-1.5 text-[0.7rem]">
-                  <span className="rounded bg-red-50 px-1.5 py-0.5 font-bold text-red-700">Utilizadores</span>
+                <p className="mt-1">
+                  <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">Utilizadores</span>
                 </p>
               </>
             ),
@@ -240,79 +240,82 @@ export default function Dashboard() {
 
   return (
     <div className={mk.page}>
-      {/* ── HERO DASHBOARD (ESTILO FIEL À IMAGEM) ── */}
-      <div className="dash-hero relative mb-8 overflow-hidden rounded-[2rem] bg-[#1a1a1a] p-8 shadow-2xl text-white border border-white/5">
-
-        {/* Camadas de Fundo (Shapes) */}
-        <div className="absolute inset-0 z-0">
-          <div className="hero-red-shape" />
-          <div className="hero-dark-overlay" />
-          <div className="hero-white-curve" />
+      {/* ── HERO ── */}
+      <div className="dash-hero relative mb-6 overflow-hidden rounded-[2rem] shadow-2xl border border-white/5">
+        {/* fundo vermelho + forma preta diagonal */}
+        <div className="absolute inset-0 bg-[#B71C1C]" />
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -right-16 -top-10 h-full w-[55%] rounded-[3rem] bg-gradient-to-br from-[#111111] via-[#1a1a1a] to-[#0d0d0d] opacity-95" />
+          <div className="absolute right-0 top-0 h-full w-[30%] bg-gradient-to-l from-[#0a0a0a] to-transparent" />
+          <div className="banner-texture opacity-[0.08]" />
         </div>
 
-        {/* CONTEÚDO REAL */}
-        <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[1fr_auto]">
+        <div className="relative z-10 grid min-h-[200px] items-center gap-6 p-7 sm:p-8 lg:grid-cols-[1fr_auto]">
 
-          {/* LEFT */}
-          <div className="flex flex-col gap-5">
-            {/* Badge Resumo */}
-            <div className="flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 backdrop-blur-md">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-              <span className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-200">
-                Resumo do dia
-              </span>
+          {/* ── LEFT ── */}
+          <div className="flex flex-col gap-4">
+            {/* badge */}
+            <div className="flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3.5 py-1 backdrop-blur-sm">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+              <span className="text-[0.65rem] font-bold uppercase tracking-[0.15em] text-white">Resumo do dia · {dateLabel}</span>
             </div>
 
-            {/* Texto Principal */}
-            <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Olá, <span className="font-extrabold">{firstName}</span> 👋
+            {/* saudação */}
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                Olá, {firstName} <span className="font-normal">👋</span>
               </h1>
-              <p className="font-medium text-gray-300 opacity-90">
+              <p className="mt-1 text-sm font-medium text-white/75">
                 Tudo sob controlo hoje. Bom trabalho.
               </p>
             </div>
 
-            {/* Botões */}
-            <div className="flex flex-wrap gap-3">
+            {/* acções */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <Link href="/pos">
-                <button type="button" className="flex items-center gap-2 rounded-full bg-[#e11d1d] px-7 py-3 text-sm font-bold shadow-lg shadow-red-900/20 transition-all hover:scale-105 hover:bg-red-500 active:scale-95">
-                  + Nova venda
+                <button type="button" className="flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#B71C1C] shadow-lg shadow-black/20 transition-all hover:bg-gray-100 active:scale-95">
+                  <span className="text-base leading-none">+</span> Nova venda
                 </button>
               </Link>
               <Link href="/reports">
-                <button type="button" className="rounded-full border border-white/10 bg-white/10 px-7 py-3 text-sm font-bold backdrop-blur-md transition-all hover:bg-white/20">
+                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30">
                   Relatórios
                 </button>
               </Link>
               <Link href="/products">
-                <button type="button" className="rounded-full border border-white/10 bg-white/10 px-7 py-3 text-sm font-bold backdrop-blur-md transition-all hover:bg-white/20">
+                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30">
                   Produtos
                 </button>
               </Link>
             </div>
           </div>
 
-          {/* RIGHT — stats */}
-          <div className="hidden shrink-0 flex-col gap-3 lg:flex">
-            {/* Receita hoje */}
-            <div className="min-w-[185px] rounded-xl border border-black/20 bg-black/30 px-5 py-4 backdrop-blur-sm">
-              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-white/50">Receita hoje</p>
-              <p className="mt-1.5 font-heading text-[1.65rem] font-extrabold tracking-tight text-white">
+          {/* ── RIGHT — painel de stats ── */}
+          <div className="hidden shrink-0 flex-col gap-2 lg:flex">
+            {/* receita principal */}
+            <div className="min-w-[210px] rounded-2xl border border-white/8 bg-white/6 px-5 py-4 backdrop-blur-md">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Receita hoje</p>
+              <p className="mt-2 text-[2rem] font-black tracking-tight text-white leading-none" data-testid="text-sales-today">
                 {formatCurrency(totalSalesToday)}
               </p>
-              <p className="mt-1 text-[0.67rem] text-white/35">Actualizado ao abrir o painel</p>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="h-1 w-1 rounded-full bg-white/25" />
+                <p className="text-[10px] text-white/30">Actualizado ao abrir o painel</p>
+              </div>
             </div>
-            {/* Mini stats */}
+            {/* mini KPIs */}
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Pedidos', value: totalOrdersToday },
-                { label: 'Alertas', value: stockAttentionTotal },
-                { label: 'Equipa',  value: activeUsers ?? '—' },
-              ].map(({ label, value }) => (
-                <div key={label} className="rounded-lg border border-black/20 bg-black/30 px-3 py-2.5 text-center backdrop-blur-sm">
-                  <p className="text-[0.55rem] font-semibold uppercase tracking-[0.1em] text-white/40">{label}</p>
-                  <p className="mt-1 font-heading text-lg font-bold text-white">{value}</p>
+                { label: 'Pedidos', value: totalOrdersToday, dot: 'bg-white/30' },
+                { label: 'Alertas', value: stockAttentionTotal, dot: stockAttentionTotal > 0 ? 'bg-red-400' : 'bg-white/30' },
+                { label: 'Equipa',  value: activeUsers ?? '—', dot: 'bg-white/30' },
+              ].map(({ label, value, dot }) => (
+                <div key={label} className="rounded-xl border border-white/8 bg-white/6 px-3 py-3 text-center backdrop-blur-sm">
+                  <div className="flex justify-center mb-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/35">{label}</p>
+                  <p className="mt-1 text-xl font-black text-white">{value}</p>
                 </div>
               ))}
             </div>
@@ -339,26 +342,39 @@ export default function Dashboard() {
       </KpiCarousel>
 
       {/* KPIs — desktop */}
-      <div className="dash-kpi mb-6 hidden grid-cols-12 gap-4 md:grid">
-        {kpis.map((k, i) => {
-          const KIcon = k.Icon;
-          const kpiDelayClass = (['dash-kpi-1', 'dash-kpi-2', 'dash-kpi-3', 'dash-kpi-4'] as const)[i] ?? 'dash-kpi-1';
-          return (
-            <Card
-              key={k.id}
-              className={cn('overflow-hidden rounded-2xl', mk.kpiBase, KPI_DESKTOP_COL[i], kpiDelayClass)}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
-                <CardTitle className="text-[0.7rem] font-bold uppercase tracking-widest text-muted-foreground">{k.title}</CardTitle>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${k.iconWrap}`}>
-                  <KIcon className="h-4 w-4" strokeWidth={2.25} />
+      {(() => {
+        const kpiMeta = [
+          { bar: 'bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d]', iconBg: 'bg-[#B71C1C]/10', iconColor: 'text-[#B71C1C]' },
+          { bar: 'bg-[#1A1A2E]',  iconBg: 'bg-gray-100', iconColor: 'text-gray-700' },
+          { bar: 'bg-[#B71C1C]/50', iconBg: 'bg-[#B71C1C]/10', iconColor: 'text-[#B71C1C]' },
+          { bar: 'bg-[#1A1A2E]',  iconBg: 'bg-gray-100', iconColor: 'text-gray-700' },
+        ];
+        return (
+          <div className="dash-kpi mb-6 hidden grid-cols-12 gap-4 md:grid">
+            {kpis.map((k, i) => {
+              const KIcon = k.Icon;
+              const meta = kpiMeta[i] ?? kpiMeta[0];
+              return (
+                <div
+                  key={k.id}
+                  className={cn('relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md', KPI_DESKTOP_COL[i])}
+                >
+                  <div className="px-5 pt-4 pb-5">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{k.title}</p>
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${meta.iconBg}`}>
+                        <KIcon className={`h-4 w-4 ${meta.iconColor}`} strokeWidth={2.25} />
+                      </div>
+                    </div>
+                    <div className="mt-2">{k.body}</div>
+                  </div>
+                  <div className={`absolute bottom-0 left-0 right-0 h-[3px] ${meta.bar}`} />
                 </div>
-              </CardHeader>
-              <CardContent className="px-5 pb-5 pt-1">{k.body}</CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* ── MAIN CONTENT ROW: Chart (2/3) + Right column (1/3) ── */}
       <div className="dash-row-1 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr] lg:gap-6">
