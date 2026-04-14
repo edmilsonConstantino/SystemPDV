@@ -458,42 +458,58 @@ export default function Reports() {
     <div className="space-y-6">
 
       {/* MOBILE: Resumo do vendedor — hoje e ontem */}
-      <div className="md:hidden space-y-4">
-        <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">Minhas Vendas</h1>
-          <p className="text-sm text-muted-foreground">Resumo do seu desempenho</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-md">
-            <div className="flex items-center gap-2 mb-2 opacity-90">
-              <Clock className="h-4 w-4" />
-              <span className="text-xs font-medium">Hoje</span>
+      <div className="md:hidden space-y-3">
+        {/* mini banner mobile */}
+        <div className="overflow-hidden rounded-2xl shadow-sm">
+          <div className="relative bg-[#B71C1C] px-4 py-4">
+            <div className="banner-texture" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <BarChart2 className="h-4 w-4 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="text-base font-extrabold text-white">Minhas Vendas</h1>
+                <p className="text-[11px] text-white/60">Resumo do seu desempenho</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold">{formatCurrency(todayTotal)}</p>
-            <p className="text-xs opacity-80 mt-1">{todaySales.length} {todaySales.length === 1 ? 'venda' : 'vendas'}</p>
-          </div>
-          <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-4 text-white shadow-md">
-            <div className="flex items-center gap-2 mb-2 opacity-90">
-              <TrendingDown className="h-4 w-4" />
-              <span className="text-xs font-medium">Ontem</span>
-            </div>
-            <p className="text-2xl font-bold">{formatCurrency(yesterdayTotal)}</p>
-            <p className="text-xs opacity-80 mt-1">{yesterdaySales.length} {yesterdaySales.length === 1 ? 'venda' : 'vendas'}</p>
           </div>
         </div>
 
-        {/* Lista de vendas recentes (mobile) */}
-        <div className="bg-card border rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b bg-muted/30">
-            <p className="font-semibold text-sm flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-primary" />
-              Vendas Recentes
-            </p>
+        {/* KPIs hoje / ontem */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Clock className="h-3 w-3 text-[#B71C1C]" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Hoje</span>
+              </div>
+              <p className="text-lg font-black text-[#B71C1C] tabular-nums">{formatCurrency(todayTotal)}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{todaySales.length} venda{todaySales.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d]" />
           </div>
-          <div className="divide-y">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingDown className="h-3 w-3 text-gray-500" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ontem</span>
+              </div>
+              <p className="text-lg font-black text-gray-800 tabular-nums">{formatCurrency(yesterdayTotal)}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">{yesterdaySales.length} venda{yesterdaySales.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1A1A2E]" />
+          </div>
+        </div>
+
+        {/* Lista de vendas recentes */}
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-3">
+            <ShoppingBag className="h-3.5 w-3.5 text-[#B71C1C]" />
+            <p className="text-xs font-bold text-gray-700">Vendas Recentes</p>
+          </div>
+          <div className="divide-y divide-gray-50">
             {baseSales.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">Nenhuma venda registada</div>
+              <div className="py-8 text-center text-sm text-gray-400">Nenhuma venda registada</div>
             ) : (
               baseSales
                 .slice()
@@ -506,12 +522,12 @@ export default function Reports() {
                   return (
                     <div key={sale.id} className="flex items-center justify-between px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium">#{sale.id.slice(-6).toUpperCase()}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm font-semibold text-gray-800">#{sale.id.slice(-6).toUpperCase()}</p>
+                        <p className="text-[11px] text-gray-400">
                           {dayLabel} · {format(new Date(sale.createdAt), "HH:mm")} · {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'}
                         </p>
                       </div>
-                      <span className="font-bold text-primary">{formatCurrency(parseFloat(sale.total))}</span>
+                      <span className="text-sm font-black tabular-nums text-[#B71C1C]">{formatCurrency(parseFloat(sale.total))}</span>
                     </div>
                   );
                 })

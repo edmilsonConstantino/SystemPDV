@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, QrCode, AlertCircle, ShoppingBag, ArrowRight, Percent, Scale, Check, LayoutGrid, List, ScanLine, Smartphone, Camera, RefreshCw, Monitor, Share2, History, Sparkles, GripHorizontal } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, QrCode, AlertCircle, ShoppingBag, ArrowRight, Percent, Scale, Check, LayoutGrid, List, ScanLine, Smartphone, Camera, RefreshCw, Monitor, Share2, History, Sparkles, GripHorizontal, ChevronRight } from 'lucide-react';
 import { QRCode } from 'react-qr-code';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency, cn } from '@/lib/utils';
@@ -656,32 +656,32 @@ export default function POS() {
               className="pointer-events-auto w-full max-w-md cursor-grab active:cursor-grabbing"
               data-testid="wrapper-floating-cart"
             >
-              <div className="flex flex-col gap-1 rounded-[1.35rem] border border-white/25 bg-gradient-to-r from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] p-1.5 text-primary-foreground shadow-[0_20px_50px_-14px_rgba(183,28,28,0.4)] ring-2 ring-white/20">
+              <div className="flex flex-col gap-0.5 rounded-[1.2rem] border border-white/25 bg-gradient-to-r from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] p-1 text-primary-foreground shadow-[0_16px_40px_-12px_rgba(183,28,28,0.4)] ring-2 ring-white/20">
                 <div
-                  className="flex flex-col items-center gap-0.5 rounded-xl bg-white/10 py-1.5"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-white/10 py-1"
                   title="Arraste para o lado se estiver a tapar um produto"
                 >
-                  <GripHorizontal className="h-5 w-5 opacity-90" strokeWidth={2.5} />
-                  <span className="text-[0.6rem] font-bold uppercase tracking-widest text-white/90">Arrastar</span>
+                  <GripHorizontal className="h-3.5 w-3.5 opacity-80" strokeWidth={2.5} />
+                  <span className="text-[0.55rem] font-bold uppercase tracking-widest text-white/80">Arrastar</span>
                 </div>
                 <button
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => setCartSheetOpen(true)}
-                  className="flex w-full items-center gap-3 rounded-2xl bg-black/10 px-3 py-2.5 text-left transition active:scale-[0.99]"
+                  className="flex w-full items-center gap-2.5 rounded-xl bg-black/10 px-2.5 py-2 text-left transition active:scale-[0.99]"
                   data-testid="button-floating-cart"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-base font-black ring-2 ring-white/35">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-sm font-black ring-2 ring-white/35">
                     {cart.length}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/90">Carrinho</p>
-                    <p className="font-heading text-lg font-bold tabular-nums leading-tight">{formatCurrency(cartTotal)}</p>
-                    <p className="truncate text-[11px] font-medium text-white/80">Toque para abrir · arraste a zona acima</p>
+                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/80">Carrinho</p>
+                    <p className="text-base font-black tabular-nums leading-tight">{formatCurrency(cartTotal)}</p>
+                    <p className="truncate text-[10px] font-medium text-white/70">Toque para abrir · arraste a zona acima</p>
                   </div>
-                  <span className="flex shrink-0 items-center gap-1 rounded-xl bg-white/15 px-2.5 py-2 text-xs font-bold ring-1 ring-white/25">
+                  <span className="flex shrink-0 items-center gap-1 rounded-lg bg-white/15 px-2 py-1.5 text-xs font-bold ring-1 ring-white/25">
                     Abrir
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    <ArrowRight className="h-3 w-3" />
                   </span>
                 </button>
               </div>
@@ -694,46 +694,57 @@ export default function POS() {
       <Sheet open={cartSheetOpen} onOpenChange={setCartSheetOpen}>
         <SheetContent
           side="bottom"
-          className="flex h-[min(90dvh,720px)] max-h-[720px] flex-col gap-0 overflow-hidden rounded-t-[2rem] border-0 border-t border-border/60 bg-card p-0 shadow-[0_-20px_60px_-20px_rgba(15,23,42,0.2)] lg:hidden"
+          className="flex h-[min(88dvh,660px)] flex-col gap-0 overflow-hidden rounded-t-[1.75rem] border-0 bg-white p-0 shadow-[0_-16px_48px_-12px_rgba(15,23,42,0.18)] lg:hidden"
         >
-          <div className="mx-auto mt-2 h-1 w-12 shrink-0 rounded-full bg-muted-foreground/25" aria-hidden />
-          <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[#B71C1C] via-[#1A1A2E] to-[#1B3A5C] px-5 pb-7 pt-4 text-primary-foreground">
-            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-            <SheetHeader className="space-y-1 text-left">
-              <SheetTitle className="font-heading text-2xl font-bold tracking-tight text-white">
-                Carrinho de venda
-              </SheetTitle>
-              <SheetDescription className="text-sm font-medium text-white/85">
-                {cart.length} {cart.length === 1 ? 'linha' : 'linhas'} · deslize para rever tudo
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-5 rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md">
-              <div className="flex items-end justify-between gap-2">
-                <div>
-                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/80">Total a pagar</p>
-                  <p className="font-heading text-3xl font-bold tabular-nums">{formatCurrency(cartTotal)}</p>
+          {/* drag handle */}
+          <div className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-gray-200" aria-hidden />
+
+          {/* Banner compacto */}
+          <div className="relative shrink-0 overflow-hidden bg-[#B71C1C] px-4 pb-4 pt-3">
+            <div className="banner-texture" />
+            <div className="relative flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                  <ShoppingCart className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
                 </div>
+                <div className="min-w-0">
+                  <SheetTitle className="text-sm font-extrabold leading-tight text-white">
+                    Carrinho
+                  </SheetTitle>
+                  <SheetDescription className="text-[11px] font-medium text-white/60">
+                    {cart.length} {cart.length === 1 ? 'item' : 'itens'} · deslize para rever
+                  </SheetDescription>
+                </div>
+              </div>
+              {/* Total pill */}
+              <div className="shrink-0 rounded-xl border border-white/25 bg-white/15 px-3 py-1.5 backdrop-blur-sm">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Total</p>
+                <p className="text-base font-black tabular-nums text-white leading-tight">{formatCurrency(cartTotal)}</p>
                 {activeDiscount.type !== 'none' && (
-                  <span className="rounded-lg bg-white/20 px-2 py-1 text-xs font-bold">−{formatCurrency(discountAmount)}</span>
+                  <p className="text-[10px] font-semibold text-white/70">−{formatCurrency(discountAmount)}</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+          {/* Lista */}
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
             {cart.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-                  <ShoppingBag className="h-8 w-8 opacity-50" />
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+                  <ShoppingBag className="h-6 w-6 text-gray-300" />
                 </div>
-                <p className="font-semibold text-foreground">Ainda sem itens</p>
-                <p className="mt-1 max-w-[240px] text-sm">Volte a «Vender» e toque em + nos produtos.</p>
-                <Button className="mt-6 rounded-xl" variant="default" onClick={() => setCartSheetOpen(false)}>
+                <p className="text-sm font-semibold text-gray-700">Ainda sem itens</p>
+                <p className="mt-0.5 text-xs text-gray-400">Toque em + nos produtos para adicionar.</p>
+                <Button
+                  className="mt-4 h-9 rounded-xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] px-4 text-sm font-bold text-white shadow-sm"
+                  onClick={() => setCartSheetOpen(false)}
+                >
                   Adicionar produtos
                 </Button>
               </div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 <AnimatePresence initial={false} mode="popLayout">
                 {cart.map((item, idx) => {
                   const product = products.find((p) => p.id === item.productId);
@@ -742,48 +753,41 @@ export default function POS() {
                     <motion.li
                       key={item.productId}
                       layout
-                      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, x: -24, transition: { duration: 0.2 } }}
+                      exit={{ opacity: 0, x: -20, transition: { duration: 0.18 } }}
                       transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                      className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_12px_40px_-24px_hsl(239_40%_30%/0.2)]"
+                      className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
                     >
-                      <div className="flex gap-3 p-3">
+                      <div className="flex gap-2.5 px-3 py-2.5">
                         <div className="relative shrink-0">
-                          <span className="absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#B71C1C] to-[#1B3A5C] text-[11px] font-black text-primary-foreground shadow-md">
+                          <span className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#B71C1C] text-[10px] font-black text-white shadow">
                             {idx + 1}
                           </span>
-                          <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-xl border border-border bg-muted">
+                          <div className="h-14 w-14 overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                             {product.image ? (
                               <img src={product.image} alt="" className="h-full w-full object-cover" />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-accent/15 text-lg font-bold text-primary">
+                              <div className="flex h-full w-full items-center justify-center bg-[#B71C1C]/8 text-base font-black text-[#B71C1C]">
                                 {product.name.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="line-clamp-2 text-sm font-bold leading-tight text-foreground">{product.name}</h4>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {formatCurrency(item.priceAtSale)} / {product.unit}
-                          </p>
-                          <p className="mt-1 text-base font-bold text-primary">
-                            {formatCurrency(item.priceAtSale * item.quantity)}
-                          </p>
+                          <h4 className="line-clamp-1 text-[13px] font-bold leading-tight text-gray-800">{product.name}</h4>
+                          <p className="mt-0.5 text-[11px] text-gray-400">{formatCurrency(item.priceAtSale)} / {product.unit}</p>
+                          <p className="mt-0.5 text-sm font-black text-[#B71C1C] tabular-nums">{formatCurrency(item.priceAtSale * item.quantity)}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 border-t border-border/60 bg-muted/25 px-3 py-2.5">
+                      <div className="flex items-center gap-1.5 border-t border-gray-50 bg-gray-50/60 px-3 py-2">
                         <button
                           type="button"
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition active:scale-95"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuantityChange(item.productId, -1);
-                          }}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-[#B71C1C] transition active:scale-95"
+                          onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.productId, -1); }}
                           data-testid={`button-decrease-mobile-${item.productId}`}
                         >
-                          <Minus className="h-5 w-5" strokeWidth={2.5} />
+                          <Minus className="h-4 w-4" strokeWidth={2.5} />
                         </button>
                         <Input
                           type="number"
@@ -798,30 +802,24 @@ export default function POS() {
                               }
                             }
                           }}
-                          className="h-11 flex-1 border-border bg-background text-center text-lg font-bold tabular-nums"
+                          className="h-9 flex-1 rounded-lg border-gray-200 bg-white text-center text-sm font-black tabular-nums"
                           data-testid={`input-quantity-${item.productId}`}
                         />
                         <button
                           type="button"
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-[#B71C1C]/25 transition active:scale-95"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuantityChange(item.productId, 1);
-                          }}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#B71C1C] text-white shadow-sm transition active:scale-95"
+                          onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.productId, 1); }}
                           data-testid={`button-increase-mobile-${item.productId}`}
                         >
-                          <Plus className="h-5 w-5" strokeWidth={2.5} />
+                          <Plus className="h-4 w-4" strokeWidth={2.5} />
                         </button>
                         <button
                           type="button"
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-destructive/30 text-destructive transition active:scale-95"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromCart(item.productId);
-                          }}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:text-red-500 active:scale-95"
+                          onClick={(e) => { e.stopPropagation(); removeFromCart(item.productId); }}
                           data-testid={`button-remove-mobile-${item.productId}`}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </motion.li>
@@ -832,32 +830,36 @@ export default function POS() {
             )}
           </div>
 
-          <div className="shrink-0 space-y-3 border-t border-border bg-muted/20 px-4 py-4">
+          {/* Footer */}
+          <div className="shrink-0 border-t border-gray-100 bg-white px-3 py-3">
             {cart.length > 0 && (
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
-                </div>
-                {activeDiscount.type !== 'none' && (
-                  <div className="flex justify-between font-medium text-primary">
-                    <span>Desconto</span>
-                    <span>−{formatCurrency(discountAmount)}</span>
-                  </div>
-                )}
+              <div className="mb-2.5 flex items-center justify-between text-xs">
+                <span className="text-gray-400">Subtotal</span>
+                <span className="font-semibold text-gray-700">{formatCurrency(subtotal)}</span>
+              </div>
+            )}
+            {activeDiscount.type !== 'none' && (
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-gray-400">Desconto</span>
+                <span className="font-semibold text-[#B71C1C]">−{formatCurrency(discountAmount)}</span>
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="h-12 rounded-xl font-semibold" onClick={() => clearCart()} data-testid="button-clear-mobile">
-                <Trash2 className="mr-2 h-4 w-4" /> Limpar
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl border-gray-200 text-sm font-semibold text-gray-600"
+                onClick={() => clearCart()}
+                data-testid="button-clear-mobile"
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Limpar
               </Button>
               <Button
-                className="h-12 rounded-xl border-0 bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] font-bold text-primary-foreground shadow-lg disabled:opacity-50"
+                className="h-10 rounded-xl border-0 bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] text-sm font-bold text-white shadow-md shadow-[#B71C1C]/25 disabled:opacity-50"
                 disabled={cart.length === 0}
                 onClick={() => openCheckout()}
                 data-testid="button-checkout-mobile"
               >
-                Finalizar <ArrowRight className="ml-2 h-4 w-4" />
+                Finalizar <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -866,106 +868,97 @@ export default function POS() {
 
       {/* Produtos — grelha / lista */}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:rounded-3xl">
-        {/* Header vermelho — PDV */}
-        <div className="shrink-0 bg-[#B71C1C] px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <ShoppingCart className="h-5 w-5 text-white" strokeWidth={2.5} />
-              <h2 className="text-base font-extrabold tracking-tight text-white">
-                PDV <span className="font-medium opacity-80">- Ponto de Venda</span>
-              </h2>
+        {/* Header vermelho + search — bloco sticky */}
+        <div className="sticky top-0 z-30 shrink-0 lg:static lg:z-0">
+        <div className="bg-[#B71C1C] px-3 py-2.5 sm:px-4 sm:py-3">
+
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/15 ring-1 ring-white/25">
+                <ShoppingCart className="h-3.5 w-3.5 text-white" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-extrabold leading-tight tracking-tight text-white">
+                  PDV
+                  <span className="hidden font-normal opacity-60 sm:inline"> — Ponto de Venda</span>
+                </h2>
+                <p className="text-[10px] font-medium text-white/50 sm:hidden">Ponto de Venda</p>
+              </div>
             </div>
-            <div className="flex shrink-0 gap-1 rounded-xl border border-white/20 bg-white/10 p-0.5">
-              <Button
-                variant="ghost"
-                size="sm"
+            {/* Toggle Lista/Grade */}
+            <div className="flex shrink-0 gap-0.5 rounded-lg border border-white/20 bg-white/10 p-0.5">
+              <button
+                type="button"
                 className={cn(
-                  'h-8 rounded-lg px-3 text-xs font-bold transition-all',
+                  'flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-bold transition-all',
                   viewMode === 'list' ? 'bg-white text-[#CC2936] shadow-sm' : 'text-white hover:bg-white/15',
                 )}
                 onClick={() => setViewMode('list')}
                 data-testid="button-view-list"
               >
-                <List className="mr-1.5 h-3.5 w-3.5" />
-                Lista
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+                <List className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Lista</span>
+              </button>
+              <button
+                type="button"
                 className={cn(
-                  'h-8 rounded-lg px-3 text-xs font-bold transition-all',
+                  'flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] font-bold transition-all',
                   viewMode === 'grid' ? 'bg-white text-[#CC2936] shadow-sm' : 'text-white hover:bg-white/15',
                 )}
                 onClick={() => setViewMode('grid')}
                 data-testid="button-view-grid"
               >
-                <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
-                Grade
-              </Button>
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Grade</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="sticky top-0 z-30 border-b border-gray-100 bg-white px-4 pb-3 pt-3 lg:static lg:z-0">
-          {/* Search */}
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
-            <Input
-              placeholder="Nome, SKU ou código de barras..."
-              className="h-10 rounded-xl border-gray-200 bg-gray-50 pl-10 pr-28 text-sm font-medium placeholder:text-gray-400 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              ref={barcodeInputRef}
-              data-testid="input-search-products"
-            />
-            {/* Inline count */}
-            <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] tabular-nums">
-              {productsFetching && !productsLoading ? (
-                <Sparkles className="h-3 w-3 animate-pulse text-[#CC2936]" />
-              ) : null}
-              <span className="font-semibold text-gray-600">{filteredProducts.length}</span>
-              <span className="text-gray-300">/</span>
-              <span className="text-gray-400">{products.length}</span>
-              {lowStockLineCount > 0 ? (
-                <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-                  {lowStockLineCount}↓
-                </span>
-              ) : null}
+        <div className="border-b border-gray-100 bg-white px-3 pb-2.5 pt-2.5 sm:px-4">
+          {/* Search + câmera em linha no mobile */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
+              <Input
+                placeholder="Nome, SKU ou barcode..."
+                className="h-9 rounded-xl border-gray-200 bg-gray-50 pl-9 pr-16 text-sm font-medium placeholder:text-gray-400 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                ref={barcodeInputRef}
+                data-testid="input-search-products"
+              />
+              {/* count inline */}
+              <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] tabular-nums">
+                {productsFetching && !productsLoading && <Sparkles className="h-2.5 w-2.5 animate-pulse text-[#CC2936]" />}
+                <span className="font-semibold text-gray-500">{filteredProducts.length}</span>
+                <span className="text-gray-300">/</span>
+                <span className="text-gray-400">{products.length}</span>
+              </div>
             </div>
-          </div>
-
-          {/* Scanner buttons */}
-          <div className={cn('mt-2.5 flex items-center gap-2', isMobileViewport && 'flex-col')}>
+            {/* Botão câmera compacto */}
             <button
               type="button"
-              className={cn(
-                'flex items-center gap-2 rounded-lg border border-[#B71C1C] bg-[#B71C1C] px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#C62828] active:scale-[0.98]',
-                isMobileViewport ? 'w-full justify-center py-3' : '',
-              )}
+              title="Ler código de barras"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#B71C1C] text-white shadow-sm transition hover:bg-[#C62828] active:scale-95"
               onClick={() => setCameraScanOpen(true)}
             >
               <Camera className="h-4 w-4" />
-              {isMobileViewport ? 'Ler código — câmera' : 'Câmera'}
             </button>
             {!isMobileViewport && (
               <button
                 type="button"
                 className={cn(
-                  'flex items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-semibold shadow-sm transition active:scale-[0.98]',
+                  'flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold shadow-sm transition active:scale-[0.98]',
                   scannerToken
                     ? 'border-[#B71C1C] bg-[#B71C1C]/8 text-[#B71C1C] hover:bg-[#B71C1C]/15'
                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50',
                 )}
                 onClick={async () => {
-                  if (scannerToken) {
-                    setRemoteScannerOpen(true);
-                    return;
-                  }
+                  if (scannerToken) { setRemoteScannerOpen(true); return; }
                   try {
                     const { token, url } = await scannerApi.start();
-                    setScannerToken(token);
-                    setScannerUrl(url);
-                    setRemoteScannerOpen(true);
+                    setScannerToken(token); setScannerUrl(url); setRemoteScannerOpen(true);
                     scannerApi.sessions().then(setScannerSessions).catch(() => setScannerSessions([]));
                   } catch {
                     toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível gerar o link' });
@@ -976,14 +969,26 @@ export default function POS() {
                 {scannerToken ? 'Scanner remoto' : 'Outro telemóvel'}
               </button>
             )}
-            {/* Hint pill */}
             <div className="ml-auto hidden items-center gap-1.5 text-[11px] text-gray-400 sm:flex">
-              <kbd className="rounded border border-gray-200 bg-gray-100 px-1.5 py-px font-mono text-[10px] font-semibold text-gray-500">
-                /
-              </kbd>
-              <span>foca a pesquisa</span>
+              <kbd className="rounded border border-gray-200 bg-gray-100 px-1.5 py-px font-mono text-[10px] font-semibold text-gray-500">/</kbd>
+              <span>foca</span>
             </div>
           </div>
+
+          {/* Câmera — label em mobile abaixo do search */}
+          {isMobileViewport && (
+            <button
+              type="button"
+              className="mt-2 flex w-full items-center justify-between gap-2 rounded-xl border border-[#B71C1C]/20 bg-[#B71C1C]/5 px-3 py-2 text-xs font-semibold text-[#B71C1C] transition hover:bg-[#B71C1C]/10 active:scale-[0.98]"
+              onClick={() => setCameraScanOpen(true)}
+            >
+              <div className="flex items-center gap-2">
+                <Camera className="h-3.5 w-3.5" />
+                Ler código de barras — câmera
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+            </button>
+          )}
 
           {!isMobileViewport && recentProducts.length > 0 && (
             <div className="mt-2.5 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
@@ -1039,6 +1044,7 @@ export default function POS() {
             ))}
           </div>
         </div>
+        </div>{/* fim bloco sticky */}
 
         <div ref={listScrollRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
@@ -1098,17 +1104,24 @@ export default function POS() {
                       data-testid={`card-product-${product.id}`}
                     >
                       <CardContent className="p-2 lg:p-3 space-y-2">
-                        <div className="relative aspect-square overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/10 to-accent/10">
+                        <div className="relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
                           {product.image ? (
-                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-primary/5 text-4xl font-bold text-primary lg:text-5xl">
-                              {product.name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                            />
+                          ) : null}
+                          <div className={cn(
+                            'flex h-full w-full items-center justify-center bg-[#B71C1C]/8 text-2xl font-black text-[#B71C1C] lg:text-3xl',
+                            product.image && 'hidden',
+                          )}>
+                            {product.name.charAt(0).toUpperCase()}
+                          </div>
                           {cartItem && (
-                            <div className="absolute inset-0 flex items-end justify-center bg-primary/10 pb-2">
-                              <div className="rounded-full bg-gradient-to-r from-[#B71C1C] to-[#1B3A5C] px-2 py-0.5 text-xs font-bold text-primary-foreground">
+                            <div className="absolute inset-0 flex items-end justify-center bg-[#B71C1C]/10 pb-2">
+                              <div className="rounded-full bg-[#B71C1C] px-2 py-0.5 text-xs font-bold text-white shadow-sm">
                                 {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)} {product.unit}
                               </div>
                             </div>

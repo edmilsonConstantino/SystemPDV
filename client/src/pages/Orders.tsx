@@ -289,7 +289,7 @@ export default function Orders() {
       {/* ── CABEÇALHO — padrão POS/Produtos ── */}
       <div className="overflow-hidden rounded-3xl shadow-sm">
         {/* Banner vermelho */}
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Título */}
@@ -325,13 +325,13 @@ export default function Orders() {
         </div>
 
         {/* Search + Tabs + hint */}
-        <div className="bg-white px-6 py-4">
+        <div className="bg-white px-4 py-3 sm:px-6 sm:py-4">
           {/* Search */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2.5} />
               <Input
-                placeholder="Buscar por código do pedido (ex: ABC1234)..."
+                placeholder="Código do pedido..."
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="h-10 rounded-xl border-gray-200 bg-gray-50 pl-10 text-sm focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
@@ -349,8 +349,8 @@ export default function Orders() {
           </div>
 
           {/* Tabs */}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {tabDefs.map((t) => {
+          <div className="mt-3 grid grid-cols-2 gap-1.5">
+            {tabDefs.map((t, i) => {
               const Icon = t.icon;
               const active = tab === t.id;
               return (
@@ -359,16 +359,17 @@ export default function Orders() {
                   type="button"
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold transition-all',
+                    'flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-bold transition-all',
+                    i === 4 && 'col-span-2',
                     active
                       ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/30'
                       : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50',
                   )}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
                   {t.label}
                   <span className={cn(
-                    'ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums',
+                    'ml-0.5 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums',
                     active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
                   )}>
                     {t.count}

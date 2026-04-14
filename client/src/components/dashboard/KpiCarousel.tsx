@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect, useCallback, Children, type ReactNode } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 const AUTO_MS = 4800;
 const PAUSE_AFTER_TOUCH_MS = 9000;
@@ -89,52 +87,25 @@ export function KpiCarousel({ children, className }: KpiCarouselProps) {
 
   return (
     <div className={cn('relative md:hidden', className)}>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Slide anterior"
-        onClick={() => {
-          pauseBriefly();
-          scrollToIndex(activeRef.current - 1);
-        }}
-        className="absolute left-0 top-1/2 z-20 h-11 w-11 -translate-y-1/2 rounded-full border-primary/25 bg-card/95 text-primary shadow-[0_8px_28px_-8px_hsl(172_72%_28%/0.35)] backdrop-blur-md transition hover:border-primary/45 hover:bg-primary/5 active:scale-95"
-      >
-        <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Próximo slide"
-        onClick={() => {
-          pauseBriefly();
-          scrollToIndex(activeRef.current + 1);
-        }}
-        className="absolute right-0 top-1/2 z-20 h-11 w-11 -translate-y-1/2 rounded-full border-primary/25 bg-card/95 text-primary shadow-[0_8px_28px_-8px_hsl(172_72%_28%/0.35)] backdrop-blur-md transition hover:border-primary/45 hover:bg-primary/5 active:scale-95"
-      >
-        <ChevronRight className="h-5 w-5" strokeWidth={2.5} />
-      </Button>
-
       <div
         ref={scrollRef}
         onTouchStart={pauseBriefly}
         onPointerDown={pauseBriefly}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-12 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ scrollPaddingInline: '3rem' }}
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ scrollPaddingInline: '0.75rem' }}
       >
         {slides.map((slide, i) => (
           <div
             key={i}
             data-kpi-slide={i}
-            className="flex w-[min(88vw,19rem)] shrink-0 snap-center snap-always justify-center"
+            className="flex w-[min(82vw,18rem)] shrink-0 snap-center snap-always justify-center"
           >
             <div className="w-full">{slide}</div>
           </div>
         ))}
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-2 px-4" role="tablist" aria-label="Indicadores KPI">
+      <div className="mt-3 mb-1 flex items-center justify-center gap-1.5 px-4" role="tablist" aria-label="Indicadores KPI">
         {Array.from({ length: n }).map((_, i) => (
           <button
             key={i}
@@ -147,10 +118,10 @@ export function KpiCarousel({ children, className }: KpiCarouselProps) {
               scrollToIndex(i);
             }}
             className={cn(
-              'h-2 rounded-full transition-all duration-300 ease-out',
+              'h-1 rounded-full transition-all duration-300 ease-out',
               i === active
-                ? 'w-9 bg-gradient-to-r from-primary via-[hsl(239_70%_52%)] to-accent shadow-[0_2px_12px_hsl(172_72%_34%/0.45)]'
-                : 'w-2 bg-border hover:w-3 hover:bg-primary/35',
+                ? 'w-5 bg-[#B71C1C]'
+                : 'w-1 bg-gray-300 hover:bg-[#B71C1C]/40',
             )}
           />
         ))}

@@ -108,7 +108,7 @@ export default function Tracking() {
 
       {/* ── BANNER ── */}
       <div className="overflow-hidden rounded-3xl shadow-sm">
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
           <div className="relative flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ export default function Tracking() {
           </div>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-4 py-4 space-y-4 sm:px-6 sm:py-5 sm:space-y-5">
 
           {/* Linha 1 — Utilizador */}
           <div className="space-y-1.5">
@@ -276,7 +276,7 @@ export default function Tracking() {
         <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
 
           {/* Cabeçalho resultados */}
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-4 py-3 sm:px-6 sm:py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#B71C1C]/10">
                 <Activity className="h-4 w-4 text-[#B71C1C]" />

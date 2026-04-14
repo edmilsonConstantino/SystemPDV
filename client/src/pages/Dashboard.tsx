@@ -25,7 +25,7 @@ import type { LucideIcon } from 'lucide-react';
 
 /** Tokens visuais — Nerion Group: vermelho · preto · branco */
 const mk = {
-  page: 'relative min-h-screen bg-white px-6 py-6',
+  page: 'relative min-h-screen bg-white px-3 py-4 sm:px-6 sm:py-6',
   // acento colorido por card (linha no topo)
   kpiAccent: [
     'bg-gradient-to-r from-red-700 via-red-500 to-transparent',           // vendas  — vermelho
@@ -400,16 +400,13 @@ export default function Dashboard() {
       <div className="dash-row-1 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr] lg:gap-6">
 
         {/* Chart card */}
-        <Card className="relative overflow-hidden border border-border bg-card shadow-sm">
-          <div
-            className="absolute inset-x-0 top-0 z-10 h-1 bg-gradient-to-r from-red-800 via-red-700 to-red-950"
-            aria-hidden
-          />
-          <CardHeader className="relative flex flex-col gap-4 pt-7 sm:flex-row sm:items-start sm:justify-between">
+        <Card className="relative overflow-hidden border border-gray-100 bg-white shadow-sm">
+          <CardHeader className="relative flex flex-col gap-4 pt-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="border-l-4 border-red-800 pl-3">
               <CardTitle className="text-lg font-bold text-foreground">Desempenho</CardTitle>
-              <CardDescription>
-                Últimos {chartRangeDays} dias · receita diária vs. meta de referência
+              <CardDescription className="text-xs leading-snug">
+                Últimos {chartRangeDays} dias · receita diária vs.{' '}
+                <span className="whitespace-nowrap">meta de referência</span>
               </CardDescription>
             </div>
             <div className="flex w-full gap-1 rounded-2xl bg-muted/60 p-1 sm:w-auto">

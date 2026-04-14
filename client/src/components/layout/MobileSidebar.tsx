@@ -52,24 +52,16 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
         side="left"
         className="flex w-[min(92vw,20rem)] flex-col border-r border-border bg-card p-0 shadow-2xl shadow-primary/10"
       >
-        <div className="relative overflow-hidden px-5 pb-10 pt-8">
-          <div
-            className="absolute inset-0 opacity-95"
-            style={{
-              background: `
-                radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.35) 0%, transparent 50%),
-                linear-gradient(135deg, hsl(172 72% 34%) 0%, hsl(239 78% 52%) 55%, hsl(262 72% 52%) 100%)
-              `,
-            }}
-          />
-          <div className="absolute -right-8 top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative flex items-start gap-3 text-primary-foreground">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 shadow-lg ring-1 ring-white/40 backdrop-blur-sm">
-              <Store className="h-6 w-6" strokeWidth={2.25} />
+        <div className="relative overflow-hidden bg-[#B71C1C] px-5 pb-6 pt-5">
+          <div className="banner-texture" />
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/8 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
+              <Store className="h-5 w-5 text-white" strokeWidth={2.25} />
             </div>
-            <div className="min-w-0 pt-0.5">
-              <h1 className="font-heading text-lg font-bold leading-tight tracking-tight">Makira Sales</h1>
-              <p className="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white/85">
+            <div className="min-w-0">
+              <h1 className="text-base font-extrabold leading-tight tracking-tight text-white">Makira Sales</h1>
+              <p className="mt-0.5 text-[0.6rem] font-bold uppercase tracking-[0.22em] text-white/60">
                 Sistema de vendas
               </p>
             </div>

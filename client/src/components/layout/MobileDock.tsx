@@ -29,22 +29,19 @@ function DockItem({
       href={href}
       className={cn(
         'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 transition-transform active:scale-95',
-        active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+        active ? 'text-[#B71C1C]' : 'text-gray-400 hover:text-gray-600',
       )}
     >
       <span
         className={cn(
           'relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
-          active ? 'bg-primary/12 text-primary shadow-inner' : 'bg-transparent',
+          active ? 'bg-[#B71C1C]/10' : 'bg-transparent',
         )}
       >
-        <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={2.25} />
+        <Icon className="h-[1.15rem] w-[1.15rem] shrink-0" strokeWidth={active ? 2.5 : 2.25} />
         {!!badgeCount && badgeCount > 0 && (
           <span
-            className={cn(
-              'absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-black leading-none',
-              'bg-accent text-accent-foreground shadow-md shadow-accent/30 ring-2 ring-background',
-            )}
+            className="absolute -right-1 -top-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-[#B71C1C] px-1 text-[10px] font-black leading-none text-white ring-2 ring-background"
             aria-label={`${badgeCount} novos pedidos`}
           >
             {badgeCount > 9 ? '9+' : badgeCount}
@@ -57,7 +54,7 @@ function DockItem({
 }
 
 const posFabButtonClass =
-  'absolute -top-7 flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full bg-gradient-to-br from-primary via-[hsl(239_78%_52%)] to-[hsl(262_72%_54%)] text-primary-foreground shadow-[0_10px_28px_-6px_hsl(172_72%_28%/0.55),0_4px_12px_-4px_hsl(239_78%_40%/0.45)] ring-4 ring-background transition active:scale-95';
+  'absolute -top-6 flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-2xl bg-gradient-to-b from-[#CC2936] to-[#7f1d1d] text-white shadow-[0_8px_24px_-6px_rgba(183,28,28,0.55)] ring-[3px] ring-background transition active:scale-95';
 
 function PosFab() {
   const [location] = useLocation();
@@ -79,7 +76,7 @@ function PosFab() {
           <ShoppingCart className="h-6 w-6" strokeWidth={2.25} />
         </Link>
       )}
-      <span className="mt-7 text-[0.65rem] font-bold leading-none text-primary">PDV</span>
+      <span className="mt-7 text-[0.65rem] font-bold leading-none text-[#B71C1C]">PDV</span>
     </div>
   );
 }
@@ -135,12 +132,9 @@ export function MobileDock({ onOpenMenu }: MobileDockProps) {
           <button
             type="button"
             onClick={onOpenMenu}
-            className={cn(
-              'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-muted-foreground transition active:scale-95',
-              'hover:text-foreground',
-            )}
+            className="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-gray-400 transition active:scale-95 hover:text-gray-600"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-transparent">
               <Menu className="h-[1.15rem] w-[1.15rem]" strokeWidth={2.25} />
             </span>
             <span className="max-w-full truncate px-0.5 text-[0.65rem] font-bold leading-none">Mais</span>

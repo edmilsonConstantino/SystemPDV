@@ -331,7 +331,7 @@ export default function Products() {
       {/* ── CABEÇALHO ── */}
       <div className="overflow-hidden rounded-3xl shadow-sm">
         {/* Banner vermelho — padrão POS */}
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Título */}
@@ -397,15 +397,23 @@ export default function Products() {
                 Novo Produto
               </button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] max-w-2xl overflow-hidden rounded-[2rem] border-none bg-white p-0 shadow-2xl">
+            <DialogContent className="w-[calc(100%-2rem)] max-w-2xl overflow-hidden rounded-[2rem] border-none bg-white p-0 shadow-2xl">
               {/* Header */}
-              <div className="border-b border-gray-100 bg-gray-50/50 px-8 py-6">
-                <DialogTitle className="text-xl font-extrabold text-gray-900">Novo Produto</DialogTitle>
-                <p className="mt-0.5 text-sm text-gray-500">Preencha os detalhes para registar no inventário.</p>
+              <div className="relative overflow-hidden rounded-t-[2rem] bg-[#B71C1C] px-5 py-4 sm:px-6 sm:py-5">
+                <div className="banner-texture" />
+                <div className="relative flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                    <Package className="h-4 w-4 text-white" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-sm font-extrabold text-white sm:text-base">Novo Produto</DialogTitle>
+                    <p className="text-[11px] text-white/60">Preencha os detalhes para registar no inventário.</p>
+                  </div>
+                </div>
               </div>
 
               {/* Body */}
-              <div className="max-h-[65vh] space-y-7 overflow-y-auto px-8 py-6">
+              <div className="max-h-[65vh] space-y-5 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
 
                 {editCount && !editCount.canEdit && (
                   <Alert variant="destructive">
@@ -630,7 +638,7 @@ export default function Products() {
               </div>
 
               {/* Footer */}
-              <div className="border-t border-gray-100 bg-gray-50/50 px-8 py-5">
+              <div className="border-t border-gray-100 bg-gray-50/50 px-5 py-4 sm:px-6">
                 <Button
                   className="h-13 w-full rounded-2xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] text-base font-bold text-white shadow-lg shadow-[#B71C1C]/20 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
                   onClick={handleSaveProduct}
@@ -847,7 +855,7 @@ export default function Products() {
               data-testid="input-search-products"
             />
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {(['all','out','low','recent'] as const).map((v) => {
               const labels = { all: 'Todos', out: 'Sem estoque', low: 'Abaixo do mínimo', recent: 'Recentes' };
               const active = view === v;
@@ -856,7 +864,7 @@ export default function Products() {
                   key={v}
                   type="button"
                   onClick={() => setView(v)}
-                  className={`h-8 rounded-full px-4 text-xs font-semibold transition-all ${
+                  className={`h-8 rounded-lg px-3 text-xs font-semibold transition-all ${
                     active
                       ? 'bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] text-white shadow-md shadow-[#B71C1C]/25'
                       : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'

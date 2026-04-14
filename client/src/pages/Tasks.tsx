@@ -115,7 +115,7 @@ export default function Tasks() {
 
       {/* ── BANNER ── */}
       <div className="overflow-hidden rounded-3xl shadow-sm">
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
           <div className="relative flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
@@ -150,7 +150,7 @@ export default function Tasks() {
       <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
         {/* Formulário */}
-        <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+        <div className="px-4 pt-4 pb-3 border-b border-gray-100 sm:px-5 sm:pt-5 sm:pb-4">
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Nova tarefa</p>
 
           {/* Input + botão */}
@@ -175,26 +175,28 @@ export default function Tasks() {
           </div>
 
           {/* Atribuição — pills compactos */}
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] text-gray-400 mr-1">Para:</span>
-            {visibleOptions.map((opt) => {
-              const active = assignedTo === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => { setAssignedTo(opt.value); setSelectedUserId(''); }}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
-                    active
-                      ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/30'
-                      : 'border border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100'
-                  }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              );
-            })}
+          <div className="mt-3 space-y-1.5">
+            <span className="text-[11px] text-gray-400">Para:</span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {visibleOptions.map((opt) => {
+                const active = assignedTo === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => { setAssignedTo(opt.value); setSelectedUserId(''); }}
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-semibold transition-all ${
+                      active
+                        ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/30'
+                        : 'border border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:bg-gray-100'
+                    }`}
+                  >
+                    {opt.icon}
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Seletor de usuário específico */}

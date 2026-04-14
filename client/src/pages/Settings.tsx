@@ -305,7 +305,7 @@ export default function SettingsPage() {
       {/* ── CABEÇALHO — padrão POS/Produtos/Pedidos ── */}
       <div className="overflow-hidden rounded-3xl shadow-sm">
         {/* Banner vermelho */}
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
           <div className="relative flex items-center gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
@@ -332,8 +332,8 @@ export default function SettingsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white px-6 py-3">
-          <div className="flex flex-wrap gap-2">
+        <div className="bg-white px-4 py-3 sm:px-6">
+          <div className="grid grid-cols-2 gap-1.5">
             {tabDefs.map((t) => {
               const Icon = t.icon;
               const active = activeTab === t.id;
@@ -343,13 +343,13 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setActiveTab(t.id)}
                   data-testid={t.testId}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all ${
                     active
                       ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/25'
                       : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
                   {t.label}
                 </button>
               );
@@ -496,7 +496,7 @@ export default function SettingsPage() {
           </div>
 
           <Card className="overflow-hidden border border-border/60 shadow-sm">
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
