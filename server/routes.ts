@@ -616,8 +616,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== ANALYTICS ROUTES ====================
+
+  app.get("/api/analytics/financial", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const [products, sales] = await Promise.all([
+        storage.getAllProducts(),
+        storage.getAllSales(),
+      ]);
+
+      // Capital imobilizado em stock (custo × quantidade em stock)
+      const capitalInStock = products.reduce((sum, p) => {
+        const cost = parseFloat(p.costPrice ?? '0');
+        const stock = parseFloat(p.stock ?? '0');
+        return sum + cost * stock;
+      }, 0);
+
+      // Receita total histórica
+      const totalRevenue = sales.reduce((sum, s) => sum + parseFloat(s.total ?? '0'), 0);
+
+      // CMV estimado: para cada item vendido, usa o costPrice actual do produto
+      const productMap = new Map(products.map(p => [p.id, p]));
+      let totalCostSold = 0;
+      for (const sale of sales) {
+        const items = (sale.items as Array<{ productId: string; quantity: number; priceAtSale: number }>) ?? [];
+        for (const item of items) {
+          const prod = productMap.get(item.productId);
+          const cost = parseFloat(prod?.costPrice ?? '0');
+          totalCostSold += cost * item.quantity;
+        }
+      }
+
+      const grossProfit = totalRevenue - totalCostSold;
+      const margin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+
+      res.json({
+        capitalInStock: Math.round(capitalInStock * 100) / 100,
+        totalRevenue:   Math.round(totalRevenue   * 100) / 100,
+        totalCostSold:  Math.round(totalCostSold  * 100) / 100,
+        grossProfit:    Math.round(grossProfit     * 100) / 100,
+        margin:         Math.round(margin          * 100) / 100,
+        salesCount:     sales.length,
+        productsCount:  products.length,
+      });
+    } catch (error) {
+      console.error("Financial analytics error:", error);
+      res.status(500).json({ error: "Erro ao calcular analytics financeiros" });
+    }
+  });
+
   // ==================== SYSTEM ROUTES ====================
-  
+
   // Get edit count for current user
   app.get("/api/system/edit-count", requireAuth, async (req: Request, res: Response) => {
     try {

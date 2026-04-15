@@ -95,6 +95,7 @@ export function MobileDock({ onOpenMenu }: MobileDockProps) {
     queryFn: notificationsApi.getAll,
     enabled: !!user && !isSeller,
     refetchInterval: 10000,
+    retry: (failureCount, error: any) => error?.status !== 401 && failureCount < 2,
   });
 
   const newOrdersUnread = notifications.filter((n: any) => !n.read && n.metadata?.action === 'new_order').length;

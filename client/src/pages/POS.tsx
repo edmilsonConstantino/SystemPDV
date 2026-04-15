@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, QrCode, AlertCircle, ShoppingBag, ArrowRight, Percent, Scale, Check, LayoutGrid, List, ScanLine, Smartphone, Camera, RefreshCw, Monitor, Share2, History, Sparkles, GripHorizontal, ChevronRight } from 'lucide-react';
-import { QRCode } from 'react-qr-code';
+import QRCode from 'react-qr-code';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Product, productsApi, categoriesApi, salesApi, scannerApi, networkApi, ScannerSessionInfo } from '@/lib/api';
@@ -412,7 +412,7 @@ export default function POS() {
         className={cn(
           'flex min-h-[56px] w-full items-stretch overflow-hidden rounded-xl border bg-white shadow-sm transition-all',
           parsedStock <= 0 && 'pointer-events-none border-gray-100 opacity-50',
-          parsedStock > 0 && cartItem && 'border-[#B71C1C]/20 bg-[#B71C1C]/5 ring-1 ring-[#B71C1C]/15',
+          parsedStock > 0 && cartItem && 'border-gray-900/30 bg-gray-900/6 ring-1 ring-gray-900/20',
           parsedStock > 0 && !cartItem && isLowStock && 'border-amber-200 bg-amber-50/60',
           parsedStock > 0 && !cartItem && !isLowStock && 'border-gray-200 hover:border-gray-300',
         )}
@@ -1095,7 +1095,7 @@ export default function POS() {
                       className={cn(
                         'group rounded-xl transition-all',
                         parsedStock <= 0 && 'pointer-events-none opacity-50',
-                        cartItem && 'border-primary shadow-md ring-2 ring-primary/20',
+                        cartItem && 'border-gray-900 shadow-md ring-2 ring-gray-900/25',
                         !cartItem && parsedStock > 0 && isLowStock && 'border-amber-400/80 bg-amber-50/40 dark:border-amber-700/60 dark:bg-amber-950/25',
                         !cartItem && parsedStock > 0 && !isLowStock && 'cursor-pointer hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg',
                         !cartItem && parsedStock > 0 && isLowStock && 'cursor-pointer hover:-translate-y-0.5 hover:border-amber-500/60 hover:shadow-md',
@@ -1366,44 +1366,91 @@ export default function POS() {
       </div>
 
       <Dialog open={weightOpen} onOpenChange={setWeightOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Informar Peso (Gramas)</DialogTitle>
-            <DialogDescription>
-              Produto: {selectedWeightProduct?.name} ({formatCurrency(parseFloat(selectedWeightProduct?.price || '0'))}/kg)
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="flex items-center justify-center gap-2">
-              <Button variant="outline" onClick={() => setWeightInGrams(100)} data-testid="button-weight-100">100g</Button>
-              <Button variant="outline" onClick={() => setWeightInGrams(250)} data-testid="button-weight-250">250g</Button>
-              <Button variant="outline" onClick={() => setWeightInGrams(500)} data-testid="button-weight-500">500g</Button>
-              <Button variant="outline" onClick={() => setWeightInGrams(1000)} data-testid="button-weight-1000">1kg</Button>
-            </div>
-            <div className="grid gap-2">
-              <Label>Peso Manual (g)</Label>
-              <div className="relative">
-                <Input 
-                  type="number" 
-                  value={weightInGrams} 
-                  onChange={(e) => setWeightInGrams(Number(e.target.value))}
-                  className="pr-8"
-                  data-testid="input-weight-grams"
-                />
-                <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">g</span>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-sm overflow-hidden rounded-[2rem] border-none p-0 shadow-2xl">
+          {/* Banner */}
+          <div className="relative overflow-hidden bg-[#B71C1C] px-5 py-4">
+            <div className="banner-texture" />
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <Scale className="h-4 w-4 text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-extrabold text-white">Informar Peso</DialogTitle>
+                <DialogDescription className="text-[11px] text-white/60">
+                  {selectedWeightProduct?.name} · {formatCurrency(parseFloat(selectedWeightProduct?.price || '0'))}/kg
+                </DialogDescription>
               </div>
             </div>
-            <div className="bg-muted/30 p-3 rounded text-center">
-              <p className="text-sm text-muted-foreground">Preço calculado</p>
-              <p className="text-xl font-bold text-primary">
+          </div>
+
+          {/* Body */}
+          <div className="space-y-4 px-5 py-4">
+            {/* Atalhos de peso */}
+            <div>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Quantidade rápida</p>
+              <div className="grid grid-cols-4 gap-2">
+                {([100, 250, 500, 1000] as const).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setWeightInGrams(g)}
+                    data-testid={`button-weight-${g}`}
+                    className={`rounded-xl border py-2 text-sm font-bold transition-all active:scale-95 ${
+                      weightInGrams === g
+                        ? 'border-[#B71C1C] bg-[#B71C1C] text-white shadow-sm'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-[#B71C1C]/40 hover:bg-[#B71C1C]/5 hover:text-[#B71C1C]'
+                    }`}
+                  >
+                    {g < 1000 ? `${g}g` : '1kg'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Input manual */}
+            <div>
+              <Label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-gray-400">Peso manual (g)</Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  value={weightInGrams}
+                  onChange={(e) => setWeightInGrams(Number(e.target.value))}
+                  className="h-11 rounded-xl border-gray-200 bg-gray-50 pr-10 text-base font-bold focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
+                  data-testid="input-weight-grams"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">g</span>
+              </div>
+            </div>
+
+            {/* Preço calculado */}
+            <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3">
+              <p className="text-xs font-semibold text-gray-500">Preço calculado</p>
+              <p className="text-lg font-black tabular-nums text-[#B71C1C]">
                 {formatCurrency(((parseFloat(selectedWeightProduct?.price || '0')) * weightInGrams) / 1000)}
               </p>
             </div>
           </div>
-          <DialogFooter>
-             <Button variant="outline" onClick={() => setWeightOpen(false)} data-testid="button-cancel-weight">Cancelar</Button>
-             <Button onClick={confirmWeightAdd} disabled={weightInGrams <= 0} data-testid="button-confirm-weight">Confirmar</Button>
-          </DialogFooter>
+
+          {/* Footer */}
+          <div className="flex gap-2 border-t border-gray-100 px-5 py-3">
+            <button
+              type="button"
+              onClick={() => setWeightOpen(false)}
+              data-testid="button-cancel-weight"
+              className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={confirmWeightAdd}
+              disabled={weightInGrams <= 0}
+              data-testid="button-confirm-weight"
+              className="flex-1 rounded-xl bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d] py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-40"
+            >
+              Confirmar
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 

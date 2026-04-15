@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, Camera, Package, PackageX, TrendingDown, Clock } from 'lucide-react';
+import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, Camera, Package, PackageX, TrendingDown, Clock, Wallet, TrendingUp, BarChart2 } from 'lucide-react';
 import { BarcodeCameraScan } from '@/components/BarcodeCameraScan';
 import { formatCurrency } from '@/lib/utils';
 import { Product, productsApi, categoriesApi, systemApi } from '@/lib/api';
@@ -39,7 +39,9 @@ export default function Products() {
 
   const { data: editCount } = useQuery({
     queryKey: ['/api/system/edit-count'],
-    queryFn: systemApi.getEditCount
+    queryFn: systemApi.getEditCount,
+    enabled: !!user,
+    retry: (failureCount, error: any) => error?.status !== 401 && failureCount < 2,
   });
 
   const [newProduct, setNewProduct] = useState({
@@ -161,6 +163,28 @@ export default function Products() {
     const updated = new Date(p.updatedAt as any).getTime();
     return Number.isFinite(updated) && (Date.now() - updated) <= 24 * 60 * 60 * 1000;
   }).length;
+
+  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+  const inventoryFinancials = (() => {
+    if (!isAdminOrManager) return null;
+    let capitalInStock = 0;
+    let saleValueInStock = 0;
+    let marginSum = 0;
+    let marginCount = 0;
+    for (const p of products as any[]) {
+      const cost = parseFloat(p.costPrice ?? '0') || 0;
+      const price = parseFloat(p.price ?? '0') || 0;
+      const stock = parseFloat(p.stock ?? '0') || 0;
+      capitalInStock += cost * stock;
+      saleValueInStock += price * stock;
+      if (cost > 0 && price > 0) {
+        marginSum += ((price - cost) / price) * 100;
+        marginCount += 1;
+      }
+    }
+    const avgMargin = marginCount > 0 ? marginSum / marginCount : 0;
+    return { capitalInStock, saleValueInStock, avgMargin };
+  })();
 
   const filteredProducts = products
     .filter(p =>
@@ -719,6 +743,63 @@ export default function Products() {
           <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gray-300" />
         </div>
       </div>
+
+      {/* ── FINANCEIRO (admin/gestor) ── */}
+      {inventoryFinancials && (
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#B71C1C]/10">
+              <BarChart2 className="h-3 w-3 text-[#B71C1C]" />
+            </div>
+            <p className="text-xs font-bold text-gray-600">Análise Financeira do Inventário</p>
+            <span className="rounded-full bg-[#B71C1C]/8 px-2 py-0.5 text-[10px] font-bold text-[#B71C1C]">Admin / Gestor</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {/* Capital em stock */}
+            <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-4 shadow-sm transition hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-blue-400">Capital em stock</p>
+                  <p className="mt-1 text-xl font-extrabold tabular-nums text-blue-700">{inventoryFinancials.capitalInStock > 0 ? formatCurrency(inventoryFinancials.capitalInStock) : '—'}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-400">Custo total em inventário</p>
+                </div>
+                <div className="rounded-xl bg-blue-50 p-2">
+                  <Wallet className="h-5 w-5 text-blue-500" />
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r from-blue-500 to-blue-400" />
+            </div>
+            {/* Valor de venda em stock */}
+            <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-emerald-500">Valor de venda em stock</p>
+                  <p className="mt-1 text-xl font-extrabold tabular-nums text-emerald-700">{inventoryFinancials.saleValueInStock > 0 ? formatCurrency(inventoryFinancials.saleValueInStock) : '—'}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-400">Receita potencial do stock</p>
+                </div>
+                <div className="rounded-xl bg-emerald-50 p-2">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r from-emerald-500 to-emerald-400" />
+            </div>
+            {/* Margem média */}
+            <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-400">Margem média</p>
+                  <p className="mt-1 text-xl font-extrabold tabular-nums text-gray-900">{inventoryFinancials.avgMargin > 0 ? `${inventoryFinancials.avgMargin.toFixed(1)}%` : '—'}</p>
+                  <p className="mt-0.5 text-[11px] text-gray-400">Média sobre produtos c/ custo</p>
+                </div>
+                <div className="rounded-xl bg-gray-100 p-2">
+                  <BarChart2 className="h-5 w-5 text-gray-500" />
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-[#1A1A2E]" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Edição de Produtos */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

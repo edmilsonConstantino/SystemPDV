@@ -7,7 +7,6 @@ import {
   ShoppingBag,
   Package,
   AlertTriangle,
-  TrendingUp,
   Users,
   Activity,
   CheckCircle2,
@@ -241,14 +240,7 @@ export default function Dashboard() {
   return (
     <div className={mk.page}>
       {/* ── HERO ── */}
-      <div className="dash-hero relative mb-6 overflow-hidden rounded-[2rem] shadow-2xl border border-white/5">
-        {/* fundo vermelho + forma preta diagonal */}
-        <div className="absolute inset-0 bg-[#B71C1C]" />
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -right-16 -top-10 h-full w-[55%] rounded-[3rem] bg-gradient-to-br from-[#111111] via-[#1a1a1a] to-[#0d0d0d] opacity-95" />
-          <div className="absolute right-0 top-0 h-full w-[30%] bg-gradient-to-l from-[#0a0a0a] to-transparent" />
-          <div className="banner-texture opacity-[0.08]" />
-        </div>
+      <div className="dash-hero relative mb-6 overflow-hidden rounded-[2rem] shadow-2xl border border-white/5 bg-gradient-to-br from-[#B71C1C] via-[#5a0a0a] to-[#000000]">
 
         <div className="relative z-10 grid items-center gap-5 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:gap-6 lg:p-8">
 

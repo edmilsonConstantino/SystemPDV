@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 import { DateRange } from "react-day-picker"
-import { Calendar as CalendarIcon, Download, TrendingUp, Users, ShoppingBag, Clock, TrendingDown, Filter, Sparkles, ReceiptText, Layers, ArrowUpRight, ArrowDownRight, FileDown, Zap, BadgeAlert, Flame, Wand2, BarChart2 } from "lucide-react"
+import { Calendar as CalendarIcon, Download, TrendingUp, Users, ShoppingBag, Clock, TrendingDown, Filter, Sparkles, ReceiptText, Layers, ArrowUpRight, ArrowDownRight, FileDown, Zap, BadgeAlert, Flame, Wand2, BarChart2, Wallet, PackageOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -351,6 +351,27 @@ export default function Reports() {
         };
       });
   }, [filteredSales2, users]);
+
+  const financialSummary = useMemo(() => {
+    const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
+    if (!isAdminOrManager) return null;
+    const capitalInStock = (products as any[]).reduce((sum, p) => {
+      const cost = parseFloat(p.costPrice ?? '0') || 0;
+      const stock = parseFloat(p.stock ?? '0') || 0;
+      return sum + cost * stock;
+    }, 0);
+    let periodCMV = 0;
+    for (const sale of filteredSales2 as any[]) {
+      for (const item of sale.items ?? []) {
+        const product = productById.get(item.productId);
+        const cost = parseFloat(product?.costPrice ?? '0') || 0;
+        periodCMV += cost * Number(item.quantity ?? 0);
+      }
+    }
+    const grossProfit = totals.revenue - periodCMV;
+    const margin = totals.revenue > 0 ? (grossProfit / totals.revenue) * 100 : 0;
+    return { capitalInStock, periodCMV, grossProfit, margin };
+  }, [filteredSales2, productById, products, totals.revenue, user?.role]);
 
   const handleExportExcel = () => {
     try {
@@ -858,6 +879,112 @@ export default function Reports() {
         </div>
 
       </div>
+
+      {/* ── SECÇÃO FINANCEIRA (admin/manager) ── */}
+      {financialSummary && (
+        <div className="hidden md:block">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B71C1C]/10">
+              <Wallet className="h-3.5 w-3.5 text-[#B71C1C]" />
+            </div>
+            <p className="text-sm font-bold text-gray-700">Análise Financeira</p>
+            <span className="rounded-full bg-[#B71C1C]/8 px-2 py-0.5 text-[10px] font-bold text-[#B71C1C]">Admin / Gestor</span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+
+            {/* Lucro bruto */}
+            <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Lucro bruto</p>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                  </div>
+                </div>
+                <p className={`mt-1 text-lg font-black tabular-nums ${financialSummary.grossProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {formatCurrency(financialSummary.grossProfit)}
+                </p>
+                <p className="mt-1 flex items-center gap-1 text-[11px]">
+                  {financialSummary.margin >= 0
+                    ? <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                    : <ArrowDownRight className="h-3 w-3 text-rose-600" />}
+                  <span className={`font-semibold ${financialSummary.margin >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    {Math.abs(financialSummary.margin).toFixed(1)}%
+                  </span>
+                  <span className="text-gray-400">margem</span>
+                </p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 to-emerald-400" />
+            </div>
+
+            {/* CMV */}
+            <div className="relative overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-sm">
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">CMV</p>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50">
+                    <TrendingDown className="h-3.5 w-3.5 text-orange-500" />
+                  </div>
+                </div>
+                <p className="mt-1 text-lg font-black tabular-nums text-orange-600">
+                  {formatCurrency(financialSummary.periodCMV)}
+                </p>
+                <p className="mt-1 text-[11px] text-gray-400">
+                  Custo das mercadorias vendidas
+                </p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-orange-400 to-amber-400" />
+            </div>
+
+            {/* Capital em stock */}
+            <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Capital em stock</p>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                    <Wallet className="h-3.5 w-3.5 text-blue-600" />
+                  </div>
+                </div>
+                <p className="mt-1 text-lg font-black tabular-nums text-blue-700">
+                  {formatCurrency(financialSummary.capitalInStock)}
+                </p>
+                <p className="mt-1 text-[11px] text-gray-400">Valor de custo em inventário</p>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 to-blue-400" />
+            </div>
+
+            {/* Receita vs CMV */}
+            <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <div className="px-4 pt-3 pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Receita / Custo</p>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                    <PackageOpen className="h-3.5 w-3.5 text-gray-600" />
+                  </div>
+                </div>
+                <div className="mt-1.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500">Receita</span>
+                    <span className="text-[11px] font-bold text-[#B71C1C]">{formatCurrency(totals.revenue)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-500">CMV</span>
+                    <span className="text-[11px] font-bold text-orange-500">{formatCurrency(financialSummary.periodCMV)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-gray-100 pt-1.5">
+                    <span className="text-[11px] font-bold text-gray-600">Lucro</span>
+                    <span className={`text-[11px] font-black ${financialSummary.grossProfit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {formatCurrency(financialSummary.grossProfit)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#B71C1C] to-orange-400" />
+            </div>
+
+          </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="hidden md:block space-y-4">
         <TabsList className="sr-only" />

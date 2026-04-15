@@ -330,6 +330,25 @@ export const systemApi = {
   }
 };
 
+// Financial Analytics API
+export interface FinancialData {
+  capitalInStock: number;
+  totalRevenue: number;
+  totalCostSold: number;
+  grossProfit: number;
+  margin: number;
+  salesCount: number;
+  productsCount: number;
+}
+
+export const financialApi = {
+  get: async (): Promise<FinancialData> => {
+    const res = await fetch(`${API_BASE}/analytics/financial`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Erro ao buscar dados financeiros');
+    return res.json();
+  }
+};
+
 // Orders API
 export interface Order {
   id: string;
