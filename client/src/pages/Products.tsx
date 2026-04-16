@@ -746,56 +746,62 @@ export default function Products() {
 
       {/* ── FINANCEIRO (admin/gestor) ── */}
       {inventoryFinancials && (
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#B71C1C]/10">
-              <BarChart2 className="h-3 w-3 text-[#B71C1C]" />
+        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          {/* Header da secção */}
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-5 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B71C1C]/10">
+                <BarChart2 className="h-3.5 w-3.5 text-[#B71C1C]" strokeWidth={2.5} />
+              </div>
+              <p className="text-sm font-bold text-gray-700">Análise Financeira do Inventário</p>
             </div>
-            <p className="text-xs font-bold text-gray-600">Análise Financeira do Inventário</p>
-            <span className="rounded-full bg-[#B71C1C]/8 px-2 py-0.5 text-[10px] font-bold text-[#B71C1C]">Admin / Gestor</span>
+            <span className="rounded-full border border-[#B71C1C]/15 bg-[#B71C1C]/8 px-2.5 py-0.5 text-[10px] font-bold text-[#B71C1C]">
+              Admin / Gestor
+            </span>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+          {/* Cards internos */}
+          <div className="grid grid-cols-1 divide-y divide-gray-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             {/* Capital em stock */}
-            <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-blue-400">Capital em stock</p>
-                  <p className="mt-1 text-xl font-extrabold tabular-nums text-blue-700">{inventoryFinancials.capitalInStock > 0 ? formatCurrency(inventoryFinancials.capitalInStock) : '—'}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-400">Custo total em inventário</p>
-                </div>
-                <div className="rounded-xl bg-blue-50 p-2">
-                  <Wallet className="h-5 w-5 text-blue-500" />
-                </div>
+            <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#B71C1C]/8">
+                <Wallet className="h-5 w-5 text-[#B71C1C]" />
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r from-blue-500 to-blue-400" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Capital em stock</p>
+                <p className="mt-0.5 text-lg font-extrabold tabular-nums text-gray-900">
+                  {inventoryFinancials.capitalInStock > 0 ? formatCurrency(inventoryFinancials.capitalInStock) : '—'}
+                </p>
+                <p className="text-[11px] text-gray-400">Custo total em inventário</p>
+              </div>
             </div>
+
             {/* Valor de venda em stock */}
-            <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-emerald-500">Valor de venda em stock</p>
-                  <p className="mt-1 text-xl font-extrabold tabular-nums text-emerald-700">{inventoryFinancials.saleValueInStock > 0 ? formatCurrency(inventoryFinancials.saleValueInStock) : '—'}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-400">Receita potencial do stock</p>
-                </div>
-                <div className="rounded-xl bg-emerald-50 p-2">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" />
-                </div>
+            <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                <TrendingUp className="h-5 w-5 text-emerald-600" />
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r from-emerald-500 to-emerald-400" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Valor de venda em stock</p>
+                <p className="mt-0.5 text-lg font-extrabold tabular-nums text-emerald-700">
+                  {inventoryFinancials.saleValueInStock > 0 ? formatCurrency(inventoryFinancials.saleValueInStock) : '—'}
+                </p>
+                <p className="text-[11px] text-gray-400">Receita potencial do stock</p>
+              </div>
             </div>
+
             {/* Margem média */}
-            <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[0.7rem] font-bold uppercase tracking-widest text-gray-400">Margem média</p>
-                  <p className="mt-1 text-xl font-extrabold tabular-nums text-gray-900">{inventoryFinancials.avgMargin > 0 ? `${inventoryFinancials.avgMargin.toFixed(1)}%` : '—'}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-400">Média sobre produtos c/ custo</p>
-                </div>
-                <div className="rounded-xl bg-gray-100 p-2">
-                  <BarChart2 className="h-5 w-5 text-gray-500" />
-                </div>
+            <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                <BarChart2 className="h-5 w-5 text-amber-500" />
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-[#1A1A2E]" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Margem média</p>
+                <p className="mt-0.5 text-lg font-extrabold tabular-nums text-gray-900">
+                  {inventoryFinancials.avgMargin > 0 ? `${inventoryFinancials.avgMargin.toFixed(1)}%` : '—'}
+                </p>
+                <p className="text-[11px] text-gray-400">Média sobre produtos c/ custo</p>
+              </div>
             </div>
           </div>
         </div>

@@ -94,6 +94,13 @@ export default function Dashboard() {
   ).length;
   const ordersDelta = totalOrdersToday - ordersYesterday;
 
+  const totalSalesYesterday = sales
+    .filter((s) => new Date(s.createdAt).toDateString() === yesterday.toDateString())
+    .reduce((acc, s) => acc + parseFloat(s.total), 0);
+  const salesDayPct = totalSalesYesterday > 0
+    ? ((totalSalesToday - totalSalesYesterday) / totalSalesYesterday) * 100
+    : totalSalesToday > 0 ? 100 : 0;
+
   const outOfStockCount = products.filter((p) => parseFloat(p.stock) <= 0).length;
   const lowBelowMinCount = products.filter((p) => {
     const s = parseFloat(p.stock);
@@ -172,9 +179,15 @@ export default function Dashboard() {
       iconWrap: mk.softRed,
       Icon: DollarSign,
       body: (
-        <p className="text-xl font-black tabular-nums text-[#B71C1C]" data-testid="text-sales-today">
-          {formatCurrency(totalSalesToday)}
-        </p>
+        <>
+          <p className="text-xl font-black tabular-nums text-[#B71C1C]" data-testid="text-sales-today">
+            {formatCurrency(totalSalesToday)}
+          </p>
+          <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${salesDayPct >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+            <span>{salesDayPct >= 0 ? '↗' : '↘'}</span>
+            {salesDayPct >= 0 ? '+' : ''}{salesDayPct.toFixed(1)}%
+          </p>
+        </>
       ),
     },
     {
@@ -187,11 +200,9 @@ export default function Dashboard() {
           <p className="text-xl font-black tabular-nums text-gray-900" data-testid="text-orders-today">
             {totalOrdersToday}
           </p>
-          <p className="mt-1 text-[11px] text-gray-400">
-            <span className={`font-bold ${ordersDelta >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {ordersDelta >= 0 ? `+${ordersDelta}` : ordersDelta}
-            </span>
-            {' '}vs. ontem
+          <p className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${ordersDelta >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+            <span>{ordersDelta >= 0 ? '↗' : '↘'}</span>
+            {ordersDelta >= 0 ? '+' : ''}{ordersDelta} vs. ontem
           </p>
         </>
       ),
@@ -207,8 +218,8 @@ export default function Dashboard() {
             {stockAttentionTotal}
           </p>
           <p className="mt-1">
-            <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold ${stockAttentionTotal > 0 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-              {stockAttentionTotal > 0 ? 'Atenção' : 'Normal'}
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${stockAttentionTotal > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+              {stockAttentionTotal > 0 ? '⚠ Crítico' : '✓ Normal'}
             </span>
           </p>
         </>
@@ -227,7 +238,7 @@ export default function Dashboard() {
                   {activeUsers}
                 </p>
                 <p className="mt-1">
-                  <span className="inline-flex rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">Utilizadores</span>
+                  <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">↗ Online</span>
                 </p>
               </>
             ),
@@ -240,7 +251,7 @@ export default function Dashboard() {
   return (
     <div className={mk.page}>
       {/* ── HERO ── */}
-      <div className="dash-hero relative mb-6 overflow-hidden rounded-[2rem] shadow-2xl border border-white/5 bg-gradient-to-br from-[#B71C1C] via-[#5a0a0a] to-[#000000]">
+      <div className="dash-hero relative mb-6 overflow-hidden rounded-[2rem] shadow-2xl border border-white/5 bg-gradient-to-br from-[#c0392b] via-[#a93226] to-[#922b21]">
 
         <div className="relative z-10 grid items-center gap-5 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:gap-6 lg:p-8">
 
@@ -336,30 +347,45 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs — mobile: carrossel */}
-      <KpiCarousel>
-        {kpis.map((k) => {
-          const KIcon = k.Icon;
-          return (
-            <Card key={k.id} className={cn('w-full overflow-hidden rounded-xl', mk.kpiBase)}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-                <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{k.title}</CardTitle>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${k.iconWrap}`}>
-                  <KIcon className="h-4 w-4" strokeWidth={2.25} />
+      {(() => {
+        const kpiMeta = [
+          { bg: 'bg-[#B71C1C]/8',   orb: 'bg-[#B71C1C]/20',   iconBg: 'bg-[#B71C1C]/15',  iconColor: 'text-[#B71C1C]' },
+          { bg: 'bg-[#1A1A2E]/6',   orb: 'bg-[#1A1A2E]/15',   iconBg: 'bg-[#1A1A2E]/10',  iconColor: 'text-[#1A1A2E]' },
+          { bg: 'bg-amber-50',       orb: 'bg-amber-200/60',    iconBg: 'bg-amber-100',      iconColor: 'text-amber-600'  },
+          { bg: 'bg-[#B71C1C]/8',   orb: 'bg-[#B71C1C]/20',   iconBg: 'bg-[#B71C1C]/15',  iconColor: 'text-[#B71C1C]' },
+        ];
+        return (
+          <KpiCarousel>
+            {kpis.map((k, i) => {
+              const KIcon = k.Icon;
+              const meta = kpiMeta[i] ?? kpiMeta[0];
+              return (
+                <div key={k.id} className={`relative overflow-hidden rounded-2xl ${meta.bg} p-4 shadow-sm`}>
+                  {/* Orb decorativo */}
+                  <div className={`pointer-events-none absolute -right-5 -top-5 h-24 w-24 rounded-full ${meta.orb}`} />
+                  <div className="relative">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{k.title}</p>
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${meta.iconBg}`}>
+                        <KIcon className={`h-4 w-4 ${meta.iconColor}`} strokeWidth={2.25} />
+                      </div>
+                    </div>
+                    {k.body}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="px-4 pb-4 pt-0">{k.body}</CardContent>
-            </Card>
-          );
-        })}
-      </KpiCarousel>
+              );
+            })}
+          </KpiCarousel>
+        );
+      })()}
 
       {/* KPIs — desktop */}
       {(() => {
         const kpiMeta = [
-          { bar: 'bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d]', iconBg: 'bg-[#B71C1C]/10', iconColor: 'text-[#B71C1C]' },
-          { bar: 'bg-[#1A1A2E]',  iconBg: 'bg-gray-100', iconColor: 'text-gray-700' },
-          { bar: 'bg-[#B71C1C]/50', iconBg: 'bg-[#B71C1C]/10', iconColor: 'text-[#B71C1C]' },
-          { bar: 'bg-[#1A1A2E]',  iconBg: 'bg-gray-100', iconColor: 'text-gray-700' },
+          { bg: 'bg-[#B71C1C]/8',   orb: 'bg-[#B71C1C]/20',   iconBg: 'bg-[#B71C1C]/15',  iconColor: 'text-[#B71C1C]' },
+          { bg: 'bg-[#1A1A2E]/6',   orb: 'bg-[#1A1A2E]/15',   iconBg: 'bg-[#1A1A2E]/10',  iconColor: 'text-[#1A1A2E]' },
+          { bg: 'bg-amber-50',       orb: 'bg-amber-200/60',    iconBg: 'bg-amber-100',      iconColor: 'text-amber-600'  },
+          { bg: 'bg-[#B71C1C]/8',   orb: 'bg-[#B71C1C]/20',   iconBg: 'bg-[#B71C1C]/15',  iconColor: 'text-[#B71C1C]' },
         ];
         return (
           <div className="dash-kpi mb-6 hidden grid-cols-12 gap-4 md:grid">
@@ -369,18 +395,19 @@ export default function Dashboard() {
               return (
                 <div
                   key={k.id}
-                  className={cn('relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md', KPI_DESKTOP_COL[i])}
+                  className={cn('relative overflow-hidden rounded-2xl shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md', meta.bg, KPI_DESKTOP_COL[i])}
                 >
-                  <div className="px-5 pt-4 pb-5">
+                  {/* Orb decorativo */}
+                  <div className={`pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full ${meta.orb}`} />
+                  <div className="relative px-5 pt-4 pb-5">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{k.title}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{k.title}</p>
                       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${meta.iconBg}`}>
                         <KIcon className={`h-4 w-4 ${meta.iconColor}`} strokeWidth={2.25} />
                       </div>
                     </div>
                     <div className="mt-2">{k.body}</div>
                   </div>
-                  <div className={`absolute bottom-0 left-0 right-0 h-[3px] ${meta.bar}`} />
                 </div>
               );
             })}

@@ -1046,8 +1046,9 @@ export default function POS() {
         </div>
         </div>{/* fim bloco sticky */}
 
-        <div ref={listScrollRef} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
+            ref={listScrollRef}
             className={cn(
               'flex-1 overflow-y-auto overscroll-contain p-1.5 lg:p-4',
               isMobileViewport && cart.length > 0 && !cartSheetOpen
@@ -1104,7 +1105,7 @@ export default function POS() {
                       data-testid={`card-product-${product.id}`}
                     >
                       <CardContent className="p-2 lg:p-3 space-y-2">
-                        <div className="relative aspect-square overflow-hidden rounded-xl border border-gray-100 bg-gray-50">
+                        <div className="relative aspect-square overflow-hidden rounded-xl border border-[#B71C1C]/10 bg-[#B71C1C]/6">
                           {product.image ? (
                             <img
                               src={product.image}

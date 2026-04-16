@@ -573,19 +573,19 @@ export default function Reports() {
                   Relatórios
                   <span className="hidden sm:inline text-sm font-normal text-white/50 ml-2">— Insights &amp; Tendências</span>
                 </h1>
-                <p className="flex items-center gap-2 text-[11px] font-medium text-white/60 mt-0.5">
-                  <span>{totals.count} venda{totals.count !== 1 ? 's' : ''} no período</span>
-                  <span className="h-1 w-1 rounded-full bg-white/40" />
-                  <span className="text-emerald-200">{formatCurrency(totals.revenue)} receita</span>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/80">
+                    {totals.count} venda{totals.count !== 1 ? 's' : ''}
+                  </span>
+                  <span className="rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-200">
+                    {formatCurrency(totals.revenue)}
+                  </span>
                   {totals.pct !== 0 && (
-                    <>
-                      <span className="h-1 w-1 rounded-full bg-amber-300/80" />
-                      <span className={totals.pct >= 0 ? 'text-emerald-200' : 'text-red-200'}>
-                        {totals.pct >= 0 ? '+' : ''}{totals.pct.toFixed(1)}% vs anterior
-                      </span>
-                    </>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${totals.pct >= 0 ? 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-200' : 'border border-red-300/30 bg-red-400/15 text-red-200'}`}>
+                      {totals.pct >= 0 ? '↗' : '↘'} {totals.pct >= 0 ? '+' : ''}{totals.pct.toFixed(1)}% vs anterior
+                    </span>
                   )}
-                </p>
+                </div>
               </div>
             </div>
             {/* Acções: exportar + data */}
