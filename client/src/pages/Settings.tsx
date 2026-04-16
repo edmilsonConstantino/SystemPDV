@@ -416,6 +416,7 @@ export default function SettingsPage() {
                         value={newUser.name}
                         onChange={(e) => setNewUser({...newUser, name: e.target.value})}
                         data-testid="input-user-name"
+                        autoComplete="off"
                         className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                       />
                     </div>
@@ -426,6 +427,7 @@ export default function SettingsPage() {
                         value={newUser.username}
                         onChange={(e) => setNewUser({...newUser, username: e.target.value})}
                         data-testid="input-username"
+                        autoComplete="off"
                         className="h-11 rounded-xl border-gray-200 bg-gray-50 focus-visible:border-[#B71C1C]/40 focus-visible:ring-[#B71C1C]/15"
                       />
                     </div>
