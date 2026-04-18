@@ -35,10 +35,14 @@ export default function Orders() {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
 
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [] } = useQuery({
     queryKey: ['/api/orders'],
     queryFn: ordersApi.getAll,
+    placeholderData: (prev) => prev,
+    staleTime: 10_000,
   });
+
+
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
@@ -269,17 +273,6 @@ export default function Orders() {
       toast({ title: 'Erro', description: 'Não foi possível copiar.', variant: 'destructive' });
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-muted-foreground">Carregando pedidos...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!user) return null;
 

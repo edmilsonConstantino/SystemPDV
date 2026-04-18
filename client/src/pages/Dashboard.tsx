@@ -418,6 +418,9 @@ export default function Dashboard() {
       {/* ── MAIN CONTENT ROW: Chart (2/3) + Right column (1/3) ── */}
       <div className="dash-row-1 grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr] lg:gap-6">
 
+        {/* Left column: Chart + Stock Alerts */}
+        <div className="flex flex-col gap-5 lg:gap-6">
+
         {/* Chart card */}
         <Card className="relative overflow-hidden border border-gray-100 bg-white shadow-sm">
           <CardHeader className="relative flex flex-col gap-4 pt-5 sm:flex-row sm:items-start sm:justify-between">
@@ -510,6 +513,70 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+          {/* ── STOCK ALERTS — below chart in left column ── */}
+          <Card className="border border-border bg-card shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-50">
+                  <Package className="h-4 w-4 text-red-700" strokeWidth={2.25} />
+                </span>
+                Alertas de stock
+                {lowStockProducts.length > 0 && (
+                  <span className="ml-auto rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">
+                    {lowStockProducts.length} produto{lowStockProducts.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {lowStockProducts.length === 0 ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" strokeWidth={2} />
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-800">Tudo em ordem!</p>
+                    <p className="text-xs text-emerald-600">Sem produtos abaixo do stock mínimo</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {lowStockProducts.map((p) => {
+                    const s = parseFloat(p.stock);
+                    const m = parseFloat(p.minStock);
+                    const esgotado = s <= 0;
+                    return (
+                      <div
+                        key={p.id}
+                        className={cn(
+                          'flex items-center justify-between rounded-xl border px-3 py-2.5',
+                          esgotado
+                            ? 'border-destructive/25 bg-destructive/5'
+                            : 'border-amber-400/40 bg-amber-50/70',
+                        )}
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{p.name}</p>
+                          <p className={cn('text-xs font-bold', esgotado ? 'text-destructive' : 'text-amber-800')}>
+                            {s} {p.unit} (mín. {m})
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            'ml-2 shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold',
+                            esgotado ? 'bg-destructive text-destructive-foreground' : 'bg-amber-600 text-white',
+                          )}
+                        >
+                          {esgotado ? 'Esgotado' : 'Baixo'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+        </div>{/* end left column */}
+
         {/* Right column: Top produtos + Atividade stacked */}
         <div className="flex flex-col gap-5 lg:gap-6">
           {/* Top produtos */}
@@ -541,7 +608,7 @@ export default function Dashboard() {
                         <p className="text-xs text-muted-foreground">{p.quantity} vendas</p>
                       </div>
                     </div>
-                    <p className="shrink-0 text-sm font-bold text-red-700">{formatCurrency(p.revenue)}</p>
+                    <p className="shrink-0 text-sm font-bold text-emerald-600">{formatCurrency(p.revenue)}</p>
                   </div>
                 ))
               )}
@@ -653,69 +720,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── STOCK ALERTS (full width) ── */}
-      <div className="dash-row-2 mt-5 lg:mt-6">
-        <Card className="border border-border bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50">
-                <Package className="h-5 w-5 text-red-700" strokeWidth={2.25} />
-              </span>
-              Alertas de stock
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {lowStockProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 bg-red-50/50 py-10 text-center sm:py-12">
-                <CheckCircle2 className="mb-3 h-12 w-12 text-red-700" strokeWidth={2} />
-                <p className="font-bold text-foreground">Tudo em ordem!</p>
-                <p className="mt-1 text-sm text-muted-foreground">Sem produtos abaixo do mínimo</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {lowStockProducts.map((p) => {
-                  const s = parseFloat(p.stock);
-                  const m = parseFloat(p.minStock);
-                  const esgotado = s <= 0;
-                  return (
-                    <div
-                      key={p.id}
-                      className={cn(
-                        'flex items-start justify-between rounded-2xl border px-3 py-3',
-                        esgotado
-                          ? 'border-destructive/25 bg-destructive/5'
-                          : 'border-amber-400/40 bg-amber-50/70 dark:border-amber-700/40 dark:bg-amber-950/25',
-                      )}
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{p.name}</p>
-                        <p
-                          className={cn(
-                            'text-xs font-bold',
-                            esgotado ? 'text-destructive' : 'text-amber-800 dark:text-amber-200',
-                          )}
-                        >
-                          {s} {p.unit} (mín. {m})
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          'rounded-lg px-2 py-1 text-[10px] font-bold',
-                          esgotado
-                            ? 'bg-destructive text-destructive-foreground'
-                            : 'bg-amber-600 text-white dark:bg-amber-700',
-                        )}
-                      >
-                        {esgotado ? 'Esgotado' : 'Stock baixo'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

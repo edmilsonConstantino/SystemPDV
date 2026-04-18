@@ -66,7 +66,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
             'md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-y-contain md:p-6 md:pb-6',
           )}
         >
-          <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mx-auto max-w-7xl animate-in fade-in duration-150">
             {children}
           </div>
         </div>
