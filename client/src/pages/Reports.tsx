@@ -478,118 +478,41 @@ export default function Reports() {
   return (
     <div className="space-y-6">
 
-      {/* MOBILE: Resumo do vendedor — hoje e ontem */}
-      <div className="md:hidden space-y-3">
-        {/* mini banner mobile */}
-        <div className="overflow-hidden rounded-2xl shadow-sm">
-          <div className="relative bg-[#B71C1C] px-4 py-4">
-            <div className="banner-texture" />
-            <div className="relative flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
-                <BarChart2 className="h-4 w-4 text-white" strokeWidth={2.5} />
-              </div>
-              <div>
-                <h1 className="text-base font-extrabold text-white">Minhas Vendas</h1>
-                <p className="text-[11px] text-white/60">Resumo do seu desempenho</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* KPIs hoje / ontem */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Clock className="h-3 w-3 text-[#B71C1C]" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Hoje</span>
-              </div>
-              <p className="text-lg font-black text-[#B71C1C] tabular-nums">{formatCurrency(todayTotal)}</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">{todaySales.length} venda{todaySales.length !== 1 ? 's' : ''}</p>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#B71C1C] to-[#7f1d1d]" />
-          </div>
-          <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <TrendingDown className="h-3 w-3 text-gray-500" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ontem</span>
-              </div>
-              <p className="text-lg font-black text-gray-800 tabular-nums">{formatCurrency(yesterdayTotal)}</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">{yesterdaySales.length} venda{yesterdaySales.length !== 1 ? 's' : ''}</p>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#1A1A2E]" />
-          </div>
-        </div>
-
-        {/* Lista de vendas recentes */}
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-          <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-3">
-            <ShoppingBag className="h-3.5 w-3.5 text-[#B71C1C]" />
-            <p className="text-xs font-bold text-gray-700">Vendas Recentes</p>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {baseSales.length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-400">Nenhuma venda registada</div>
-            ) : (
-              baseSales
-                .slice()
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .slice(0, 10)
-                .map(sale => {
-                  const isToday = isSameDay(new Date(sale.createdAt), today);
-                  const isYesterday = isSameDay(new Date(sale.createdAt), subDays(today, 1));
-                  const dayLabel = isToday ? 'Hoje' : isYesterday ? 'Ontem' : format(new Date(sale.createdAt), "dd/MM", { locale: ptBR });
-                  return (
-                    <div key={sale.id} className="flex items-center justify-between px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">#{sale.id.slice(-6).toUpperCase()}</p>
-                        <p className="text-[11px] text-gray-400">
-                          {dayLabel} · {format(new Date(sale.createdAt), "HH:mm")} · {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'}
-                        </p>
-                      </div>
-                      <span className="text-sm font-black tabular-nums text-[#B71C1C]">{formatCurrency(parseFloat(sale.total))}</span>
-                    </div>
-                  );
-                })
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── CABEÇALHO — padrão do sistema ── */}
-      <div className="hidden md:block overflow-hidden rounded-3xl shadow-sm">
+      {/* ── CABEÇALHO ── */}
+      <div className="overflow-hidden rounded-3xl shadow-sm">
         {/* Banner vermelho */}
-        <div className="relative bg-[#B71C1C] px-6 py-5">
+        <div className="relative bg-[#B71C1C] px-4 py-4 sm:px-6 sm:py-5">
           <div className="banner-texture" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Título */}
+          <div className="relative space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
+
+            {/* Linha 1 (mobile): ícone + título + badges */}
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
                 <BarChart2 className="h-5 w-5 text-white" strokeWidth={2.5} />
               </div>
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight text-white">
+              <div className="min-w-0">
+                <h1 className="text-lg font-extrabold leading-tight tracking-tight text-white sm:text-xl">
                   Relatórios
                   <span className="hidden sm:inline text-sm font-normal text-white/50 ml-2">— Insights &amp; Tendências</span>
                 </h1>
-                <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold text-white/80">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/80">
                     {totals.count} venda{totals.count !== 1 ? 's' : ''}
                   </span>
-                  <span className="rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-200">
+                  <span className="rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
                     {formatCurrency(totals.revenue)}
                   </span>
                   {totals.pct !== 0 && (
-                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${totals.pct >= 0 ? 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-200' : 'border border-red-300/30 bg-red-400/15 text-red-200'}`}>
-                      {totals.pct >= 0 ? '↗' : '↘'} {totals.pct >= 0 ? '+' : ''}{totals.pct.toFixed(1)}% vs anterior
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${totals.pct >= 0 ? 'border border-emerald-300/30 bg-emerald-400/15 text-emerald-200' : 'border border-red-300/30 bg-red-400/15 text-red-200'}`}>
+                      {totals.pct >= 0 ? '↗ +' : '↘ '}{totals.pct.toFixed(1)}%
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            {/* Acções: exportar + data */}
-            <div className="flex flex-wrap items-center gap-2">
+
+            {/* Linha 2 (mobile): acções numa linha compacta */}
+            <div className="flex items-center gap-2 sm:shrink-0">
               <button
                 type="button"
                 onClick={() => exportCsv(`relatorio_resumo_${format(new Date(), 'dd-MM-yyyy')}.csv`, [{
@@ -599,32 +522,34 @@ export default function Reports() {
                   ticket_medio: totals.avg.toFixed(2),
                   itens_total: totals.items,
                 }])}
-                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
               >
                 <FileDown className="h-3.5 w-3.5" />
-                CSV
+                <span className="sm:inline">CSV</span>
               </button>
               <button
                 type="button"
                 onClick={handleExportExcel}
-                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+                className="flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
               >
                 <Download className="h-3.5 w-3.5" />
-                Excel
+                <span className="sm:inline">Excel</span>
               </button>
               <Popover>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
                     data-testid="button-date-range"
-                    className="flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-[#B71C1C] shadow-md shadow-black/20 transition hover:bg-gray-50"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-bold text-[#B71C1C] shadow-md shadow-black/20 transition hover:bg-gray-50 sm:flex-none"
                   >
-                    <CalendarIcon className="h-3.5 w-3.5" />
-                    {date?.from ? (
-                      date.to
-                        ? `${format(date.from, "dd MMM", { locale: ptBR })} – ${format(date.to, "dd MMM", { locale: ptBR })}`
-                        : format(date.from, "dd MMM yyyy", { locale: ptBR })
-                    ) : 'Selecione período'}
+                    <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">
+                      {date?.from ? (
+                        date.to
+                          ? `${format(date.from, "dd MMM", { locale: ptBR })} – ${format(date.to, "dd MMM", { locale: ptBR })}`
+                          : format(date.from, "dd MMM yyyy", { locale: ptBR })
+                      ) : 'Período'}
+                    </span>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
@@ -633,18 +558,19 @@ export default function Reports() {
                     defaultMonth={date?.from}
                     selected={date}
                     onSelect={setDate}
-                    numberOfMonths={2}
+                    numberOfMonths={typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 2}
                   />
                 </PopoverContent>
               </Popover>
             </div>
+
           </div>
         </div>
 
         {/* Tabs + filtros */}
-        <div className="bg-white px-6 py-4">
-          {/* Tabs de vista */}
-          <div className="flex flex-wrap gap-1.5">
+        <div className="bg-white px-4 py-3 sm:px-6 sm:py-4">
+          {/* Tabs de vista — scroll horizontal em mobile */}
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {([
               { id: 'overview',  label: 'Visão geral',  icon: Sparkles   },
               { id: 'trends',    label: 'Tendências',   icon: TrendingUp  },
@@ -658,7 +584,7 @@ export default function Reports() {
                   key={t.id}
                   type="button"
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  className={`shrink-0 flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
                     active
                       ? 'bg-[#B71C1C] text-white shadow-sm shadow-[#B71C1C]/25'
                       : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
@@ -671,8 +597,8 @@ export default function Reports() {
             })}
           </div>
 
-          {/* Filtros rápidos */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          {/* Filtros rápidos — scroll horizontal em mobile */}
+          <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 px-2.5 py-1">
               <Filter className="h-3 w-3 text-gray-400 mr-0.5" />
               <span className="text-[10px] font-bold text-gray-400 mr-1">Período</span>
@@ -755,7 +681,7 @@ export default function Reports() {
         </div>
       </div>
 
-      <div className="hidden md:grid md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
 
         {/* Receita */}
         <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
@@ -766,7 +692,7 @@ export default function Reports() {
                 <Sparkles className="h-3.5 w-3.5 text-[#B71C1C]" />
               </div>
             </div>
-            <p className="mt-1 text-lg font-black tabular-nums text-[#B71C1C]" data-testid="text-total-revenue">
+            <p className="mt-1 text-base font-black tabular-nums text-[#B71C1C] truncate" data-testid="text-total-revenue">
               {formatCurrency(totals.revenue)}
             </p>
             <p className="mt-1 flex items-center gap-1 text-[11px]">
@@ -804,7 +730,7 @@ export default function Reports() {
                 <ReceiptText className="h-3.5 w-3.5 text-gray-700" />
               </div>
             </div>
-            <p className="mt-1 text-lg font-black tabular-nums text-gray-900" data-testid="text-total-sales">
+            <p className="mt-1 text-base font-black tabular-nums text-gray-900" data-testid="text-total-sales">
               {totals.count}
             </p>
             <p className="mt-1 flex items-center gap-1 text-[11px]">
@@ -836,7 +762,7 @@ export default function Reports() {
                 <ShoppingBag className="h-3.5 w-3.5 text-[#B71C1C]" />
               </div>
             </div>
-            <p className="mt-1 text-lg font-black tabular-nums text-gray-900" data-testid="text-avg-ticket">
+            <p className="mt-1 text-base font-black tabular-nums text-gray-900 truncate" data-testid="text-avg-ticket">
               {formatCurrency(totals.avg)}
             </p>
             <p className="mt-1 text-[11px] text-gray-400">Receita por venda</p>
@@ -860,7 +786,7 @@ export default function Reports() {
                 <Layers className="h-3.5 w-3.5 text-gray-700" />
               </div>
             </div>
-            <p className="mt-1 text-lg font-black tabular-nums text-gray-900">{totals.items}</p>
+            <p className="mt-1 text-base font-black tabular-nums text-gray-900">{totals.items}</p>
             <p className="mt-1 text-[11px] text-gray-400">Total no período</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {annotations.streak > 0 && (
@@ -882,7 +808,7 @@ export default function Reports() {
 
       {/* ── SECÇÃO FINANCEIRA (admin/manager) ── */}
       {financialSummary && (
-        <div className="hidden md:block">
+        <div className="block">
           <div className="mb-3 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B71C1C]/10">
               <Wallet className="h-3.5 w-3.5 text-[#B71C1C]" />
@@ -986,7 +912,7 @@ export default function Reports() {
         </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="hidden md:block space-y-4">
+      <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="block space-y-4">
         <TabsList className="sr-only" />
 
         <TabsContent value="overview" className="space-y-6">
