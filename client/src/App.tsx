@@ -16,6 +16,7 @@ import SettingsPage from "@/pages/Settings";
 import ClientOrders from "@/pages/ClientOrders";
 import Orders from "@/pages/Orders";
 import Tracking from "@/pages/Tracking";
+import HistoryPage from "@/pages/History";
 import Scanner from "@/pages/Scanner";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/lib/auth";
@@ -58,6 +59,9 @@ function Router() {
       </Route>
       <Route path="/tracking">
         <MainLayout><Tracking /></MainLayout>
+      </Route>
+      <Route path="/history">
+        <MainLayout><HistoryPage /></MainLayout>
       </Route>
       
       <Route component={NotFound} />

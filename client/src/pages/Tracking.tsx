@@ -20,6 +20,78 @@ interface UserItem {
   username: string;
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Nome', price: 'Preço', costPrice: 'Custo', stock: 'Stock',
+  minStock: 'Stock mín.', sku: 'SKU', barcode: 'Código de barras', unit: 'Unidade', categoryId: 'Categoria',
+};
+
+function renderDetails(log: AuditLog) {
+  const d = log.details || {};
+
+  if (log.action === 'UPDATE_PRODUCT' && d.changes) {
+    const raw = d.changes as Record<string, any>;
+    const entries = Object.entries(raw).filter(([field]) => field !== 'image');
+    if (entries.length === 0) return <span className="text-[11px] text-gray-400">Sem alterações</span>;
+    const isNewFormat = entries.some(([, val]) => val !== null && typeof val === 'object' && ('de' in val || 'para' in val));
+    return (
+      <div className="space-y-1">
+        {d.productName && <p className="mb-1 text-[11px] font-bold text-gray-600">{d.productName}</p>}
+        {isNewFormat
+          ? entries.map(([field, val]) => (
+              <div key={field} className="flex flex-wrap items-center gap-1 text-[11px]">
+                <span className="font-semibold text-gray-500">{FIELD_LABELS[field] || field}:</span>
+                <span className="rounded bg-red-50 px-1 text-red-600 line-through">{String(val?.de ?? '—')}</span>
+                <span className="text-gray-400">→</span>
+                <span className="rounded bg-emerald-50 px-1 font-semibold text-emerald-700">{String(val?.para ?? '—')}</span>
+              </div>
+            ))
+          : entries.map(([field, val]) => (
+              <div key={field} className="flex flex-wrap items-center gap-1 text-[11px]">
+                <span className="font-semibold text-gray-500">{FIELD_LABELS[field] || field}:</span>
+                <span className="rounded bg-emerald-50 px-1 font-semibold text-emerald-700">{String(val)}</span>
+                <span className="text-gray-400 italic">(anterior não disponível)</span>
+              </div>
+            ))
+        }
+      </div>
+    );
+  }
+
+  if (log.action === 'INCREASE_STOCK') {
+    return (
+      <div className="space-y-0.5 text-[11px]">
+        {d.productName && <p className="font-bold text-gray-600">{d.productName}</p>}
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-gray-500">Stock:</span>
+          <span className="rounded bg-red-50 px-1 text-red-600">{d.previousStock}</span>
+          <span className="text-gray-400">→</span>
+          <span className="rounded bg-emerald-50 px-1 font-semibold text-emerald-700">{d.newStock}</span>
+          <span className="text-gray-400">(+{d.quantityAdded})</span>
+        </div>
+        {d.priceChanged && (
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-gray-500">Preço:</span>
+            <span className="rounded bg-red-50 px-1 text-red-600">{d.previousPrice}</span>
+            <span className="text-gray-400">→</span>
+            <span className="rounded bg-emerald-50 px-1 font-semibold text-emerald-700">{d.newPrice}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <details className="cursor-pointer">
+      <summary className="list-none flex items-center gap-1 font-semibold text-[#B71C1C] hover:underline">
+        <ChevronDown className="h-3 w-3" />Ver
+      </summary>
+      <pre className="mt-2 max-h-40 overflow-auto rounded-xl border border-gray-100 bg-gray-50 p-3 text-[11px] text-gray-600">
+        {JSON.stringify(d, null, 2)}
+      </pre>
+    </details>
+  );
+}
+
 const ACTION_COLORS: Record<string, string> = {
   create:   'bg-emerald-50 text-emerald-700 border-emerald-100',
   update:   'bg-blue-50 text-blue-700 border-blue-100',
@@ -340,15 +412,7 @@ export default function Tracking() {
                         {log.entityId ? log.entityId.slice(-8).toUpperCase() : '—'}
                       </td>
                       <td className="px-5 py-3.5 text-xs">
-                        <details className="cursor-pointer">
-                          <summary className="font-semibold text-[#B71C1C] hover:underline list-none flex items-center gap-1">
-                            <ChevronDown className="h-3 w-3" />
-                            Ver
-                          </summary>
-                          <pre className="mt-2 max-h-40 overflow-auto rounded-xl bg-gray-50 p-3 text-[11px] text-gray-600 border border-gray-100">
-                            {JSON.stringify(log.details || {}, null, 2)}
-                          </pre>
-                        </details>
+                        {renderDetails(log)}
                       </td>
                     </tr>
                   ))}

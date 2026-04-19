@@ -50,7 +50,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="flex w-[min(92vw,20rem)] flex-col border-r border-border bg-card p-0 shadow-2xl shadow-primary/10"
+        className="flex h-full w-[min(92vw,20rem)] flex-col overflow-hidden border-r border-border bg-card p-0 shadow-2xl shadow-primary/10"
       >
         <div className="relative overflow-hidden bg-[#B71C1C] px-5 pb-6 pt-5">
           <div className="banner-texture" />

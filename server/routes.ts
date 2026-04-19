@@ -322,8 +322,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      const oldProduct = await storage.getProduct(req.params.id);
+      if (!oldProduct) {
+        return res.status(404).json({ error: "Produto não encontrado" });
+      }
+
       const updated = await storage.updateProduct(req.params.id, req.body);
-      
+
       if (!updated) {
         return res.status(404).json({ error: "Produto não encontrado" });
       }
@@ -334,13 +339,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.incrementDailyEdits(req.session.userId!, today);
       }
 
+      // Compute field-by-field diff for a meaningful audit trail
+      const TRACKED_FIELDS = ['name', 'sku', 'barcode', 'price', 'costPrice', 'stock', 'minStock', 'unit', 'categoryId'] as const;
+      const changes: Record<string, { de: any; para: any }> = {};
+      for (const field of TRACKED_FIELDS) {
+        if (req.body[field] !== undefined && String((oldProduct as any)[field] ?? '') !== String(req.body[field])) {
+          changes[field] = { de: (oldProduct as any)[field], para: req.body[field] };
+        }
+      }
+
       // Audit log
       await storage.createAuditLog({
         userId: req.session.userId!,
         action: "UPDATE_PRODUCT",
         entityType: "product",
         entityId: updated.id,
-        details: { changes: req.body }
+        details: { productName: oldProduct.name, changes }
       });
 
       // Create notifications for sellers when admin updates product
@@ -450,7 +464,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== SALES ROUTES ====================
-  
+
+  app.get("/api/sales/:id", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const sale = await storage.getSale(req.params.id);
+      if (!sale) return res.status(404).json({ error: "Venda não encontrada" });
+
+      const allProducts = await storage.getAllProducts();
+      const productMap: Record<string, { name: string; unit: string }> = {};
+      for (const p of allProducts) productMap[p.id] = { name: p.name, unit: p.unit };
+
+      const items = ((sale.items as any[]) || []).map((item: any) => ({
+        ...item,
+        productName: productMap[item.productId]?.name || 'Produto desconhecido',
+        unit: productMap[item.productId]?.unit || 'un',
+      }));
+
+      res.json({ ...sale, items });
+    } catch (error) {
+      console.error("Get sale error:", error);
+      res.status(500).json({ error: "Erro ao buscar venda" });
+    }
+  });
+
   app.get("/api/sales", requireAuth, async (req: Request, res: Response) => {
     try {
       // Sellers only see their own sales, admins/managers see all
@@ -496,16 +532,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         preview
       });
 
+      // Enriquecer itens com nomes de produtos para o audit log
+      const allProducts = await storage.getAllProducts();
+      const productMap: Record<string, { name: string; unit: string }> = {};
+      for (const p of allProducts) productMap[p.id] = { name: p.name, unit: p.unit };
+      const saleItems = ((newSale.items as any[]) || []).map((item: any) => ({
+        productId: item.productId,
+        productName: productMap[item.productId]?.name || 'Produto desconhecido',
+        unit: productMap[item.productId]?.unit || 'un',
+        quantity: item.quantity,
+        priceAtSale: item.priceAtSale,
+      }));
+
       // Audit log
       await storage.createAuditLog({
         userId: req.session.userId!,
         action: "CREATE_SALE",
         entityType: "sale",
         entityId: newSale.id,
-        details: { 
+        details: {
           total: newSale.total,
           paymentMethod: newSale.paymentMethod,
-          itemCount: newSale.items.length
+          amountReceived: newSale.amountReceived,
+          change: newSale.change,
+          items: saleItems,
         }
       });
 
@@ -562,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== AUDIT LOG ROUTES ====================
   
-  app.get("/api/audit-logs", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  app.get("/api/audit-logs", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
     try {
       const logs = await storage.getAllAuditLogs();
       res.json(logs);

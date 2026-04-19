@@ -41,6 +41,7 @@ export interface IStorage {
 
   // Sales
   getAllSales(): Promise<Sale[]>;
+  getSale(id: string): Promise<Sale | undefined>;
   getSalesByUser(userId: string): Promise<Sale[]>;
   createSale(sale: InsertSale): Promise<Sale>;
 
@@ -202,6 +203,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(sales).orderBy(desc(sales.createdAt));
   }
 
+  async getSale(id: string): Promise<Sale | undefined> {
+    const [sale] = await db.select().from(sales).where(eq(sales.id, id));
+    return sale;
+  }
+
   async getSalesByUser(userId: string): Promise<Sale[]> {
     return await db.select().from(sales).where(eq(sales.userId, userId)).orderBy(desc(sales.createdAt));
   }
@@ -257,7 +263,7 @@ export class DatabaseStorage implements IStorage {
 
   // AUDIT LOGS
   async getAllAuditLogs(): Promise<AuditLog[]> {
-    return await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(100);
+    return await db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt)).limit(500);
   }
 
   async getAuditLogsByEntity(entityType: string, entityId: string): Promise<AuditLog[]> {

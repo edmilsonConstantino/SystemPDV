@@ -276,42 +276,53 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* receita — visível só mobile (painel direito hidden em mobile) */}
-            <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm lg:hidden">
-              <div className="flex-1">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Receita hoje</p>
-                <p className="mt-0.5 text-lg font-black text-white tabular-nums">{formatCurrency(totalSalesToday)}</p>
+            {/* receita — visível só mobile */}
+            <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm lg:hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Receita hoje</p>
+                  <p className="mt-1 text-[1.65rem] font-black leading-none text-white tabular-nums">
+                    {formatCurrency(totalSalesToday)}
+                  </p>
+                </div>
+                <span className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/70">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
+                  Ao vivo
+                </span>
               </div>
-              <div className="flex gap-2 text-center">
+              <div className="mt-3 flex gap-2 border-t border-white/10 pt-3">
                 {[
                   { label: 'Pedidos', value: totalOrdersToday },
                   { label: 'Alertas', value: stockAttentionTotal },
                 ].map(({ label, value }) => (
-                  <div key={label} className="rounded-lg border border-white/10 bg-white/8 px-2.5 py-1.5">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">{label}</p>
-                    <p className="text-sm font-black text-white">{value}</p>
+                  <div key={label} className="flex flex-1 flex-col rounded-xl bg-white/8 px-3 py-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-white/40">{label}</p>
+                    <p className="mt-0.5 text-lg font-black leading-none text-white">{value}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* acções */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href="/pos">
-                <button type="button" className="flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-[#B71C1C] shadow-lg shadow-black/20 transition-all hover:bg-gray-100 active:scale-95 sm:px-5 sm:py-2.5">
-                  <span className="text-base leading-none">+</span> Nova venda
+            {/* mobile: coluna (nova venda largo + secundários lado a lado) | sm+: linha original */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Link href="/pos" className="sm:flex-none">
+                <button type="button" className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-3 text-[15px] font-extrabold text-[#B71C1C] shadow-lg shadow-black/20 transition-all hover:bg-gray-50 active:scale-[0.97] sm:w-auto sm:rounded-xl sm:px-5 sm:py-2.5 sm:text-sm">
+                  + Nova venda
                 </button>
               </Link>
-              <Link href="/reports">
-                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 sm:px-5 sm:py-2.5">
-                  Relatórios
-                </button>
-              </Link>
-              <Link href="/products" className="hidden sm:block">
-                <button type="button" className="rounded-xl border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30">
-                  Produtos
-                </button>
-              </Link>
+              <div className="flex gap-2 sm:contents">
+                <Link href="/reports" className="flex-1 sm:flex-none">
+                  <button type="button" className="flex w-full items-center justify-center rounded-2xl border border-white/35 bg-white/15 py-3 text-[13px] font-semibold text-white backdrop-blur-sm transition hover:bg-white/25 active:scale-[0.97] sm:w-auto sm:rounded-xl sm:px-5 sm:py-2.5 sm:text-sm">
+                    Relatórios
+                  </button>
+                </Link>
+                <Link href="/products" className="flex-1 sm:flex-none">
+                  <button type="button" className="flex w-full items-center justify-center rounded-2xl border border-white/35 bg-white/15 py-3 text-[13px] font-semibold text-white backdrop-blur-sm transition hover:bg-white/25 active:scale-[0.97] sm:w-auto sm:rounded-xl sm:px-5 sm:py-2.5 sm:text-sm">
+                    Produtos
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
 

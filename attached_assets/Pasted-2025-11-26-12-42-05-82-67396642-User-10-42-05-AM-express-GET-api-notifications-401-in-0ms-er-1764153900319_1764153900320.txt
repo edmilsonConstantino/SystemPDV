@@ -40,7 +40,7 @@ User
 User
 10:42:42 AM [express] GET /api/notifications 401 in 1ms :: {"error":"Não autenticado"}
 2025-11-26 12:42:42.04
-67396642
+67396642    
 User
 10:42:42 AM [express] GET /api/users 401 in 1ms :: {"error":"Não autenticado"}
 2025-11-26 12:42:47.52

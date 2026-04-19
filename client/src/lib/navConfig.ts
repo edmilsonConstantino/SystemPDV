@@ -9,6 +9,7 @@ import {
   Boxes,
   FileText,
   Store,
+  History,
 } from 'lucide-react';
 
 export type AppRole = 'admin' | 'manager' | 'seller';
@@ -68,6 +69,12 @@ export const mainNavItems: MainNavItem[] = [
     href: '/tasks',
     icon: CheckSquare,
     roles: ['admin', 'manager', 'seller'],
+  },
+  {
+    label: 'Histórico',
+    href: '/history',
+    icon: History,
+    roles: ['admin', 'manager'],
   },
   {
     label: 'Rastreamento',
