@@ -1582,6 +1582,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const snap = await storage.getSnapshot(req.params.id);
       if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
 
+      // Save current state before restoring so the user can undo
+      await storage.createSnapshot(`↩ Antes do restauro — ${snap.label}`, 'manual');
+
       const result = await storage.restoreSnapshot(req.params.id);
 
       // Log the restore action
@@ -1655,6 +1658,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { targetDate } = req.body;
       if (!targetDate) return res.status(400).json({ error: "Parâmetro 'targetDate' obrigatório" });
+
+      // Save current state before reverting so the user can undo
+      await storage.createSnapshot(`↩ Antes da reversão para ${targetDate}`, 'manual');
 
       const allLogs = await storage.getAllAuditLogs();
       const currentProducts = await storage.getAllProducts();
