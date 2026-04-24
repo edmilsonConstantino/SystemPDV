@@ -163,12 +163,28 @@ const alternatePorts = [3000, 5000, 8080, 3001, 5001, 8000, 8001, 8888, 9000]; /
     // Registrar rotas
     log('Registering routes...');
     server = await registerRoutes(app);
-    
+
     // Validar que server foi criado
     if (!server) {
       throw new Error('registerRoutes did not return a server instance');
     }
     log('Routes registered');
+
+    // Auto-snapshot diário (não bloqueia o boot)
+    try {
+      const { storage } = await import('./storage');
+      await storage.pruneOldSnapshots();
+      const alreadyHas = await storage.hasTodayAutoSnapshot();
+      if (!alreadyHas) {
+        const label = `Auto — ${new Date().toLocaleDateString('pt-MZ', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+        await storage.createSnapshot(label, 'auto');
+        log('📸 Daily snapshot created');
+      } else {
+        log('📸 Daily snapshot already exists for today');
+      }
+    } catch (snapErr) {
+      console.warn('⚠️  Could not create daily snapshot:', snapErr instanceof Error ? snapErr.message : snapErr);
+    }
   } catch (error) {
     console.error('❌ FATAL: Server bootstrap failed');
     console.error('Error:', error instanceof Error ? error.message : String(error));

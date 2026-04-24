@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, UserPlus, Activity, History, Search, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, Users, Receipt } from 'lucide-react';
+import { Shield, UserPlus, Activity, History, Search, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, Users, Receipt, RotateCcw, Camera, Clock, ChevronRight, TriangleAlert, CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -40,6 +40,16 @@ export default function SettingsPage() {
   const [orderAuditCode, setOrderAuditCode] = useState('');
   const [orderAuditData, setOrderAuditData] = useState<any>(null);
   const [orderAuditOpen, setOrderAuditOpen] = useState(false);
+
+  // Rollback state
+  const [rollbackPreview, setRollbackPreview] = useState<any>(null);
+  const [rollbackConfirmText, setRollbackConfirmText] = useState('');
+  const [rollbackModalOpen, setRollbackModalOpen] = useState(false);
+  const [rollbackTarget, setRollbackTarget] = useState<{ type: 'snapshot'; id: string; label: string } | { type: 'audit'; date: string } | null>(null);
+  const [auditRollbackDate, setAuditRollbackDate] = useState('');
+  const [auditRollbackPreview, setAuditRollbackPreview] = useState<any>(null);
+  const [auditRollbackLoading, setAuditRollbackLoading] = useState(false);
+  const [manualSnapshotLabel, setManualSnapshotLabel] = useState('');
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
@@ -76,6 +86,107 @@ export default function SettingsPage() {
     queryKey: ['/api/sales'],
     queryFn: salesApi.getAll
   });
+
+  const { data: snapshots = [], refetch: refetchSnapshots } = useQuery<any[]>({
+    queryKey: ['/api/snapshots'],
+    queryFn: async () => {
+      const res = await fetch('/api/snapshots', { credentials: 'include' });
+      if (!res.ok) throw new Error('Erro ao carregar snapshots');
+      return res.json();
+    },
+    enabled: activeTab === 'rollback' && (user?.role === 'admin' || user?.role === 'manager'),
+  });
+
+  const createSnapshotMutation = useMutation({
+    mutationFn: async (label: string) => {
+      const res = await fetch('/api/snapshots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ label }),
+      });
+      if (!res.ok) throw new Error('Erro ao criar snapshot');
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Snapshot criado', description: 'Estado actual guardado com sucesso.' });
+      setManualSnapshotLabel('');
+      refetchSnapshots();
+    },
+    onError: (e: any) => toast({ title: 'Erro', description: e.message, variant: 'destructive' }),
+  });
+
+  const restoreSnapshotMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/snapshots/${id}/restore`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Erro ao restaurar snapshot');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: '✅ Restaurado!', description: `${data.restoredProducts} produto(s) e ${data.restoredCategories} categoria(s) restaurados.` });
+      setRollbackModalOpen(false);
+      setRollbackConfirmText('');
+      setRollbackPreview(null);
+      setRollbackTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    },
+    onError: (e: any) => toast({ title: 'Erro', description: e.message, variant: 'destructive' }),
+  });
+
+  const applyAuditRollbackMutation = useMutation({
+    mutationFn: async (targetDate: string) => {
+      const res = await fetch('/api/snapshots/audit-rollback/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ targetDate }),
+      });
+      if (!res.ok) throw new Error('Erro ao aplicar reversão');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: '✅ Revertido!', description: `${data.productsReverted} produto(s) revertidos para o estado de ${auditRollbackDate}.` });
+      setRollbackModalOpen(false);
+      setRollbackConfirmText('');
+      setAuditRollbackPreview(null);
+      setRollbackTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    },
+    onError: (e: any) => toast({ title: 'Erro', description: e.message, variant: 'destructive' }),
+  });
+
+  async function loadSnapshotPreview(snap: any) {
+    try {
+      const res = await fetch(`/api/snapshots/${snap.id}/preview`, { credentials: 'include' });
+      const data = await res.json();
+      setRollbackPreview(data);
+      setRollbackTarget({ type: 'snapshot', id: snap.id, label: snap.label });
+      setRollbackConfirmText('');
+      setRollbackModalOpen(true);
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível carregar preview', variant: 'destructive' });
+    }
+  }
+
+  async function loadAuditRollbackPreview(date: string) {
+    if (!date) return;
+    setAuditRollbackLoading(true);
+    try {
+      const res = await fetch(`/api/snapshots/audit-rollback/preview?date=${date}`, { credentials: 'include' });
+      const data = await res.json();
+      setAuditRollbackPreview(data);
+      setRollbackTarget({ type: 'audit', date });
+      setRollbackConfirmText('');
+      setRollbackModalOpen(true);
+    } catch {
+      toast({ title: 'Erro', description: 'Não foi possível carregar preview', variant: 'destructive' });
+    } finally {
+      setAuditRollbackLoading(false);
+    }
+  }
 
   const { isLoading: productsLoading } = useQuery({
     queryKey: ['/api/products'],
@@ -191,6 +302,7 @@ export default function SettingsPage() {
     else if (tab === 'audit') setActiveTab('audit');
     else if (tab === 'permissions') setActiveTab('permissions');
     else if (tab === 'users') setActiveTab('users');
+    else if (tab === 'rollback') setActiveTab('rollback');
   }, [location]);
 
   // Mantém o URL sincronizado ao trocar tabs (para o sidebar apontar direto)
@@ -295,6 +407,7 @@ export default function SettingsPage() {
       ? [
           { id: 'audit', label: 'Rastreio & Auditoria', icon: History, testId: 'tab-audit' },
           { id: 'invoices', label: 'Recibos & Faturas', icon: Receipt, testId: 'tab-invoices' },
+          { id: 'rollback', label: 'Reversão de Dados', icon: RotateCcw, testId: 'tab-rollback' },
         ]
       : []),
   ];
@@ -1256,6 +1369,270 @@ export default function SettingsPage() {
 
           </div>
         </TabsContent>
+
+        {/* ── REVERSÃO DE DADOS ── */}
+        <TabsContent value="rollback" className="space-y-5">
+
+          {/* Banner de aviso */}
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="text-sm">
+              <p className="font-bold text-amber-800">Esta acção é irreversível</p>
+              <p className="mt-0.5 text-amber-700">Restaurar reverte preços, stock e nomes de produtos. Vendas e pedidos nunca são tocados.</p>
+            </div>
+          </div>
+
+          {/* Secção 1 — Reversão por Audit Log (para erros já feitos) */}
+          {(() => {
+            // Build list of dates (last 14 days) that have product change events
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - 14);
+            const productChangeDates = Array.from(
+              new Set(
+                auditLogs
+                  .filter((l: any) => {
+                    const isProductChange = l.action === 'UPDATE_PRODUCT' || l.action === 'CREATE_PRODUCT' || l.action === 'DELETE_PRODUCT';
+                    const withinWindow = new Date(l.createdAt) >= cutoff;
+                    return isProductChange && withinWindow;
+                  })
+                  .map((l: any) => new Date(l.createdAt).toISOString().slice(0, 10))
+              )
+            ).sort((a, b) => b.localeCompare(a)); // newest first
+
+            // Count changes per date
+            const changesPerDate: Record<string, number> = {};
+            auditLogs
+              .filter((l: any) => (l.action === 'UPDATE_PRODUCT' || l.action === 'CREATE_PRODUCT' || l.action === 'DELETE_PRODUCT') && new Date(l.createdAt) >= cutoff)
+              .forEach((l: any) => {
+                const d = new Date(l.createdAt).toISOString().slice(0, 10);
+                changesPerDate[d] = (changesPerDate[d] || 0) + 1;
+              });
+
+            return (
+              <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="h-4 w-4 text-[#B71C1C]" />
+                    <p className="font-bold text-gray-800">Reverter por data (Audit Log)</p>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Dias com alterações de produtos nas últimas 2 semanas. Clica numa data para ver o que muda e confirmar a reversão.
+                  </p>
+                </div>
+                <div className="p-5">
+                  {productChangeDates.length === 0 ? (
+                    <div className="py-8 text-center">
+                      <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-gray-200" />
+                      <p className="text-sm font-semibold text-gray-400">Nenhuma alteração de produtos nas últimas 2 semanas</p>
+                      <p className="mt-1 text-xs text-gray-400">Não há nada para reverter por audit log.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {productChangeDates.map((dateStr) => {
+                        const date = new Date(dateStr + 'T12:00:00');
+                        const isToday = dateStr === new Date().toISOString().slice(0, 10);
+                        const isYesterday = dateStr === (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+                        const label = isToday ? 'Hoje' : isYesterday ? 'Ontem' : date.toLocaleDateString('pt-MZ', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+                        const count = changesPerDate[dateStr] || 0;
+                        const selected = auditRollbackDate === dateStr;
+                        return (
+                          <button
+                            key={dateStr}
+                            type="button"
+                            onClick={() => setAuditRollbackDate(dateStr)}
+                            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${
+                              selected
+                                ? 'border-[#B71C1C] bg-red-50 ring-1 ring-[#B71C1C]/30'
+                                : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black ${selected ? 'bg-[#B71C1C] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>
+                                {date.getDate()}
+                              </div>
+                              <div>
+                                <p className={`text-sm font-semibold ${selected ? 'text-[#B71C1C]' : 'text-gray-800'}`}>{label}</p>
+                                <p className="text-xs text-gray-400">{count} alteração{count !== 1 ? 'ões' : ''} de produto{count !== 1 ? 's' : ''}</p>
+                              </div>
+                            </div>
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${selected ? 'bg-[#B71C1C] text-white' : 'bg-gray-200 text-gray-600'}`}>
+                              {selected ? 'Selecionado' : 'Selecionar'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                      <Button
+                        onClick={() => loadAuditRollbackPreview(auditRollbackDate)}
+                        disabled={!auditRollbackDate || auditRollbackLoading}
+                        className="mt-1 h-10 w-full rounded-xl bg-[#B71C1C] text-sm font-bold hover:bg-[#9b1414]"
+                      >
+                        {auditRollbackLoading ? 'A verificar…' : `Ver o que muda ao reverter para ${auditRollbackDate ? new Date(auditRollbackDate + 'T12:00:00').toLocaleDateString('pt-MZ', { day: '2-digit', month: 'short' }) : '…'}`}
+                        <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Secção 2 — Snapshots diários */}
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/60 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <Camera className="h-4 w-4 text-[#B71C1C]" />
+                <p className="font-bold text-gray-800">Snapshots guardados</p>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">{snapshots.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Label (opcional)"
+                  value={manualSnapshotLabel}
+                  onChange={(e) => setManualSnapshotLabel(e.target.value)}
+                  className="h-8 w-40 rounded-lg border border-gray-200 bg-white px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#B71C1C]/20"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => createSnapshotMutation.mutate(manualSnapshotLabel || `Manual — ${new Date().toLocaleDateString('pt-MZ')}`)}
+                  disabled={createSnapshotMutation.isPending}
+                  className="h-8 rounded-lg bg-[#B71C1C] px-3 text-xs font-bold hover:bg-[#9b1414]"
+                >
+                  <Camera className="mr-1.5 h-3 w-3" />
+                  {createSnapshotMutation.isPending ? 'A guardar…' : 'Snapshot agora'}
+                </Button>
+              </div>
+            </div>
+
+            {snapshots.length === 0 ? (
+              <div className="py-12 text-center">
+                <Clock className="mx-auto mb-2 h-8 w-8 text-gray-200" />
+                <p className="text-sm font-semibold text-gray-400">Nenhum snapshot disponível</p>
+                <p className="mt-1 text-xs text-gray-400">O primeiro snapshot automático será criado no próximo arranque do servidor.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {snapshots.map((snap: any) => {
+                  const date = new Date(snap.createdAt);
+                  const isToday = date.toDateString() === new Date().toDateString();
+                  return (
+                    <div key={snap.id} className="flex items-center gap-3 px-5 py-3.5">
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${snap.type === 'auto' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {snap.type === 'auto' ? <Clock className="h-3.5 w-3.5" /> : <Camera className="h-3.5 w-3.5" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-800">{snap.label}</p>
+                        <p className="text-xs text-gray-400">
+                          {isToday ? 'Hoje' : date.toLocaleDateString('pt-MZ', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {' · '}
+                          {date.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${snap.type === 'auto' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {snap.type === 'auto' ? 'Auto' : 'Manual'}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => loadSnapshotPreview(snap)}
+                        className="h-7 shrink-0 rounded-lg border-gray-200 px-2.5 text-xs font-semibold text-gray-600 hover:border-[#B71C1C] hover:text-[#B71C1C]"
+                      >
+                        Restaurar
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── MODAL DE CONFIRMAÇÃO DE REVERSÃO ── */}
+        <Dialog open={rollbackModalOpen} onOpenChange={(o) => { setRollbackModalOpen(o); if (!o) { setRollbackConfirmText(''); setRollbackPreview(null); setAuditRollbackPreview(null); setRollbackTarget(null); } }}>
+          <DialogContent className="max-w-lg rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-lg font-black">
+                <RotateCcw className="h-5 w-5 text-[#B71C1C]" />
+                Confirmar Reversão
+              </DialogTitle>
+              <DialogDescription>
+                {rollbackTarget?.type === 'snapshot'
+                  ? `Restaurar para snapshot: "${rollbackTarget.label}"`
+                  : rollbackTarget?.type === 'audit'
+                  ? `Reverter alterações após ${rollbackTarget.date}`
+                  : ''}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              {/* Preview de alterações */}
+              {(rollbackPreview || auditRollbackPreview) && (() => {
+                const preview = rollbackPreview || auditRollbackPreview;
+                const changes = preview.productChanges || preview.changes || [];
+                return (
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+                      {changes.length === 0 ? 'Nenhuma alteração detectada' : `${changes.length} produto(s) afectado(s)`}
+                    </p>
+                    {changes.length === 0 ? (
+                      <div className="flex items-center gap-2 text-sm text-emerald-700">
+                        <CheckCircle2 className="h-4 w-4" />
+                        O estado actual já corresponde ao ponto escolhido.
+                      </div>
+                    ) : (
+                      <div className="max-h-48 space-y-2 overflow-y-auto">
+                        {changes.slice(0, 10).map((c: any) => (
+                          <div key={c.id} className="rounded-lg border border-gray-200 bg-white p-2.5">
+                            <p className="text-xs font-bold text-gray-700">{c.name || c.productName}</p>
+                            {c.status === 'recreate' && <p className="mt-0.5 text-[11px] text-blue-600">→ Será recriado (foi apagado)</p>}
+                            {(c.changes || c.revert) && Object.entries(c.changes || c.revert).map(([field, val]: [string, any]) => (
+                              <p key={field} className="mt-0.5 text-[11px] text-gray-500">
+                                {field}: <span className="font-semibold text-[#B71C1C]">{c.changes ? `${val.from} → ${val.to}` : String(val)}</span>
+                              </p>
+                            ))}
+                          </div>
+                        ))}
+                        {changes.length > 10 && <p className="text-center text-xs text-gray-400">… e mais {changes.length - 10}</p>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                <strong>Vendas e pedidos NÃO são alterados.</strong> Apenas produtos e categorias serão revertidos.
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-gray-600">Escreve <span className="font-black text-[#B71C1C]">CONFIRMAR</span> para prosseguir:</label>
+                <input
+                  type="text"
+                  value={rollbackConfirmText}
+                  onChange={(e) => setRollbackConfirmText(e.target.value)}
+                  placeholder="CONFIRMAR"
+                  className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B71C1C]/20"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setRollbackModalOpen(false)} className="rounded-xl">
+                Cancelar
+              </Button>
+              <Button
+                disabled={rollbackConfirmText !== 'CONFIRMAR' || restoreSnapshotMutation.isPending || applyAuditRollbackMutation.isPending}
+                onClick={() => {
+                  if (rollbackTarget?.type === 'snapshot') restoreSnapshotMutation.mutate(rollbackTarget.id);
+                  else if (rollbackTarget?.type === 'audit') applyAuditRollbackMutation.mutate(rollbackTarget.date);
+                }}
+                className="rounded-xl bg-[#B71C1C] font-bold hover:bg-[#9b1414]"
+              >
+                {(restoreSnapshotMutation.isPending || applyAuditRollbackMutation.isPending) ? 'A restaurar…' : 'Restaurar agora'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
       </Tabs>
     </div>
   );

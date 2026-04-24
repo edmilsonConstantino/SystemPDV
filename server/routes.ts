@@ -1517,6 +1517,191 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== END SCANNER ROUTES ====================
 
+  // ==================== SNAPSHOT / ROLLBACK ROUTES ====================
+
+  // List all snapshots (last 14 days)
+  app.get("/api/snapshots", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const list = await storage.listSnapshots();
+      res.json(list);
+    } catch (error) {
+      console.error("List snapshots error:", error);
+      res.status(500).json({ error: "Erro ao listar snapshots" });
+    }
+  });
+
+  // Create a manual snapshot
+  app.post("/api/snapshots", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const label = req.body.label?.trim() || `Manual — ${new Date().toLocaleString('pt-MZ')}`;
+      const snap = await storage.createSnapshot(label, 'manual');
+      res.json(snap);
+    } catch (error) {
+      console.error("Create snapshot error:", error);
+      res.status(500).json({ error: "Erro ao criar snapshot" });
+    }
+  });
+
+  // Preview what a restore would change
+  app.get("/api/snapshots/:id/preview", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const snap = await storage.getSnapshot(req.params.id);
+      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
+
+      const { products: snapProducts, categories: snapCategories } = snap.data as { products: any[]; categories: any[] };
+      const currentProducts = await storage.getAllProducts();
+      const currentCategories = await storage.getAllCategories();
+
+      const productChanges = snapProducts.map((sp: any) => {
+        const cur = currentProducts.find((p) => p.id === sp.id);
+        if (!cur) return { id: sp.id, name: sp.name, status: 'recreate' as const, changes: {} };
+        const changes: Record<string, { from: any; to: any }> = {};
+        for (const field of ['name', 'price', 'costPrice', 'stock', 'minStock', 'unit', 'categoryId'] as const) {
+          if (String(cur[field] ?? '') !== String(sp[field] ?? '')) {
+            changes[field] = { from: cur[field], to: sp[field] };
+          }
+        }
+        return { id: sp.id, name: sp.name, status: Object.keys(changes).length > 0 ? 'update' as const : 'unchanged' as const, changes };
+      }).filter((p: any) => p.status !== 'unchanged');
+
+      res.json({
+        snapshot: { id: snap.id, label: snap.label, createdAt: snap.createdAt },
+        productChanges,
+        categoryCount: snapCategories.length,
+        totalAffected: productChanges.length,
+      });
+    } catch (error) {
+      console.error("Snapshot preview error:", error);
+      res.status(500).json({ error: "Erro ao gerar pré-visualização" });
+    }
+  });
+
+  // Restore from snapshot
+  app.post("/api/snapshots/:id/restore", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const snap = await storage.getSnapshot(req.params.id);
+      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
+
+      const result = await storage.restoreSnapshot(req.params.id);
+
+      // Log the restore action
+      await storage.createAuditLog({
+        userId: (req as any).user.id,
+        action: "RESTORE_SNAPSHOT",
+        entityType: "snapshot",
+        entityId: snap.id,
+        details: {
+          snapshotLabel: snap.label,
+          snapshotDate: snap.createdAt,
+          ...result,
+        },
+      });
+
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error("Restore snapshot error:", error);
+      res.status(500).json({ error: "Erro ao restaurar snapshot" });
+    }
+  });
+
+  // Rollback from audit logs — reconstruct product state at a given date
+  app.get("/api/snapshots/audit-rollback/preview", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const targetDate = req.query.date as string; // YYYY-MM-DD
+      if (!targetDate) return res.status(400).json({ error: "Parâmetro 'date' obrigatório" });
+
+      const allLogs = await storage.getAllAuditLogs();
+      const currentProducts = await storage.getAllProducts();
+
+      // Find product update logs AFTER the target date, ordered newest first
+      const targetTs = new Date(targetDate + 'T23:59:59Z').getTime();
+      const relevantLogs = allLogs
+        .filter((l) => l.action === 'UPDATE_PRODUCT' && new Date(l.createdAt).getTime() > targetTs)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // For each product, accumulate which fields would be reverted to their "de" value
+      const revertMap: Record<string, { productName: string; revert: Record<string, any> }> = {};
+
+      for (const log of relevantLogs) {
+        if (!log.entityId) continue;
+        const details = log.details as any;
+        if (!details?.changes) continue;
+        if (!revertMap[log.entityId]) {
+          const cur = currentProducts.find((p) => p.id === log.entityId);
+          revertMap[log.entityId] = { productName: details.productName || cur?.name || log.entityId, revert: {} };
+        }
+        for (const [field, diff] of Object.entries(details.changes as Record<string, { de: any; para: any }>)) {
+          // Only set the revert value if we haven't already (we want the OLDEST "de" value)
+          if (!(field in revertMap[log.entityId].revert)) {
+            revertMap[log.entityId].revert[field] = diff.de;
+          }
+        }
+      }
+
+      const changes = Object.entries(revertMap).map(([id, { productName, revert }]) => ({
+        id,
+        productName,
+        revert,
+      }));
+
+      res.json({ targetDate, changes, totalAffected: changes.length });
+    } catch (error) {
+      console.error("Audit rollback preview error:", error);
+      res.status(500).json({ error: "Erro ao pré-visualizar reversão" });
+    }
+  });
+
+  app.post("/api/snapshots/audit-rollback/apply", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+    try {
+      const { targetDate } = req.body;
+      if (!targetDate) return res.status(400).json({ error: "Parâmetro 'targetDate' obrigatório" });
+
+      const allLogs = await storage.getAllAuditLogs();
+      const currentProducts = await storage.getAllProducts();
+
+      const targetTs = new Date(targetDate + 'T23:59:59Z').getTime();
+      const relevantLogs = allLogs
+        .filter((l) => l.action === 'UPDATE_PRODUCT' && new Date(l.createdAt).getTime() > targetTs)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      const revertMap: Record<string, Record<string, any>> = {};
+      for (const log of relevantLogs) {
+        if (!log.entityId) continue;
+        const details = log.details as any;
+        if (!details?.changes) continue;
+        if (!revertMap[log.entityId]) revertMap[log.entityId] = {};
+        for (const [field, diff] of Object.entries(details.changes as Record<string, { de: any; para: any }>)) {
+          if (!(field in revertMap[log.entityId])) {
+            revertMap[log.entityId][field] = diff.de;
+          }
+        }
+      }
+
+      let applied = 0;
+      for (const [productId, fields] of Object.entries(revertMap)) {
+        const exists = currentProducts.find((p) => p.id === productId);
+        if (!exists) continue;
+        await storage.updateProduct(productId, fields);
+        applied++;
+      }
+
+      await storage.createAuditLog({
+        userId: (req as any).user.id,
+        action: "AUDIT_ROLLBACK",
+        entityType: "snapshot",
+        entityId: null as any,
+        details: { targetDate, productsReverted: applied },
+      });
+
+      res.json({ success: true, productsReverted: applied });
+    } catch (error) {
+      console.error("Audit rollback apply error:", error);
+      res.status(500).json({ error: "Erro ao aplicar reversão" });
+    }
+  });
+
+  // ==================== END SNAPSHOT ROUTES ====================
+
   const httpServer = createServer(app);
 
   return httpServer;

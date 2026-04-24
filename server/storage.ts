@@ -1,4 +1,4 @@
-import { 
+import {
   type User, type InsertUser,
   type Product, type InsertProduct,
   type Category, type InsertCategory,
@@ -9,10 +9,11 @@ import {
   type Task, type InsertTask,
   type Order, type InsertOrder,
   type OrderReopen, type InsertOrderReopen,
-  users, products, categories, sales, notifications, auditLogs, dailyEdits, tasks, orders, orderReopens
+  type Snapshot, type InsertSnapshot,
+  users, products, categories, sales, notifications, auditLogs, dailyEdits, tasks, orders, orderReopens, snapshots
 } from "@shared/schema";
 import { db } from "../db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, lt } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -93,6 +94,14 @@ export interface IStorage {
   reopenOrder(orderId: string): Promise<Order | undefined>;
   getReopensToday(userId: string, date: string): Promise<number>;
   trackReopen(reopen: InsertOrderReopen): Promise<OrderReopen>;
+
+  // Snapshots (data rollback)
+  createSnapshot(label: string, type: 'auto' | 'manual'): Promise<Snapshot>;
+  listSnapshots(): Promise<Snapshot[]>;
+  getSnapshot(id: string): Promise<Snapshot | undefined>;
+  restoreSnapshot(id: string): Promise<{ restoredProducts: number; restoredCategories: number }>;
+  pruneOldSnapshots(): Promise<void>;
+  hasTodayAutoSnapshot(): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -490,6 +499,84 @@ export class DatabaseStorage implements IStorage {
   async trackReopen(reopen: InsertOrderReopen): Promise<OrderReopen> {
     const [newReopen] = await db.insert(orderReopens).values(reopen).returning();
     return newReopen;
+  }
+
+  // ── SNAPSHOTS ────────────────────────────────────────────────────────────
+
+  async createSnapshot(label: string, type: 'auto' | 'manual'): Promise<Snapshot> {
+    const [allProducts, allCategories] = await Promise.all([
+      db.select().from(products),
+      db.select().from(categories),
+    ]);
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const [snap] = await db.insert(snapshots).values({
+      label,
+      type,
+      dateKey,
+      data: { products: allProducts, categories: allCategories },
+    }).returning();
+    return snap;
+  }
+
+  async listSnapshots(): Promise<Snapshot[]> {
+    return db.select().from(snapshots).orderBy(desc(snapshots.createdAt));
+  }
+
+  async getSnapshot(id: string): Promise<Snapshot | undefined> {
+    const [snap] = await db.select().from(snapshots).where(eq(snapshots.id, id));
+    return snap;
+  }
+
+  async restoreSnapshot(id: string): Promise<{ restoredProducts: number; restoredCategories: number }> {
+    const snap = await this.getSnapshot(id);
+    if (!snap) throw new Error('Snapshot não encontrado');
+
+    const { products: snapProducts, categories: snapCategories } = snap.data as { products: any[]; categories: any[] };
+
+    // Restore categories first (products reference them)
+    for (const cat of snapCategories) {
+      const existing = await db.select().from(categories).where(eq(categories.id, cat.id));
+      if (existing.length > 0) {
+        await db.update(categories).set({ name: cat.name }).where(eq(categories.id, cat.id));
+      } else {
+        await db.insert(categories).values(cat).onConflictDoNothing();
+      }
+    }
+
+    // Restore products
+    for (const prod of snapProducts) {
+      const existing = await db.select().from(products).where(eq(products.id, prod.id));
+      if (existing.length > 0) {
+        await db.update(products).set({
+          name: prod.name,
+          sku: prod.sku,
+          price: prod.price,
+          costPrice: prod.costPrice,
+          stock: prod.stock,
+          minStock: prod.minStock,
+          unit: prod.unit,
+          categoryId: prod.categoryId,
+          image: prod.image,
+        }).where(eq(products.id, prod.id));
+      } else {
+        await db.insert(products).values(prod).onConflictDoNothing();
+      }
+    }
+
+    return { restoredProducts: snapProducts.length, restoredCategories: snapCategories.length };
+  }
+
+  async pruneOldSnapshots(): Promise<void> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 14);
+    await db.delete(snapshots).where(lt(snapshots.createdAt, cutoff));
+  }
+
+  async hasTodayAutoSnapshot(): Promise<boolean> {
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const result = await db.select({ id: snapshots.id }).from(snapshots)
+      .where(and(eq(snapshots.dateKey, dateKey), eq(snapshots.type, 'auto')));
+    return result.length > 0;
   }
 }
 

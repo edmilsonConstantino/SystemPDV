@@ -201,3 +201,17 @@ export const orderReopens = pgTable("order_reopens", {
 export const insertOrderReopenSchema = createInsertSchema(orderReopens).omit({ id: true, createdAt: true });
 export type InsertOrderReopen = z.infer<typeof insertOrderReopenSchema>;
 export type OrderReopen = typeof orderReopens.$inferSelect;
+
+// SNAPSHOTS TABLE — daily data rollback (14-day window)
+export const snapshots = pgTable("snapshots", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  label: text("label").notNull(),
+  type: text("type").notNull().$type<'auto' | 'manual'>(),
+  dateKey: text("date_key").notNull(), // YYYY-MM-DD, used to deduplicate daily auto snapshots
+  data: jsonb("data").notNull().$type<{ products: any[]; categories: any[] }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertSnapshotSchema = createInsertSchema(snapshots).omit({ id: true, createdAt: true });
+export type InsertSnapshot = z.infer<typeof insertSnapshotSchema>;
+export type Snapshot = typeof snapshots.$inferSelect;
