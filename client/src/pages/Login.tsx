@@ -98,7 +98,7 @@ export default function Login() {
         <div className="w-full max-w-sm">
 
           {/* Cabeçalho do card */}
-          <div className="mb-8">
+          <div className="mb-8 text-center">
             <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
               Bem-vindo de volta <span className="inline-block">👋</span>
             </h2>
