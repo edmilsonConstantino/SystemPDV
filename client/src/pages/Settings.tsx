@@ -1642,16 +1642,6 @@ export default function SettingsPage() {
                 <strong>Vendas e pedidos NÃO são alterados.</strong> Apenas produtos e categorias serão revertidos.
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-600">Escreve <span className="font-black text-[#B71C1C]">CONFIRMAR</span> para prosseguir:</label>
-                <input
-                  type="text"
-                  value={rollbackConfirmText}
-                  onChange={(e) => setRollbackConfirmText(e.target.value)}
-                  placeholder="CONFIRMAR"
-                  className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B71C1C]/20"
-                />
-              </div>
             </div>
 
             <DialogFooter className="gap-2">
@@ -1659,7 +1649,7 @@ export default function SettingsPage() {
                 Cancelar
               </Button>
               <Button
-                disabled={rollbackConfirmText !== 'CONFIRMAR' || restoreSnapshotMutation.isPending || applyAuditRollbackMutation.isPending}
+                disabled={restoreSnapshotMutation.isPending || applyAuditRollbackMutation.isPending}
                 onClick={() => {
                   if (rollbackTarget?.type === 'snapshot') restoreSnapshotMutation.mutate(rollbackTarget.id);
                   else if (rollbackTarget?.type === 'audit') applyAuditRollbackMutation.mutate(rollbackTarget.date);
