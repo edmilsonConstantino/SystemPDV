@@ -505,11 +505,11 @@ export class DatabaseStorage implements IStorage {
 
   async createSnapshot(label: string, type: 'auto' | 'manual'): Promise<Snapshot> {
     const [allProducts, allCategories, allSales, allOrders, allTasks] = await Promise.all([
-      db.select().from(products),
-      db.select().from(categories),
-      db.select().from(sales),
-      db.select().from(orders),
-      db.select().from(tasks),
+      db.select().from(products).catch(() => []),
+      db.select().from(categories).catch(() => []),
+      db.select().from(sales).catch(() => []),
+      db.select().from(orders).catch(() => []),
+      db.select().from(tasks).catch(() => []),
     ]);
     const dateKey = new Date().toISOString().slice(0, 10);
     const [snap] = await db.insert(snapshots).values({

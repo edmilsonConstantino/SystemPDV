@@ -1566,73 +1566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Preview what a restore would change
-  app.get("/api/snapshots/:id/preview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    try {
-      const snap = await storage.getSnapshot(req.params.id);
-      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
-
-      const { products: snapProducts, categories: snapCategories } = snap.data as { products: any[]; categories: any[] };
-      const currentProducts = await storage.getAllProducts();
-      const currentCategories = await storage.getAllCategories();
-
-      const productChanges = snapProducts.map((sp: any) => {
-        const cur = currentProducts.find((p) => p.id === sp.id);
-        if (!cur) return { id: sp.id, name: sp.name, status: 'recreate' as const, changes: {} };
-        const changes: Record<string, { from: any; to: any }> = {};
-        for (const field of ['name', 'price', 'costPrice', 'stock', 'minStock', 'unit', 'categoryId'] as const) {
-          if (String(cur[field] ?? '') !== String(sp[field] ?? '')) {
-            changes[field] = { from: cur[field], to: sp[field] };
-          }
-        }
-        return { id: sp.id, name: sp.name, status: Object.keys(changes).length > 0 ? 'update' as const : 'unchanged' as const, changes };
-      }).filter((p: any) => p.status !== 'unchanged');
-
-      res.json({
-        snapshot: { id: snap.id, label: snap.label, createdAt: snap.createdAt },
-        productChanges,
-        categoryCount: snapCategories.length,
-        totalAffected: productChanges.length,
-      });
-    } catch (error) {
-      console.error("Snapshot preview error:", error);
-      res.status(500).json({ error: "Erro ao gerar pré-visualização" });
-    }
-  });
-
-  // Restore from snapshot
-  app.post("/api/snapshots/:id/restore", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    try {
-      const snap = await storage.getSnapshot(req.params.id);
-      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
-
-      // Save current state before restoring so the user can undo
-      await storage.createSnapshot(`↩ Antes do restauro — ${snap.label}`, 'manual');
-
-      const result = await storage.restoreSnapshot(req.params.id);
-
-      // Log the restore action
-      await storage.createAuditLog({
-        userId: (req as any).user.id,
-        action: "RESTORE_SNAPSHOT",
-        entityType: "snapshot",
-        entityId: snap.id,
-        details: {
-          snapshotLabel: snap.label,
-          snapshotDate: snap.createdAt,
-          ...result,
-        },
-      });
-
-      readOnlyMode = true;
-      res.json({ success: true, ...result });
-    } catch (error) {
-      console.error("Restore snapshot error:", error);
-      res.status(500).json({ error: "Erro ao restaurar snapshot" });
-    }
-  });
-
-  // Rollback from audit logs — reconstruct product state at a given date
+  // Rollback from audit logs — MUST be before /:id routes to avoid capture by :id param
   app.get("/api/snapshots/audit-rollback/preview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const targetDate = req.query.date as string; // YYYY-MM-DD
@@ -1659,7 +1593,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           revertMap[log.entityId] = { productName: details.productName || cur?.name || log.entityId, revert: {} };
         }
         for (const [field, diff] of Object.entries(details.changes as Record<string, { de: any; para: any }>)) {
-          // Only set the revert value if we haven't already (we want the OLDEST "de" value)
           if (!(field in revertMap[log.entityId].revert)) {
             revertMap[log.entityId].revert[field] = diff.de;
           }
@@ -1729,6 +1662,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Audit rollback apply error:", error);
       res.status(500).json({ error: "Erro ao aplicar reversão" });
+    }
+  });
+
+  // Preview what a restore would change
+  app.get("/api/snapshots/:id/preview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const snap = await storage.getSnapshot(req.params.id);
+      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
+
+      const { products: snapProducts, categories: snapCategories } = snap.data as { products: any[]; categories: any[] };
+      const currentProducts = await storage.getAllProducts();
+      const currentCategories = await storage.getAllCategories();
+
+      const productChanges = snapProducts.map((sp: any) => {
+        const cur = currentProducts.find((p) => p.id === sp.id);
+        if (!cur) return { id: sp.id, name: sp.name, status: 'recreate' as const, changes: {} };
+        const changes: Record<string, { from: any; to: any }> = {};
+        for (const field of ['name', 'price', 'costPrice', 'stock', 'minStock', 'unit', 'categoryId'] as const) {
+          if (String(cur[field] ?? '') !== String(sp[field] ?? '')) {
+            changes[field] = { from: cur[field], to: sp[field] };
+          }
+        }
+        return { id: sp.id, name: sp.name, status: Object.keys(changes).length > 0 ? 'update' as const : 'unchanged' as const, changes };
+      }).filter((p: any) => p.status !== 'unchanged');
+
+      res.json({
+        snapshot: { id: snap.id, label: snap.label, createdAt: snap.createdAt },
+        productChanges,
+        categoryCount: snapCategories.length,
+        totalAffected: productChanges.length,
+      });
+    } catch (error) {
+      console.error("Snapshot preview error:", error);
+      res.status(500).json({ error: "Erro ao gerar pré-visualização" });
+    }
+  });
+
+  // Restore from snapshot
+  app.post("/api/snapshots/:id/restore", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const snap = await storage.getSnapshot(req.params.id);
+      if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
+
+      // Save current state before restoring so the user can undo
+      await storage.createSnapshot(`↩ Antes do restauro — ${snap.label}`, 'manual');
+
+      const result = await storage.restoreSnapshot(req.params.id);
+
+      // Log the restore action
+      await storage.createAuditLog({
+        userId: (req as any).user.id,
+        action: "RESTORE_SNAPSHOT",
+        entityType: "snapshot",
+        entityId: snap.id,
+        details: {
+          snapshotLabel: snap.label,
+          snapshotDate: snap.createdAt,
+          ...result,
+        },
+      });
+
+      readOnlyMode = true;
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error("Restore snapshot error:", error);
+      res.status(500).json({ error: "Erro ao restaurar snapshot" });
     }
   });
 
