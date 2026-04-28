@@ -52,12 +52,13 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET || 'fresh-market-secret-key-2025',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    rolling: false, // não renova o prazo a cada request
     cookie: {
       secure: process.env.NODE_ENV === 'production' ? 'auto' : false,
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+      maxAge: 1000 * 60 * 60 // 1 hora
     }
   })
 );

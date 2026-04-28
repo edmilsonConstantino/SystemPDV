@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, UserPlus, Activity, History, Search, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar, Users, Receipt, RotateCcw, Camera, Clock, ChevronRight, TriangleAlert, CheckCircle2 } from 'lucide-react';
+import { Shield, UserPlus, Activity, History, Search, AlertCircle, ShoppingCart, Package, Trash2, Edit, Plus, DollarSign, Calendar as CalendarIcon, Users, Receipt, RotateCcw, Camera, Clock, ChevronRight, TriangleAlert, CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { loadInvoiceSettings, saveInvoiceSettings, type InvoiceSettings } from '@/lib/invoiceSettings';
+import { Calendar } from '@/components/ui/calendar';
 import { useLocation } from 'wouter';
 import { Separator } from '@/components/ui/separator';
 import { InvoiceA7Template } from '@/components/invoice/InvoiceA7Templates';
@@ -964,7 +965,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               { label: 'Total de ações', value: auditStats.total, Icon: Activity, color: 'text-primary bg-primary/10' },
-              { label: 'Hoje', value: auditStats.today, Icon: Calendar, color: 'text-emerald-600 bg-emerald-50' },
+              { label: 'Hoje', value: auditStats.today, Icon: CalendarIcon, color: 'text-emerald-600 bg-emerald-50' },
               { label: 'Criações', value: auditStats.creates, Icon: Plus, color: 'text-blue-600 bg-blue-50' },
               { label: 'Vendas', value: auditStats.sales, Icon: DollarSign, color: 'text-orange-600 bg-orange-50' },
             ].map(({ label, value, Icon, color }) => (
@@ -1373,104 +1374,106 @@ export default function SettingsPage() {
         {/* ── REVERSÃO DE DADOS ── */}
         <TabsContent value="rollback" className="space-y-5">
 
+          {/* Apenas admin */}
+          {user?.role !== 'admin' ? (
+            <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-5">
+              <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+              <p className="text-sm font-semibold text-red-700">Apenas o administrador pode aceder à reversão de dados.</p>
+            </div>
+          ) : (<>
+
           {/* Banner de aviso */}
           <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
             <div className="text-sm">
-              <p className="font-bold text-amber-800">Esta acção é irreversível</p>
-              <p className="mt-0.5 text-amber-700">Restaurar reverte preços, stock e nomes de produtos. Vendas e pedidos nunca são tocados.</p>
+              <p className="font-bold text-amber-800">Reversão completa do sistema</p>
+              <p className="mt-0.5 text-amber-700">Reverte produtos, categorias, vendas, pedidos e tarefas para o estado do dia escolhido. Apenas o administrador pode fazer isto.</p>
             </div>
           </div>
 
-          {/* Secção 1 — Reversão por Audit Log (para erros já feitos) */}
+          {/* Secção 1 — Calendário inteligente (Audit Log) */}
           {(() => {
-            // Build list of dates (last 14 days) that have product change events
             const cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - 14);
-            const productChangeDates = Array.from(
-              new Set(
-                auditLogs
-                  .filter((l: any) => {
-                    const isProductChange = l.action === 'UPDATE_PRODUCT' || l.action === 'CREATE_PRODUCT' || l.action === 'DELETE_PRODUCT';
-                    const withinWindow = new Date(l.createdAt) >= cutoff;
-                    return isProductChange && withinWindow;
-                  })
-                  .map((l: any) => new Date(l.createdAt).toISOString().slice(0, 10))
-              )
-            ).sort((a, b) => b.localeCompare(a)); // newest first
 
-            // Count changes per date
+            // Dates with changes in audit log
             const changesPerDate: Record<string, number> = {};
             auditLogs
-              .filter((l: any) => (l.action === 'UPDATE_PRODUCT' || l.action === 'CREATE_PRODUCT' || l.action === 'DELETE_PRODUCT') && new Date(l.createdAt) >= cutoff)
+              .filter((l: any) => new Date(l.createdAt) >= cutoff)
               .forEach((l: any) => {
                 const d = new Date(l.createdAt).toISOString().slice(0, 10);
                 changesPerDate[d] = (changesPerDate[d] || 0) + 1;
               });
+            const activeDates = Object.keys(changesPerDate).map(d => new Date(d + 'T12:00:00'));
+            const today = new Date();
+            const selected = auditRollbackDate ? new Date(auditRollbackDate + 'T12:00:00') : undefined;
 
             return (
               <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
                 <div className="border-b border-gray-100 bg-gray-50/60 px-5 py-4">
                   <div className="flex items-center gap-2">
                     <RotateCcw className="h-4 w-4 text-[#B71C1C]" />
-                    <p className="font-bold text-gray-800">Reverter por data (Audit Log)</p>
+                    <p className="font-bold text-gray-800">Voltar no tempo (Audit Log)</p>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">
-                    Dias com alterações de produtos nas últimas 2 semanas. Clica numa data para ver o que muda e confirmar a reversão.
+                    Dias com ponto vermelho têm alterações registadas. Clica no dia para selecionar e depois confirma a reversão.
                   </p>
                 </div>
-                <div className="p-5">
-                  {productChangeDates.length === 0 ? (
-                    <div className="py-8 text-center">
-                      <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-gray-200" />
-                      <p className="text-sm font-semibold text-gray-400">Nenhuma alteração de produtos nas últimas 2 semanas</p>
-                      <p className="mt-1 text-xs text-gray-400">Não há nada para reverter por audit log.</p>
+                <div className="flex flex-col items-center gap-4 p-5 sm:flex-row sm:items-start">
+                  <Calendar
+                    mode="single"
+                    selected={selected}
+                    onSelect={(date) => {
+                      if (!date) { setAuditRollbackDate(''); return; }
+                      setAuditRollbackDate(date.toISOString().slice(0, 10));
+                    }}
+                    disabled={(date) => {
+                      const key = date.toISOString().slice(0, 10);
+                      const beforeCutoff = date < cutoff;
+                      const afterToday = date > today;
+                      return beforeCutoff || afterToday;
+                    }}
+                    modifiers={{ hasChanges: activeDates }}
+                    modifiersClassNames={{ hasChanges: 'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:rounded-full after:bg-[#B71C1C] after:content-[""]' }}
+                    className="rounded-xl border border-gray-100"
+                  />
+                  <div className="flex-1 space-y-3 w-full">
+                    {auditRollbackDate ? (
+                      <>
+                        <div className="rounded-xl border border-[#B71C1C]/20 bg-red-50 p-3">
+                          <p className="text-xs font-bold text-[#B71C1C]">Data seleccionada</p>
+                          <p className="mt-0.5 text-sm font-black text-gray-800">
+                            {new Date(auditRollbackDate + 'T12:00:00').toLocaleDateString('pt-MZ', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {changesPerDate[auditRollbackDate]
+                              ? `${changesPerDate[auditRollbackDate]} evento(s) registado(s) neste dia`
+                              : 'Sem eventos registados — o sistema vai reverter com base no histórico acumulado'}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => loadAuditRollbackPreview(auditRollbackDate)}
+                          disabled={auditRollbackLoading}
+                          className="h-10 w-full rounded-xl bg-[#B71C1C] text-sm font-bold hover:bg-[#9b1414]"
+                        >
+                          {auditRollbackLoading ? 'A verificar…' : 'Ver o que muda'}
+                          <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-gray-200 p-4 text-center">
+                        <p className="text-xs text-gray-400">Selecciona um dia no calendário</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                      <span className="inline-block h-2 w-2 rounded-full bg-[#B71C1C]" />
+                      Dias com alterações registadas
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {productChangeDates.map((dateStr) => {
-                        const date = new Date(dateStr + 'T12:00:00');
-                        const isToday = dateStr === new Date().toISOString().slice(0, 10);
-                        const isYesterday = dateStr === (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
-                        const label = isToday ? 'Hoje' : isYesterday ? 'Ontem' : date.toLocaleDateString('pt-MZ', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
-                        const count = changesPerDate[dateStr] || 0;
-                        const selected = auditRollbackDate === dateStr;
-                        return (
-                          <button
-                            key={dateStr}
-                            type="button"
-                            onClick={() => setAuditRollbackDate(dateStr)}
-                            className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${
-                              selected
-                                ? 'border-[#B71C1C] bg-red-50 ring-1 ring-[#B71C1C]/30'
-                                : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black ${selected ? 'bg-[#B71C1C] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>
-                                {date.getDate()}
-                              </div>
-                              <div>
-                                <p className={`text-sm font-semibold ${selected ? 'text-[#B71C1C]' : 'text-gray-800'}`}>{label}</p>
-                                <p className="text-xs text-gray-400">{count} alteração{count !== 1 ? 'ões' : ''} de produto{count !== 1 ? 's' : ''}</p>
-                              </div>
-                            </div>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${selected ? 'bg-[#B71C1C] text-white' : 'bg-gray-200 text-gray-600'}`}>
-                              {selected ? 'Selecionado' : 'Selecionar'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                      <Button
-                        onClick={() => loadAuditRollbackPreview(auditRollbackDate)}
-                        disabled={!auditRollbackDate || auditRollbackLoading}
-                        className="mt-1 h-10 w-full rounded-xl bg-[#B71C1C] text-sm font-bold hover:bg-[#9b1414]"
-                      >
-                        {auditRollbackLoading ? 'A verificar…' : `Ver o que muda ao reverter para ${auditRollbackDate ? new Date(auditRollbackDate + 'T12:00:00').toLocaleDateString('pt-MZ', { day: '2-digit', month: 'short' }) : '…'}`}
-                        <ChevronRight className="ml-1 h-3.5 w-3.5" />
-                      </Button>
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                      <span className="inline-block h-2 w-2 rounded-full bg-gray-200" />
+                      Dias sem alterações (reversão ainda possível)
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             );
@@ -1545,6 +1548,8 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+
+          </>)}
         </TabsContent>
 
         {/* ── MODAL DE CONFIRMAÇÃO DE REVERSÃO ── */}

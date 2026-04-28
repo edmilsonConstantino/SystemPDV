@@ -504,16 +504,19 @@ export class DatabaseStorage implements IStorage {
   // ── SNAPSHOTS ────────────────────────────────────────────────────────────
 
   async createSnapshot(label: string, type: 'auto' | 'manual'): Promise<Snapshot> {
-    const [allProducts, allCategories] = await Promise.all([
+    const [allProducts, allCategories, allSales, allOrders, allTasks] = await Promise.all([
       db.select().from(products),
       db.select().from(categories),
+      db.select().from(sales),
+      db.select().from(orders),
+      db.select().from(tasks),
     ]);
     const dateKey = new Date().toISOString().slice(0, 10);
     const [snap] = await db.insert(snapshots).values({
       label,
       type,
       dateKey,
-      data: { products: allProducts, categories: allCategories },
+      data: { products: allProducts, categories: allCategories, sales: allSales, orders: allOrders, tasks: allTasks },
     }).returning();
     return snap;
   }
@@ -531,39 +534,36 @@ export class DatabaseStorage implements IStorage {
     const snap = await this.getSnapshot(id);
     if (!snap) throw new Error('Snapshot não encontrado');
 
-    const { products: snapProducts, categories: snapCategories } = snap.data as { products: any[]; categories: any[] };
+    const snapData = snap.data as { products: any[]; categories: any[]; sales?: any[]; orders?: any[]; tasks?: any[] };
+    const { products: snapProducts, categories: snapCategories, sales: snapSales = [], orders: snapOrders = [], tasks: snapTasks = [] } = snapData;
 
-    // Restore categories first (products reference them)
-    for (const cat of snapCategories) {
-      const existing = await db.select().from(categories).where(eq(categories.id, cat.id));
-      if (existing.length > 0) {
-        await db.update(categories).set({ name: cat.name }).where(eq(categories.id, cat.id));
-      } else {
-        await db.insert(categories).values(cat).onConflictDoNothing();
-      }
-    }
+    // 1. Restore categories
+    await db.delete(categories);
+    if (snapCategories.length > 0) await db.insert(categories).values(snapCategories).onConflictDoNothing();
 
-    // Restore products
-    for (const prod of snapProducts) {
-      const existing = await db.select().from(products).where(eq(products.id, prod.id));
-      if (existing.length > 0) {
-        await db.update(products).set({
-          name: prod.name,
-          sku: prod.sku,
-          price: prod.price,
-          costPrice: prod.costPrice,
-          stock: prod.stock,
-          minStock: prod.minStock,
-          unit: prod.unit,
-          categoryId: prod.categoryId,
-          image: prod.image,
-        }).where(eq(products.id, prod.id));
-      } else {
-        await db.insert(products).values(prod).onConflictDoNothing();
-      }
-    }
+    // 2. Restore products
+    await db.delete(products);
+    if (snapProducts.length > 0) await db.insert(products).values(snapProducts).onConflictDoNothing();
 
-    return { restoredProducts: snapProducts.length, restoredCategories: snapCategories.length };
+    // 3. Restore sales
+    await db.delete(sales);
+    if (snapSales.length > 0) await db.insert(sales).values(snapSales).onConflictDoNothing();
+
+    // 4. Restore orders
+    await db.delete(orders);
+    if (snapOrders.length > 0) await db.insert(orders).values(snapOrders).onConflictDoNothing();
+
+    // 5. Restore tasks
+    await db.delete(tasks);
+    if (snapTasks.length > 0) await db.insert(tasks).values(snapTasks).onConflictDoNothing();
+
+    return {
+      restoredProducts: snapProducts.length,
+      restoredCategories: snapCategories.length,
+      restoredSales: snapSales.length,
+      restoredOrders: snapOrders.length,
+      restoredTasks: snapTasks.length,
+    };
   }
 
   async pruneOldSnapshots(): Promise<void> {

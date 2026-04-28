@@ -19,6 +19,19 @@ declare module 'express-session' {
   }
 }
 
+// ── READ-ONLY MODE (activated after a rollback) ──────────────────────────────
+// In-memory flag — resets on server restart (intentional: forces conscious unlock)
+let readOnlyMode = false;
+export function getReadOnlyMode() { return readOnlyMode; }
+export function setReadOnlyMode(val: boolean) { readOnlyMode = val; }
+
+function requireWritable(req: Request, res: Response, next: Function) {
+  if (readOnlyMode) {
+    return res.status(423).json({ error: 'Sistema em modo só de leitura após reversão. Desbloqueie em Definições → Reversão de Dados.' });
+  }
+  next();
+}
+
 // Middleware to check authentication
 function requireAuth(req: Request, res: Response, next: Function) {
   if (!req.session.userId) {
@@ -204,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/categories", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/categories", requireAuth, requireAdminOrManager, requireWritable, async (req: Request, res: Response) => {
     try {
       const data = insertCategorySchema.parse(req.body);
       const newCategory = await storage.createCategory(data);
@@ -229,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/categories/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  app.delete("/api/categories/:id", requireAuth, requireAdmin, requireWritable, async (req: Request, res: Response) => {
     try {
       await storage.deleteCategory(req.params.id);
 
@@ -263,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/products", requireAuth, requireAdminOrManager, requireWritable, async (req: Request, res: Response) => {
     try {
       // Check edit permission
       const canEdit = await storage.canUserEdit(req.session.userId!, req.session.role!);
@@ -312,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/products/:id", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.patch("/api/products/:id", requireAuth, requireAdminOrManager, requireWritable, async (req: Request, res: Response) => {
     try {
       // Check edit permission
       const canEdit = await storage.canUserEdit(req.session.userId!, req.session.role!);
@@ -376,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Increase product stock (admin/manager only)
-  app.post("/api/products/:id/increase-stock", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/products/:id/increase-stock", requireAuth, requireAdminOrManager, requireWritable, async (req: Request, res: Response) => {
     try {
       const { quantity, price } = req.body;
       
@@ -428,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/products/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+  app.delete("/api/products/:id", requireAuth, requireAdmin, requireWritable, async (req: Request, res: Response) => {
     try {
       const product = await storage.getProduct(req.params.id);
       
@@ -519,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/sales", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/sales", requireAuth, requireWritable, async (req: Request, res: Response) => {
     try {
       const { preview, ...bodyData } = req.body;
       const data = insertSaleSchema.parse({
@@ -749,7 +762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tasks", requireAuth, async (req: Request, res: Response) => {
+  app.post("/api/tasks", requireAuth, requireWritable, async (req: Request, res: Response) => {
     try {
       const taskData = {
         ...req.body,
@@ -792,7 +805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
+  app.patch("/api/tasks/:id", requireAuth, requireWritable, async (req: Request, res: Response) => {
     try {
       const updated = await storage.updateTask(req.params.id, req.body);
       if (!updated) {
@@ -816,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tasks/:id", requireAuth, async (req: Request, res: Response) => {
+  app.delete("/api/tasks/:id", requireAuth, requireWritable, async (req: Request, res: Response) => {
     try {
       await storage.deleteTask(req.params.id);
       res.json({ success: true });
@@ -1517,10 +1530,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== END SCANNER ROUTES ====================
 
+  // ==================== READ-ONLY MODE ROUTES ====================
+
+  app.get("/api/system/status", requireAuth, (_req, res) => {
+    res.json({ readOnly: readOnlyMode });
+  });
+
+  app.post("/api/system/unlock", requireAuth, requireAdmin, (_req, res) => {
+    readOnlyMode = false;
+    res.json({ readOnly: false });
+  });
+
   // ==================== SNAPSHOT / ROLLBACK ROUTES ====================
 
   // List all snapshots (last 14 days)
-  app.get("/api/snapshots", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.get("/api/snapshots", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const list = await storage.listSnapshots();
       res.json(list);
@@ -1531,7 +1555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a manual snapshot
-  app.post("/api/snapshots", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/snapshots", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const label = req.body.label?.trim() || `Manual — ${new Date().toLocaleString('pt-MZ')}`;
       const snap = await storage.createSnapshot(label, 'manual');
@@ -1543,7 +1567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Preview what a restore would change
-  app.get("/api/snapshots/:id/preview", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.get("/api/snapshots/:id/preview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const snap = await storage.getSnapshot(req.params.id);
       if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
@@ -1577,7 +1601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Restore from snapshot
-  app.post("/api/snapshots/:id/restore", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/snapshots/:id/restore", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const snap = await storage.getSnapshot(req.params.id);
       if (!snap) return res.status(404).json({ error: "Snapshot não encontrado" });
@@ -1600,6 +1624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      readOnlyMode = true;
       res.json({ success: true, ...result });
     } catch (error) {
       console.error("Restore snapshot error:", error);
@@ -1608,7 +1633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rollback from audit logs — reconstruct product state at a given date
-  app.get("/api/snapshots/audit-rollback/preview", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.get("/api/snapshots/audit-rollback/preview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const targetDate = req.query.date as string; // YYYY-MM-DD
       if (!targetDate) return res.status(400).json({ error: "Parâmetro 'date' obrigatório" });
@@ -1654,7 +1679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/snapshots/audit-rollback/apply", requireAuth, requireAdminOrManager, async (req: Request, res: Response) => {
+  app.post("/api/snapshots/audit-rollback/apply", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const { targetDate } = req.body;
       if (!targetDate) return res.status(400).json({ error: "Parâmetro 'targetDate' obrigatório" });
@@ -1699,6 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: { targetDate, productsReverted: applied },
       });
 
+      readOnlyMode = true;
       res.json({ success: true, productsReverted: applied });
     } catch (error) {
       console.error("Audit rollback apply error:", error);

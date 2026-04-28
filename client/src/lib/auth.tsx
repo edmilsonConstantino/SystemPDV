@@ -7,6 +7,8 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  readOnly: boolean;
+  unlockSystem: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -14,15 +16,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [readOnly, setReadOnly] = useState(false);
   const queryClient = useQueryClient();
 
-  // Check if user is already logged in on mount
+  // Check if user is already logged in on mount.
+  // sessionStorage is wiped when the browser closes — if the flag is missing
+  // the user opened a fresh browser, so we force-logout the server session.
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const currentUser = await authApi.getMe();
-        setUser(currentUser);
-      } catch (error) {
+        if (!sessionStorage.getItem('session_alive')) {
+          await authApi.logout();
+          setUser(null);
+        } else {
+          setUser(currentUser);
+          // Check read-only status
+          const statusRes = await fetch('/api/system/status', { credentials: 'include' });
+          if (statusRes.ok) {
+            const status = await statusRes.json();
+            setReadOnly(status.readOnly);
+          }
+        }
+      } catch {
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -33,20 +49,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     const loggedInUser = await authApi.login({ username, password });
+    sessionStorage.setItem('session_alive', '1');
     setUser(loggedInUser);
-    // Invalidate all queries to fetch fresh data for the logged-in user
     queryClient.invalidateQueries();
+    // Refresh read-only status after login
+    const statusRes = await fetch('/api/system/status', { credentials: 'include' });
+    if (statusRes.ok) setReadOnly((await statusRes.json()).readOnly);
   };
 
   const logout = async () => {
     await authApi.logout();
+    sessionStorage.removeItem('session_alive');
     setUser(null);
-    // Clear all cached data
+    setReadOnly(false);
     queryClient.clear();
   };
 
+  const unlockSystem = async () => {
+    await fetch('/api/system/unlock', { method: 'POST', credentials: 'include' });
+    setReadOnly(false);
+    queryClient.invalidateQueries();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, readOnly, unlockSystem }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,6 +15,7 @@
     "db:push:prod": "dotenv -e .env.production drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env db/seed.ts",
+    "db:seed:history": "tsx --env-file=.env scripts/seedHistory.ts",
     "user:promote:admin": "tsx --env-file=.env scripts/promoteUserToAdmin.ts",
     "db:local:up": "docker compose up -d",
     "db:local:down": "docker compose down",
